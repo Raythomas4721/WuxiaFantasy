@@ -1,6 +1,7 @@
 // 內容檢查：在建置前找出打錯的 id、只讀不寫的旗標、假選項與禁用名稱。
 
-import type { Condition, Content, GameEffect, Outcome, OutcomeSpec, TextSpec } from './types';
+import { TEMPLATE_KEYS } from './text';
+import type { Condition, Content, GameEffect, Outcome, OutcomeSpec, TextSpec, VarSpec } from './types';
 
 /** 引擎自己設定的旗標。 */
 const ENGINE_FLAGS = ['hidden_illness', 'weak_body', 'omen', 'fortune_decline', 'fortune_rise', 'father_dead', 'mother_dead', 'dead', 'died_young'];
@@ -40,6 +41,25 @@ function textConditions(spec: TextSpec): Condition[] {
   return typeof spec === 'string' ? [] : spec.flatMap((v) => (v.if ? [v.if] : []));
 }
 
+function textStrings(spec: TextSpec): string[] {
+  return typeof spec === 'string' ? [spec] : spec.map((v) => v.text);
+}
+
+function varStrings(spec: VarSpec): string[] {
+  return spec.flatMap((v) => (typeof v === 'string' ? [v] : v.values));
+}
+
+function varConditions(spec: VarSpec): Condition[] {
+  return spec.flatMap((v) => (typeof v !== 'string' && v.if ? [v.if] : []));
+}
+
+/** 找出文字裡引用了、卻沒有定義的 {變數}。 */
+function unknownPlaceholders(texts: string[], allowed: Set<string>): string[] {
+  const bad = new Set<string>();
+  for (const t of texts) for (const m of t.matchAll(/\{(\w+)\}/g)) if (!allowed.has(m[1])) bad.add(m[1]);
+  return [...bad];
+}
+
 export function validateContent(content: Content): ValidationReport {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -55,6 +75,22 @@ export function validateContent(content: Content): ValidationReport {
     textConditions(e.text).forEach((c) => conditions.push({ where: w, c }));
     e.weightMods?.forEach((m) => conditions.push({ where: w, c: m.if }));
     e.enterEffects?.forEach((x) => effects.push({ where: w, e: x }));
+
+    const strings: string[] = [...textStrings(e.text)];
+    for (const spec of Object.values(e.vars ?? {})) {
+      strings.push(...varStrings(spec));
+      varConditions(spec).forEach((c) => conditions.push({ where: w, c }));
+      if (varStrings(spec).length === 0) errors.push(`${w}：有一組素材是空的`);
+    }
+    for (const ch of e.choices) {
+      strings.push(ch.text);
+      for (const o of [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure)]) {
+        strings.push(...textStrings(o.text));
+        if (o.recap) strings.push(o.recap.text);
+      }
+    }
+    const allowed = new Set([...TEMPLATE_KEYS, ...Object.keys(e.vars ?? {})]);
+    for (const key of unknownPlaceholders(strings, allowed)) errors.push(`${w}：文字引用了未定義的變數 {${key}}`);
 
     if (e.choices.length < 2) errors.push(`${w}：選項少於 2 個`);
     if (!e.choices.some((c) => !c.requires)) errors.push(`${w}：沒有任何無條件的選項，可能卡住`);
@@ -78,10 +114,22 @@ export function validateContent(content: Content): ValidationReport {
     }
   }
 
+  const builtIns = new Set(TEMPLATE_KEYS);
   for (const f of content.focuses) {
-    if (f.conditions) conditions.push({ where: `方針 ${f.id}`, c: f.conditions });
-    f.growth.forEach((g) => effects.push({ where: `方針 ${f.id}`, e: g.effect }));
+    const w = `方針 ${f.id}`;
+    if (f.conditions) conditions.push({ where: w, c: f.conditions });
+    f.growth.forEach((g) => effects.push({ where: w, e: g.effect }));
+    varConditions(f.summary).forEach((c) => conditions.push({ where: w, c }));
+    if (varStrings(f.summary).length === 0) errors.push(`${w}：沒有任何歲月摘要`);
+    for (const key of unknownPlaceholders(varStrings(f.summary), builtIns)) errors.push(`${w}：文字引用了未定義的變數 {${key}}`);
   }
+  const otherTexts = [
+    ...content.endings.flatMap((en) => textStrings(en.text)),
+    ...Object.values(content.ambitions).flatMap((a) => [a.fulfilledText, a.unfulfilledText]),
+    ...content.eraLines.map((l) => l.text),
+    ...content.rumors.map((r) => r.text),
+  ];
+  for (const key of unknownPlaceholders(otherTexts, builtIns)) errors.push(`結局／志向／傳聞：文字引用了未定義的變數 {${key}}`);
   for (const b of Object.values(content.backgrounds)) b.effects?.forEach((e) => effects.push({ where: `出身 ${b.id}`, e }));
   for (const t of Object.values(content.traits)) t.effects.forEach((e) => effects.push({ where: `特質 ${t.id}`, e }));
   for (const en of content.endings) {

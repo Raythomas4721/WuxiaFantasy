@@ -44,6 +44,11 @@ export function pickText(spec: TextSpec, state: GameState): string {
   return hit ? hit.text : '';
 }
 
+/** 所有事件都能使用的內建變數名稱（內容檢查用）。 */
+export const TEMPLATE_KEYS = [
+  'name', 'surname', 'companion', 'companionTrait', 'rival', 'age', 'ageCn', 'year', 'yearName', 'region', 'place', 'sect',
+];
+
 export function templateVars(state: GameState): Record<string, string> {
   const p = state.player;
   const region = CONTENT.regions[p.region];
@@ -63,11 +68,16 @@ export function templateVars(state: GameState): Record<string, string> {
   };
 }
 
-export function fill(text: string, state: GameState): string {
-  const vars = templateVars(state);
-  return text.replace(/\{(\w+)\}/g, (m, key: string) => vars[key] ?? m);
+/**
+ * 代入變數。extra 是組合式事件抽出的素材，素材本身也可以再引用內建變數（例如 {companion}），
+ * 所以最多代換兩輪。
+ */
+export function fill(text: string, state: GameState, extra?: Record<string, string>): string {
+  const vars = { ...templateVars(state), ...extra };
+  const once = (t: string) => t.replace(/\{(\w+)\}/g, (m, key: string) => vars[key] ?? m);
+  return once(once(text));
 }
 
-export function renderText(spec: TextSpec, state: GameState): string {
-  return fill(pickText(spec, state), state);
+export function renderText(spec: TextSpec, state: GameState, extra?: Record<string, string>): string {
+  return fill(pickText(spec, state), state, extra);
 }

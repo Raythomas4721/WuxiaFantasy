@@ -275,6 +275,38 @@ small {
   color: var(--gold);
 }
 
+.focus-warn,
+.focus-note {
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+
+.focus-warn {
+  color: var(--bad);
+}
+
+.focus-note {
+  color: var(--ink-3);
+}
+
+.fate-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1rem;
+}
+
+.fate-tags li {
+  padding: 0.15rem 0.8rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
 .pick-title {
   font-weight: 700;
   font-size: 1.05rem;

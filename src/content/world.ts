@@ -11,6 +11,8 @@ export const backgrounds: Record<string, BackgroundDef> = {
     desc: '根骨與心性較好，金錢與人脈少。',
     statMods: { gengu: 2, xinxing: 1 },
     money: 10,
+    // 亂世裡農家最多。
+    weight: 2,
   },
   merchant: {
     id: 'merchant',
@@ -163,7 +165,12 @@ export const focuses: FocusDef[] = [
     childhood: true,
     tags: ['study'],
     growth: [{ effect: wuxing(1), chance: 0.5 }],
-    summary: '這兩年你在私塾讀書。先生搖頭晃腦念的那些句子，你已經能背上大半。',
+    summary: [
+      '這兩年你在私塾讀書。先生搖頭晃腦念的那些句子，你已經能背上大半。',
+      '你在私塾裡坐了兩年，學會了寫自己的名字，也學會了趁先生打瞌睡時偷看窗外。',
+      '先生說你的字寫得像雞爪子，可你背書比誰都快。',
+      '你每天提著書箱上學，路過河邊總要停下來看一會兒魚。',
+    ],
   },
   {
     id: 'kid_play',
@@ -176,7 +183,12 @@ export const focuses: FocusDef[] = [
       { effect: meili(1), chance: 0.3 },
       { effect: rel('companion', 8) },
     ],
-    summary: '你和{companion}這兩年幾乎踏遍了附近每一座山頭、每一條河。',
+    summary: [
+      '你和{companion}這兩年幾乎踏遍了附近每一座山頭、每一條河。',
+      '你和{companion}在後山找到一個樹洞，把撿來的寶貝全藏在裡面。',
+      '你跟著{companion}爬樹掏鳥窩，摔下來好幾次，膝蓋上的疤一直沒好。',
+      '這兩年你是巷子裡的孩子王，{companion}是你的頭號跟班。',
+    ],
   },
   {
     id: 'kid_help',
@@ -190,9 +202,30 @@ export const focuses: FocusDef[] = [
       { effect: money(5) },
     ],
     summary: [
-      { if: { backgrounds: ['physician'] }, text: '這兩年你在藥鋪裡打下手，切藥、碾藥、看火，手上總帶著一股藥香。' },
-      { if: { backgrounds: ['merchant'] }, text: '這兩年你在鋪子裡幫忙招呼客人，算盤打得比帳房先生還快。' },
-      { text: '這兩年你跟著大人下田，手上長了繭，個子也竄高了一截。' },
+      {
+        if: { backgrounds: ['physician'] },
+        values: [
+          '這兩年你在藥鋪裡打下手，切藥、碾藥、看火，手上總帶著一股藥香。',
+          '你學會了包藥，一張紙、一根繩，包得方方正正。',
+          '你幫著曬藥材，每次要下雨，總是你第一個衝出去收。',
+        ],
+      },
+      {
+        if: { backgrounds: ['merchant'] },
+        values: [
+          '這兩年你在鋪子裡幫忙招呼客人，算盤打得比帳房先生還快。',
+          '你學會了看秤，誰想在秤桿上動手腳，你一眼就看得出來。',
+          '你跟著夥計去碼頭點貨，一整船的貨數得清清楚楚。',
+        ],
+      },
+      {
+        if: { not: { backgrounds: ['physician', 'merchant'] } },
+        values: [
+          '這兩年你跟著大人下田，手上長了繭，個子也竄高了一截。',
+          '你學會了插秧、放牛、看天色。大人說，你看雲比老農還準。',
+          '農忙時你從早到晚泡在田裡，農閒時就幫著劈柴挑水。',
+        ],
+      },
     ],
   },
   {
@@ -203,7 +236,11 @@ export const focuses: FocusDef[] = [
     conditions: { any: [{ flags: ['saw_martial'] }, { minMartial: 1 }] },
     tags: ['martial'],
     growth: [{ effect: train('martial', 2) }, { effect: gengu(1), chance: 0.3 }],
-    summary: '你天天在後院對著柴堆比劃拳腳。大人們笑你，你也不在乎。',
+    summary: [
+      '你天天在後院對著柴堆比劃拳腳。大人們笑你，你也不在乎。',
+      '你把木棍當劍、把柴堆當敵人，一個人在後院打得滿頭大汗。',
+      '你偷偷在床底下藏了一根木棍，每天天沒亮就起來練。',
+    ],
   },
   // ---- 十三歲以後 ----
   {
@@ -212,7 +249,12 @@ export const focuses: FocusDef[] = [
     desc: '悟性增長，可能遇到書院與科舉的機會。',
     tags: ['study'],
     growth: [{ effect: wuxing(1), chance: 0.5 }],
-    summary: '這段日子你埋首書卷。窗外的世道越來越亂，書裡的道理卻越讀越明白。',
+    summary: [
+      '這段日子你埋首書卷。窗外的世道越來越亂，書裡的道理卻越讀越明白。',
+      '你抄完了一整部書，手腕痠得抬不起來。',
+      '你在書院裡和同窗爭論了好幾夜，誰也說服不了誰。',
+      '你讀到一句話，反覆想了好幾天，好像想通了什麼，又好像沒有。',
+    ],
   },
   {
     id: 'martial',
@@ -220,7 +262,12 @@ export const focuses: FocusDef[] = [
     desc: '武學與根骨增長，容易遇到切磋與比武。',
     tags: ['martial', 'sparring'],
     growth: [{ effect: train('martial', 2) }, { effect: gengu(1), chance: 0.3 }],
-    summary: '你每天聞雞起舞，一套功夫翻來覆去練了上千遍。',
+    summary: [
+      '你每天聞雞起舞，一套功夫翻來覆去練了上千遍。',
+      '冬練三九，夏練三伏。你的手上、腳上，全是厚厚的繭。',
+      '你在河邊練功，練到河對岸的漁夫都認得你了。',
+      '你把一招拆成十招，再把十招合回一招。',
+    ],
   },
   {
     id: 'work',
@@ -228,7 +275,12 @@ export const focuses: FocusDef[] = [
     desc: '賺取錢財，磨練心性。',
     tags: ['work', 'village'],
     growth: [{ effect: money(20) }, { effect: xinxing(1), chance: 0.3 }],
-    summary: '這段日子你踏踏實實地做活，攢下了一點積蓄。',
+    summary: [
+      '這段日子你踏踏實實地做活，攢下了一點積蓄。',
+      '你在碼頭扛了一陣子貨，肩膀上磨出了一層厚皮。',
+      '你在鄰鎮的作坊做工，學會了一門手藝。',
+      '日子過得平平淡淡，每天出門做活，天黑回家吃飯。',
+    ],
   },
   {
     id: 'trade',
@@ -237,7 +289,11 @@ export const focuses: FocusDef[] = [
     conditions: { any: [{ backgrounds: ['merchant'] }, { minAge: 18 }] },
     tags: ['trade', 'travel'],
     growth: [{ effect: money(15) }, { effect: meili(1), chance: 0.3 }],
-    summary: '你跟著貨船走了幾趟，見識了不少地方，也學會了怎麼跟人討價還價。',
+    summary: [
+      '你跟著貨船走了幾趟，見識了不少地方，也學會了怎麼跟人討價還價。',
+      '這一趟生意不賺不賠，倒是結識了幾個客商。',
+      '你學會了看行情：哪裡缺糧、哪裡缺鹽，價錢就往哪裡跑。',
+    ],
   },
   {
     id: 'travel',
@@ -246,7 +302,12 @@ export const focuses: FocusDef[] = [
     conditions: { minAge: 15 },
     tags: ['travel', 'tavern', 'chance'],
     growth: [{ effect: fuyuan(1), chance: 0.3 }, { effect: money(-5) }],
-    summary: '你背著包袱走了很遠的路。山川、渡口、客棧，一處一處都記在了心裡。',
+    summary: [
+      '你背著包袱走了很遠的路。山川、渡口、客棧，一處一處都記在了心裡。',
+      '你在一座不知名的小鎮住了一個月，走的時候，客棧老闆娘還塞給你兩個饅頭。',
+      '你爬上一座高山，在山頂看了一整夜的星星。',
+      '你走過被戰火燒過的村子，也走過歌舞昇平的城鎮。這世道，真是什麼樣子都有。',
+    ],
   },
   {
     id: 'social',
@@ -254,7 +315,11 @@ export const focuses: FocusDef[] = [
     desc: '結識朋友，經營人情。',
     tags: ['social', 'tavern'],
     growth: [{ effect: meili(1), chance: 0.5 }, { effect: fame(1) }],
-    summary: '這段日子你結識了不少朋友，酒喝了不少，人情也欠了不少。',
+    summary: [
+      '這段日子你結識了不少朋友，酒喝了不少，人情也欠了不少。',
+      '你在茶樓裡認識了幾個說得上話的人，三天兩頭聚在一起。',
+      '誰家有紅白喜事都會請你，你也總是到。',
+    ],
   },
   {
     id: 'medicine',
@@ -263,7 +328,11 @@ export const focuses: FocusDef[] = [
     conditions: { any: [{ minSkill: { baicao: 1 } }, { sects: ['yaogu'] }] },
     tags: ['medicine'],
     growth: [{ effect: train('medicine', 2) }, { effect: fame(1) }, { effect: add('healed', 1), chance: 0.3 }],
-    summary: '你背著藥箱走鄉串戶。認得你的人越來越多，叫你一聲大夫。',
+    summary: [
+      '你背著藥箱走鄉串戶。認得你的人越來越多，叫你一聲大夫。',
+      '你在破廟裡給窮人義診了一個月，藥錢都是自己貼的。',
+      '你把這些年看過的病例整理成冊，越寫越厚。',
+    ],
   },
   {
     id: 'sect',
@@ -272,7 +341,11 @@ export const focuses: FocusDef[] = [
     conditions: { hasSect: true },
     tags: ['sect'],
     growth: [{ effect: train('sect', 2) }, { effect: add('sect_merit', 1), chance: 0.4 }],
-    summary: '你為{sect}奔走了一段日子，門裡的人越來越把你當自己人。',
+    summary: [
+      '你為{sect}奔走了一段日子，門裡的人越來越把你當自己人。',
+      '門裡的大小事你都插得上手，同門有事也愛來找你商量。',
+      '你在{sect}待得久了，連看門的老頭都會拉著你聊兩句。',
+    ],
   },
   {
     id: 'rest',
@@ -280,6 +353,10 @@ export const focuses: FocusDef[] = [
     desc: '調養身體，遠離是非。',
     tags: ['rest'],
     growth: [{ effect: health(25) }, { effect: xinxing(1), chance: 0.3 }],
-    summary: '你閉門休養了一段日子。身子好了些，心也靜了些。',
+    summary: [
+      '你閉門休養了一段日子。身子好了些，心也靜了些。',
+      '你在院子裡種了幾盆花，每天看它們長一點點。',
+      '你睡了很多覺，喝了很多茶，什麼也沒想。',
+    ],
   },
 ];

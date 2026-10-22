@@ -102,6 +102,9 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
     case 'meet':
       s.flags[`met_${e.npc}`] = true;
       break;
+    case 'resetStreak':
+      s.focusStreak = undefined;
+      break;
     case 'die':
       killPlayer(s, e.cause);
       break;

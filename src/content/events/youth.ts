@@ -19,8 +19,16 @@ export const youthEvents: GameEvent[] = [
         if: { flags: ['father_dead'] },
         text: '{ageCn}歲這年的除夕，你一個人坐在門檻上守歲。母親說，你父親若還在，一定會問你：將來想做什麼樣的人？',
       },
-      { text: '{ageCn}歲這年的除夕，家裡守歲到半夜。長輩摸著你的頭問：「你也不小了。將來，想做什麼樣的人？」' },
+      { text: '{scene}：「你也不小了。將來，想做什麼樣的人？」' },
     ],
+    vars: {
+      scene: [
+        '{ageCn}歲這年的除夕，家裡守歲到半夜。長輩摸著你的頭問',
+        '{ageCn}歲這年的元宵，燈會散了，長輩牽著你走在回家的路上，忽然問',
+        '{ageCn}歲這年的中秋，一家人坐在院子裡賞月。長輩看著月亮，問你',
+        '{ageCn}歲這年清明，你跟著長輩去上墳。在墳前，長輩問你',
+      ],
+    },
     choices: [
       {
         id: 'martial',
@@ -30,7 +38,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '長輩看了看你手上的繭，嘆了口氣：「那就別怕吃苦。」',
           effects: [ambition('martial'), danshi(1)],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你說要練成天下無敵的武功。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你說要練成天下無敵的武功。' },
         },
       },
       {
@@ -41,7 +49,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '長輩笑了：「俠客可不好當。」可你看得出來，那笑裡有幾分驕傲。',
           effects: [ambition('chivalry'), chiv(3)],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你說要做個鋤強扶弱的俠客。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你說要做個鋤強扶弱的俠客。' },
         },
       },
       {
@@ -52,7 +60,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '長輩點點頭：「醫者的手，一輩子都放不下。想好了？」你用力點頭。',
           effects: [ambition('healer'), xinxing(1)],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你說要做一個救人的大夫。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你說要做一個救人的大夫。' },
         },
       },
       {
@@ -63,7 +71,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '長輩哈哈大笑：「好！比那些空口說白話的強。」',
           effects: [ambition('wealth'), meili(1)],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你說要賺很多錢，讓家裡再也不愁吃穿。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你說要賺很多錢，讓家裡再也不愁吃穿。' },
         },
       },
       {
@@ -74,7 +82,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '屋裡忽然安靜了。過了很久，長輩才低聲說：「這世道，總得有人去。」',
           effects: [ambition('nation'), danshi(1)],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你說要從軍保家衛國。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你說要從軍保家衛國。' },
         },
       },
       {
@@ -85,7 +93,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '沒有人接話。燈花爆了一下，你的影子在牆上晃了晃。',
           effects: [ambition('revenge')],
-          recap: { weight: 2, text: '{ageCn}歲那年除夕，你發誓要報仇。' },
+          recap: { weight: 2, text: '{ageCn}歲那年，你發誓要報仇。' },
         },
       },
       {
@@ -94,7 +102,7 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '長輩愣了一下，然後笑得很開心：「這比什麼都難得。」',
           effects: [ambition('peace'), xinxing(1)],
-          recap: { weight: 1, text: '{ageCn}歲那年除夕，你說只想平平安安過一輩子。' },
+          recap: { weight: 1, text: '{ageCn}歲那年，你說只想平平安安過一輩子。' },
         },
       },
     ],
@@ -413,7 +421,17 @@ export const youthEvents: GameEvent[] = [
     maxTimes: 4,
     conditions: { minAge: 16, maxAge: 50, sects: ['changfeng'] },
     tags: ['sect', 'work', 'travel'],
-    text: '這一趟鏢押的是一批綢緞，要送往襄陽。走到半路的山坳裡，林子裡突然響起一聲呼哨，幾十個蒙面人攔住了去路。',
+    vars: {
+      cargo: ['一批綢緞', '一箱官銀', '一位富商的家眷', '一車名貴藥材', '一口誰也不許打開的木箱'],
+      dest: ['襄陽', '臨安', '成都', '揚州', '鄂州'],
+      ambush: [
+        '走到半路的山坳裡，林子裡突然響起一聲呼哨，幾十個蒙面人攔住了去路。',
+        '渡河時，對岸的蘆葦叢裡忽然衝出十幾條小船，船上全是水寇。',
+        '黃昏時分，一群扮成難民的人圍了上來，破衣服底下露出了刀。',
+        '夜宿客棧，半夜裡你聞到一股異香——有人在往房裡吹迷煙。',
+      ],
+    },
+    text: '這一趟鏢押的是{cargo}，要送往{dest}。{ambush}',
     choices: [
       {
         id: 'fight',

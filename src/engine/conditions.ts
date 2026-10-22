@@ -84,6 +84,10 @@ export function checkCondition(s: GameState, c?: Condition): boolean {
   if (c.minMoney !== undefined && p.money < c.minMoney) return false;
   if (!within(p.health, c.minHealth, c.maxHealth)) return false;
   if (c.focus && (!s.focus || !c.focus.includes(s.focus))) return false;
+  if (c.minFocusStreak !== undefined) {
+    const streak = s.focusStreak && s.focusStreak.id === s.focus ? s.focusStreak.count : 0;
+    if (streak < c.minFocusStreak) return false;
+  }
   if (c.sects && (!p.sect || !c.sects.includes(p.sect))) return false;
   if (c.hasSect !== undefined && Boolean(p.sect) !== c.hasSect) return false;
   if (c.ambitions && (!p.ambition || !c.ambitions.includes(p.ambition))) return false;

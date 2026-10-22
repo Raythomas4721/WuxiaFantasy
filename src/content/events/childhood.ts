@@ -162,13 +162,14 @@ export const childhoodEvents: GameEvent[] = [
     priority: 3,
     conditions: { minAge: 3, maxAge: 8 },
     tags: ['social'],
-    text: '隔壁搬來一戶人家，家裡的孩子叫{companion}，比你大半歲，{companionTrait}。第一次見面，{companion}就搶走了你手裡的竹蜻蜓。',
+    vars: { toy: ['竹蜻蜓', '泥娃娃', '小木馬', '撥浪鼓', '剛撿到的漂亮石子'] },
+    text: '隔壁搬來一戶人家，家裡的孩子叫{companion}，比你大半歲，{companionTrait}。第一次見面，{companion}就搶走了你手裡的{toy}。',
     choices: [
       {
         id: 'fight',
         text: '撲上去搶回來',
         outcome: {
-          text: '你們在泥地裡滾成一團，最後兩個人都哭了，又一起被大人拎回家。第二天，{companion}把竹蜻蜓還給你，還多送了一隻草編的蚱蜢。',
+          text: '你們在泥地裡滾成一團，最後兩個人都哭了，又一起被大人拎回家。第二天，{companion}把{toy}還給你，還多送了一隻草編的蚱蜢。',
           effects: [danshi(1), rel('companion', 15)],
         },
       },
@@ -184,7 +185,7 @@ export const childhoodEvents: GameEvent[] = [
         id: 'tell',
         text: '跑去告訴大人',
         outcome: {
-          text: '大人把{companion}訓了一頓。你拿回了竹蜻蜓，{companion}卻好幾天都不跟你說話。後來還是你先拿了顆糖去和好。',
+          text: '大人把{companion}訓了一頓。你拿回了{toy}，{companion}卻好幾天都不跟你說話。後來還是你先拿了顆糖去和好。',
           effects: [xinxing(1), rel('companion', 5)],
         },
       },

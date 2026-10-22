@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { CONTENT } from '../content';
 import { currentYear } from '../engine/conditions';
 import {
-  chooseFocus, chooseOption, choiceViews, describeOrigin, focusOptions, nextTurn, startLife,
+  FATIGUE_STREAK, chooseFocus, chooseOption, choiceViews, describeOrigin, focusOptions, nextTurn, startLife,
+  streakIfChosen,
 } from '../engine/game';
 import { chineseNumber, eraName } from '../engine/text';
 import type { GameState } from '../engine/types';
@@ -84,6 +85,11 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
       return (
         <article className="panel">
           <h2 className="panel-title">命格</h2>
+          <ul className="fate-tags">
+            <li>{CONTENT.backgrounds[state.player.background].name}</li>
+            <li>{CONTENT.regions[state.player.birthRegion].name}</li>
+            <li>{CONTENT.traits[state.player.trait].name}</li>
+          </ul>
           <div className="story">
             {describeOrigin(state).map((line, i) => (
               <p key={i}>{line}</p>
@@ -104,12 +110,22 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
             {state.player.age < 13 ? '這兩年，你多半在……' : '這段日子，你打算……'}
           </h2>
           <div className="focus-grid">
-            {focusOptions(state).map((f) => (
-              <button key={f.id} className="focus-card" onClick={() => act(() => chooseFocus(state, f.id))}>
-                <span className="pick-title">{f.name}</span>
-                <span className="pick-desc">{f.desc}</span>
-              </button>
-            ))}
+            {focusOptions(state).map((f) => {
+              const streak = streakIfChosen(state, f.id);
+              return (
+                <button key={f.id} className="focus-card" onClick={() => act(() => chooseFocus(state, f.id))}>
+                  <span className="pick-title">{f.name}</span>
+                  <span className="pick-desc">{f.desc}</span>
+                  {streak >= FATIGUE_STREAK ? (
+                    <span className="focus-warn">
+                      連續第 {streak} 次・收穫{streak === FATIGUE_STREAK ? '減半' : '大減'}，小心倦怠
+                    </span>
+                  ) : streak === FATIGUE_STREAK - 1 ? (
+                    <span className="focus-note">已連續 {streak - 1} 次</span>
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
         </article>
       );

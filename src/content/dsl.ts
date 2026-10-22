@@ -31,4 +31,5 @@ export const later = (event: string, min: number, max: number, expire?: number):
   expire,
 });
 export const meet = (npc: string): GameEffect => ({ type: 'meet', npc });
+export const resetStreak = (): GameEffect => ({ type: 'resetStreak' });
 export const die = (cause: string): GameEffect => ({ type: 'die', cause });

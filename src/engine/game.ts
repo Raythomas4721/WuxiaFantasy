@@ -15,22 +15,28 @@ import type {
   Check,
   ChoiceView,
   FocusDef,
+  GameEvent,
   GameState,
   Outcome,
   OutcomeSpec,
   Snapshot,
   StatName,
   TurnResult,
+  VarSpec,
 } from './types';
 
 export const SAVE_VERSION = 1;
 const RUMOR_CHANCE = 0.75;
 const CHILD_SUMMARY = '你在{place}一天天長大。';
+/** 連續第幾次選同一方針開始倦怠，以及每多一次的成長機率折扣（會累乘）。 */
+export const FATIGUE_STREAK = 4;
+const FATIGUE_MULT = 0.5;
 
 export interface NewGameSetup {
   name: string;
-  background: string;
-  region: string;
+  /** 省略時依種子隨機投胎（一般遊玩都省略；測試可指定）。 */
+  background?: string;
+  region?: string;
   trait: string;
   seed: number;
 }
@@ -52,8 +58,13 @@ export function rollTraitOptions(seed: number, achievedEndings: string[]): strin
 
 export function newGame(setup: NewGameSetup): GameState {
   const rng = new Rng(setup.seed);
-  const bg = CONTENT.backgrounds[setup.background];
-  if (!bg) throw new Error(`未知出身：${setup.background}`);
+  const backgroundId =
+    setup.background ??
+    rng.weighted(Object.values(CONTENT.backgrounds).map((b) => ({ item: b.id, weight: b.weight ?? 1 })))!;
+  const regionId = setup.region ?? rng.pick(Object.keys(CONTENT.regions));
+  const bg = CONTENT.backgrounds[backgroundId];
+  if (!bg) throw new Error(`未知出身：${backgroundId}`);
+  if (!CONTENT.regions[regionId]) throw new Error(`未知地區：${regionId}`);
 
   const stats = {} as Record<StatName, number>;
   for (const k of STAT_ORDER) stats[k] = Math.max(1, Math.min(10, rng.int(3, 6) + (bg.statMods[k] ?? 0)));
@@ -79,9 +90,9 @@ export function newGame(setup: NewGameSetup): GameState {
       surname: '',
       birthYear: rng.int(1228, 1233),
       age: 0,
-      background: setup.background,
-      birthRegion: setup.region,
-      region: setup.region,
+      background: backgroundId,
+      birthRegion: regionId,
+      region: regionId,
       trait: setup.trait,
       stats,
       fame: 0,
@@ -232,7 +243,8 @@ function setResult(s: GameState, rng: Rng, result: Omit<TurnResult, 'gains' | 'r
 
 function quietTurn(s: GameState, rng: Rng): void {
   const focus = CONTENT.focuses.find((f) => f.id === s.focus);
-  const text = renderText(focus ? focus.summary : CHILD_SUMMARY, s);
+  const options = focus ? varPool(s, focus.summary) : [];
+  const text = fill(options.length > 0 ? rng.pick(options) : CHILD_SUMMARY, s);
   s.history.push({ turn: s.turn, age: s.player.age, year: currentYear(s), title: '歲月', text });
   pushTags(s, focus?.tags ?? []);
   setResult(s, rng, { title: '歲月', text });
@@ -247,8 +259,25 @@ function presentEvent(s: GameState, rng: Rng): void {
   const prev = s.fired[e.id];
   s.fired[e.id] = { count: (prev?.count ?? 0) + 1, lastYear: currentYear(s) };
   applyEffects(s, e.enterEffects, rng);
-  s.current = { eventId: e.id, text: renderText(e.text, s) };
+  const vars = rollVars(s, e, rng);
+  s.current = { eventId: e.id, text: renderText(e.text, s, vars), vars };
   s.phase = 'event';
+}
+
+/** 素材池：純字串全部可用；條件清單則合併所有條件符合的值。 */
+function varPool(s: GameState, spec: VarSpec): string[] {
+  return spec.flatMap((v) => (typeof v === 'string' ? [v] : checkCondition(s, v.if) ? v.values : []));
+}
+
+/** 組合式事件：每個變數從符合條件的素材池裡抽一個。 */
+function rollVars(s: GameState, e: GameEvent, rng: Rng): Record<string, string> | undefined {
+  if (!e.vars) return undefined;
+  const out: Record<string, string> = {};
+  for (const [key, spec] of Object.entries(e.vars)) {
+    const pool = varPool(s, spec);
+    if (pool.length > 0) out[key] = rng.pick(pool);
+  }
+  return out;
 }
 
 function beginTurn(s: GameState, rng: Rng): void {
@@ -280,16 +309,25 @@ export function focusOptions(s: GameState): FocusDef[] {
   return CONTENT.focuses.filter((f) => Boolean(f.childhood) === child && checkCondition(s, f.conditions));
 }
 
+/** 若這回合選了此方針，會是連續第幾次。 */
+export function streakIfChosen(s: GameState, focusId: string): number {
+  return s.focusStreak?.id === focusId ? s.focusStreak.count + 1 : 1;
+}
+
 export function chooseFocus(state: GameState, focusId: string): GameState {
   if (state.phase !== 'focus') throw new Error('現在不是選擇方針的時候');
   const focus = focusOptions(state).find((f) => f.id === focusId);
   if (!focus) throw new Error(`無法選擇方針：${focusId}`);
   const s = clone(state);
   const rng = new Rng(s.rng);
+  const streak = streakIfChosen(s, focusId);
+  // 連續做同一件事，收穫會越來越少：第四次起每多一次，成長機率再打一次折。
+  const fatigue = streak >= FATIGUE_STREAK ? FATIGUE_MULT ** (streak - FATIGUE_STREAK + 1) : 1;
   for (const g of focus.growth) {
-    if (g.chance === undefined || rng.chance(g.chance)) applyEffects(s, [g.effect], rng);
+    if (rng.chance((g.chance ?? 1) * fatigue)) applyEffects(s, [g.effect], rng);
   }
   s.focus = focusId;
+  s.focusStreak = { id: focusId, count: streak };
   presentEvent(s, rng);
   s.rng = rng.state;
   return s;
@@ -319,7 +357,7 @@ export function choiceViews(s: GameState): ChoiceView[] {
     if (!enabled && c.hidden) continue;
     views.push({
       id: c.id,
-      text: fill(c.text, s),
+      text: fill(c.text, s, s.current.vars),
       enabled,
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
       odds: enabled && c.check ? oddsLabel(checkChance(s, c.check)) : undefined,
@@ -357,15 +395,16 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
   }
   const outcome = resolveOutcome(s, spec);
   applyEffects(s, outcome.effects, rng);
-  const text = renderText(outcome.text, s);
+  const vars = state.current.vars;
+  const text = renderText(outcome.text, s, vars);
   s.history.push({
     turn: s.turn,
     age: s.player.age,
     year: currentYear(s),
     title: e.title,
-    choice: fill(choice.text, s),
+    choice: fill(choice.text, s, vars),
     text,
-    recap: outcome.recap ? { weight: outcome.recap.weight, text: fill(outcome.recap.text, s) } : undefined,
+    recap: outcome.recap ? { weight: outcome.recap.weight, text: fill(outcome.recap.text, s, vars) } : undefined,
   });
   pushTags(s, e.tags ?? []);
   setResult(s, rng, { title: e.title, text, check });

@@ -3,7 +3,7 @@
 import type { GameEvent } from '../../engine/types';
 import {
   add, align, ambition, chiv, danshi, fame, flag, fuyuan, gengu, goTo, health, later, meet, meili, money,
-  rel, train, wuxing, xinxing, xp,
+  rel, resetStreak, train, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const adultEvents: GameEvent[] = [
@@ -116,10 +116,27 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 5,
     conditions: { minAge: 15, any: [{ minSkill: { baicao: 1 } }, { sects: ['yaogu'] }] },
     tags: ['medicine'],
+    vars: {
+      case: [
+        {
+          values: [
+            '一個農婦抱著發燒的孩子跪在你面前。孩子的嘴唇已經發紫了。',
+            '一個老船夫被人抬了進來，腿上的傷口已經發黑流膿。',
+            '一個年輕的鐵匠捂著胸口，說這三天咳出的痰裡都帶著血。',
+            '一個大戶人家的管家半夜來敲門，說老太爺突然口眼歪斜，話都說不出來。',
+            '一個逃難來的孩子倒在你門口，渾身滾燙，身上起滿了紅疹。',
+          ],
+        },
+        { if: { minYear: 1236 }, values: ['一個缺了半隻耳朵的老兵找上門來，說舊傷一到陰雨天就疼得睡不著。'] },
+        {
+          if: { minYear: 1268, maxYear: 1273, regions: ['xiangyang'] },
+          values: ['一個守城的兵被抬到你面前，大腿上插著半截箭，人已經燒得說不出話。'],
+        },
+      ],
+    },
     text: [
-      { if: { minYear: 1268, regions: ['xiangyang'] }, text: '一個守城的兵被抬到你面前，大腿上插著半截箭，人已經燒得說不出話。' },
-      { if: { flagMin: { healed: 3 } }, text: '天還沒亮，門外已經排了七八個人。最前面的是一個抱著發燒孩子的婦人，孩子的嘴唇已經發紫了。' },
-      { text: '一個農婦抱著發燒的孩子跪在你面前。孩子的嘴唇已經發紫了。' },
+      { if: { flagMin: { healed: 3 } }, text: '天還沒亮，你門外已經排起了隊。{case}' },
+      { text: '{case}' },
     ],
     choices: [
       {
@@ -130,7 +147,7 @@ export const adultEvents: GameEvent[] = [
           difficulty: 5,
           skill: 'baicao',
           success: {
-            text: '你守了一夜。天亮時，燒退了。後來每年，總有一籃雞蛋悄悄放在你的門口。',
+            text: '你守了一夜。天亮時，病人的氣色終於緩了過來。後來每年，總有一籃雞蛋悄悄放在你的門口。',
             effects: [add('healed'), chiv(4), fame(3), xp('baicao', 1)],
           },
           failure: {
@@ -212,13 +229,44 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 3,
     conditions: { minAge: 16, maxAge: 55, hasSect: true },
     tags: ['sect'],
-    text: [
-      { if: { sects: ['yaogu'] }, text: '藥谷今年的藥材在半路上被人截了，谷裡派你下山去追查。' },
-      { if: { sects: ['changfeng'] }, text: '總鏢頭派你去教新來的趟子手扎馬步，還要你順便管管那幾個愛賭錢的。' },
-      { if: { sects: ['yijun'] }, text: '韓守義派你去城北，修補被投石砸塌的一段城牆。' },
-      { if: { sects: ['baina'] }, text: '葛百衲讓你去城南的流民棚，給新來的人分粥，順便看看有沒有鬧事的。' },
-      { text: '門裡交給你一件差事。' },
-    ],
+    vars: {
+      task: [
+        {
+          if: { sects: ['yaogu'] },
+          values: [
+            '藥谷今年的藥材在半路上被人截了，谷裡派你下山去追查',
+            '谷主要你去山下的村子看看，那場怪病是不是又回來了',
+            '藥圃裡一株百年老參被人偷挖了，師兄們懷疑是自己人幹的',
+          ],
+        },
+        {
+          if: { sects: ['changfeng'] },
+          values: [
+            '總鏢頭派你去教新來的趟子手扎馬步，順便管管那幾個愛賭錢的',
+            '鏢局接了一趟沒人敢接的鏢，總鏢頭點了你的名',
+            '城裡有人散佈謠言，說長風鏢局監守自盜，總鏢頭要你去查',
+          ],
+        },
+        {
+          if: { sects: ['yijun'] },
+          values: [
+            '韓守義派你去城北，修補被投石砸塌的一段城牆',
+            '義軍的糧倉少了十幾袋米，韓守義要你查個清楚',
+            '城外的村子被搶了，韓守義讓你帶一隊人去接百姓進城',
+          ],
+        },
+        {
+          if: { sects: ['baina'] },
+          values: [
+            '葛百衲讓你去城南的流民棚分粥，順便看看有沒有鬧事的',
+            '一個小乞丐被大戶人家打斷了腿，葛百衲要你去討個公道',
+            '城裡新來了一批流民，葛百衲讓你去安頓他們',
+          ],
+        },
+        { if: { not: { sects: ['yaogu', 'changfeng', 'yijun', 'baina'] } }, values: ['門裡交給你一件差事'] },
+      ],
+    },
+    text: '{task}。',
     choices: [
       {
         id: 'diligent',
@@ -418,12 +466,29 @@ export const adultEvents: GameEvent[] = [
       },
       {
         if: { flagMin: { liao_count: 1 } },
-        text: '你在另一座城的茶館裡又遇見了那個獨眼的說書人。他用那隻好眼睛看了你一下：「又是你啊。」',
+        text: '你在另一座城的茶館裡又遇見了那個獨眼的說書人。他今天講的是{story}。講完了，他用那隻好眼睛看了你一下：「又是你啊。」',
       },
       {
-        text: '茶館裡，一個瞎了一隻眼的老說書人一拍醒木：「上回說到——」滿屋子的人都安靜了下來。他講的是江湖上的事：誰在哪裡打了一架，誰為了誰丟了性命。他說得繪聲繪色，好像每一件都親眼見過。',
+        text: '茶館裡，一個瞎了一隻眼的老說書人一拍醒木：「上回說到——」滿屋子的人都安靜了下來。他今天講的是{story}。他說得繪聲繪色，好像每一件都親眼見過。',
       },
     ],
+    vars: {
+      story: [
+        {
+          values: [
+            '一個書生為了一句承諾，走了三千里路',
+            '一個乞丐在大水裡救了半座城的人',
+            '一個女鏢頭單槍匹馬，護著一趟鏢闖過了三道關卡',
+          ],
+        },
+        { if: { minYear: 1239 }, values: ['藥谷疫變那年，藥王林鶴年三天三夜沒合眼'] },
+        { if: { minYear: 1243 }, values: ['一個醉醺醺的劍客，一劍斬斷了十八支船槳'] },
+        { if: { minYear: 1252 }, values: ['血衣樓如何在一夜之間刺殺了三位掌門'] },
+        { if: { minYear: 1260 }, values: ['釣魚城下，蒙古大汗是怎麼死的'] },
+        { if: { minYear: 1274 }, values: ['鐵槍韓守義在襄陽城南的最後一夜'] },
+        { if: { minFame: 30 }, values: ['一個叫{name}的人——你愣了一下，他講的竟然是你'] },
+      ],
+    },
     choices: [
       {
         id: 'tip',
@@ -531,7 +596,16 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 3,
     conditions: { minAge: 13, minMartial: 1 },
     tags: ['martial'],
-    text: '這幾個月，你的功夫怎麼練都停在原地。一招一式都對，卻總覺得隔著一層什麼。',
+    vars: {
+      block: [
+        '一招一式都對，卻總覺得隔著一層什麼',
+        '丹田裡總有一股氣，怎麼也提不上來',
+        '對著木樁出手時，總是慢了半拍',
+        '你發現自己出招之前，肩膀總會不自覺地先動一下',
+        '同一招練了上千遍，卻越練越彆扭',
+      ],
+    },
+    text: '這幾個月，你的功夫怎麼練都停在原地：{block}。',
     choices: [
       {
         id: 'grind',
@@ -600,7 +674,16 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 2,
     conditions: { minAge: 13, maxAge: 50 },
     tags: ['work'],
-    text: '到了月底，東家說今年生意不好，工錢只能發一半。一起做活的人都看著你。',
+    vars: {
+      boss: ['東家', '工頭', '掌櫃', '船老大'],
+      excuse: [
+        '說今年生意不好，工錢只能發一半',
+        '說貨被雨淋壞了，損失要從工錢裡扣',
+        '已經拖了三個月的工錢，還是只說再等等',
+        '說外地來的人手便宜，要把大家的工錢砍掉三成',
+      ],
+    },
+    text: '到了月底，{boss}{excuse}。一起做活的人都看著你。',
     choices: [
       {
         id: 'accept',
@@ -613,8 +696,8 @@ export const adultEvents: GameEvent[] = [
         check: {
           stats: ['meili'],
           difficulty: 6,
-          success: { text: '你說得在情在理，東家最後還是把工錢補齊了。', effects: [money(30), meili(1)] },
-          failure: { text: '東家翻了臉，把你轟了出去。', effects: [fame(-1)] },
+          success: { text: '你說得在情在理，{boss}最後還是把工錢補齊了。', effects: [money(30), meili(1)] },
+          failure: { text: '{boss}翻了臉，把你轟了出去。', effects: [fame(-1)] },
         },
       },
       {
@@ -623,8 +706,8 @@ export const adultEvents: GameEvent[] = [
         check: {
           stats: ['danshi'],
           difficulty: 6,
-          success: { text: '停工三天，東家撐不住了。大家都說，多虧有你。', effects: [money(20), chiv(3), fame(3)] },
-          failure: { text: '東家找來打手，帶頭的你被打了一頓。', effects: [health(-10), chiv(3)] },
+          success: { text: '停工三天，{boss}撐不住了。大家都說，多虧有你。', effects: [money(20), chiv(3), fame(3)] },
+          failure: { text: '{boss}找來打手，帶頭的你被打了一頓。', effects: [health(-10), chiv(3)] },
         },
       },
     ],
@@ -639,7 +722,8 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 4,
     conditions: { minAge: 15, focus: ['trade'] },
     tags: ['trade'],
-    text: '有人急著出手一批川蜀的藥材，價錢只要市價的一半。來路說不清，但這樣的機會不多。',
+    vars: { goods: ['一批川蜀的藥材', '一批江南的生絲', '一批北邊來的皮貨', '一整船的海鹽', '一批上好的茶磚', '一批瓷器'] },
+    text: '有人急著出手{goods}，價錢只要市價的一半。來路說不清，但這樣的機會不多。',
     choices: [
       {
         id: 'all_in',
@@ -648,7 +732,7 @@ export const adultEvents: GameEvent[] = [
         check: {
           stats: ['fuyuan'],
           difficulty: 6,
-          success: { text: '貨一到江南就被搶購一空。你數錢數到半夜。', effects: [money(180)] },
+          success: { text: '貨一轉手就被搶購一空。你數錢數到半夜。', effects: [money(180)] },
           failure: { text: '貨在半路被官府扣了，說是贓物。你血本無歸。', effects: [money(-80)] },
         },
       },
@@ -753,10 +837,15 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 3,
     conditions: { minAge: 15 },
     tags: ['travel'],
-    text: [
-      { if: { minYear: 1250 }, text: '官道上，幾個兵痞正在搶一個老漢的驢車。老漢跪在地上磕頭，額頭都磕破了。' },
-      { text: '官道上，幾個地痞正在搶一個老漢的驢車。老漢跪在地上磕頭，額頭都磕破了。' },
-    ],
+    vars: {
+      spot: ['官道上', '渡口邊', '市集的角落裡', '一座破廟前', '山路的轉彎處'],
+      culprit: [
+        { values: ['幾個地痞', '一群惡霸家的家丁', '三個攔路的山賊'] },
+        { if: { minYear: 1236 }, values: ['幾個兵痞', '一夥潰散的逃兵'] },
+      ],
+      victim: ['一個老漢的驢車', '一個貨郎的擔子', '一個趕考書生的盤纏', '一對賣藝父女的錢箱', '一個婦人懷裡的錢袋'],
+    },
+    text: '{spot}，{culprit}正在搶{victim}。被搶的人跪在地上苦苦哀求，額頭都磕破了。',
     choices: [
       {
         id: 'fight',
@@ -765,8 +854,8 @@ export const adultEvents: GameEvent[] = [
           stats: ['danshi', 'gengu'],
           difficulty: 6,
           martial: true,
-          success: { text: '三兩下就把人打跑了。老漢拉著你的手，非要你收下一袋棗子。', effects: [fame(4), chiv(4)] },
-          failure: { text: '你寡不敵眾，被打得滿臉是血。好在驢車保住了。', effects: [health(-20), chiv(4)] },
+          success: { text: '三兩下就把人打跑了。被救的人拉著你的手，非要塞給你一點謝禮。', effects: [fame(4), chiv(4)] },
+          failure: { text: '你寡不敵眾，被打得滿臉是血。好在東西保住了。', effects: [health(-20), chiv(4)] },
         },
       },
       {
@@ -776,13 +865,13 @@ export const adultEvents: GameEvent[] = [
           stats: ['wuxing'],
           difficulty: 5,
           success: { text: '那幫人嚇得一哄而散。你自己都忍不住笑了。', effects: [chiv(3), wuxing(1)] },
-          failure: { text: '沒人信你。他們搶了驢車揚長而去。', effects: [chiv(1)] },
+          failure: { text: '沒人信你。他們搶了東西揚長而去。', effects: [chiv(1)] },
         },
       },
       {
         id: 'pass',
         text: '繞路走開',
-        outcome: { text: '你繞過了那段路。身後傳來老漢的哭聲。', effects: [chiv(-2), flag('passed_by')] },
+        outcome: { text: '你繞過了那段路。身後傳來哭聲。', effects: [chiv(-2), flag('passed_by')] },
       },
     ],
   },
@@ -834,12 +923,21 @@ export const adultEvents: GameEvent[] = [
     priority: 6,
     conditions: { minAge: 30, maxAge: 38, hasAmbition: true },
     tags: ['family'],
-    text: '{ageCn}歲這年，你在水盆裡看見了自己的第一根白頭髮。少年時說過的那句話，忽然又浮上了心頭。',
+    vars: {
+      moment: [
+        '你在水盆裡看見了自己的第一根白頭髮',
+        '你在路邊看見一個少年練拳，一招一式都像極了當年的自己',
+        '收拾舊箱子時，你翻出了小時候抓週抓過的那樣東西',
+        '你大病了一場，病好的那個早晨，在床上躺了很久',
+        '一個老朋友喝醉了，拉著你的手，問你還記不記得小時候說過的話',
+      ],
+    },
+    text: '{ageCn}歲這年，{moment}。少年時說過的那句話，忽然又浮上了心頭。',
     choices: [
       {
         id: 'keep',
         text: '初心不改',
-        outcome: { text: '你對著水裡的自己笑了笑。路還長。', effects: [xinxing(1), flag('kept_ambition')] },
+        outcome: { text: '你笑了笑。路還長。', effects: [xinxing(1), flag('kept_ambition')] },
       },
       {
         id: 'peace',
@@ -937,7 +1035,15 @@ export const adultEvents: GameEvent[] = [
     priority: 6,
     conditions: { minAge: 55, maxAge: 66 },
     tags: ['family'],
-    text: '這些年，老朋友一個個走了。某天清晨，你坐在院子裡，忽然想好好想一想，剩下的日子該怎麼過。',
+    vars: {
+      moment: [
+        '這些年，老朋友一個個走了。某天清晨，你一個人坐在院子裡',
+        '某天上台階時，你的膝蓋忽然軟了一下',
+        '你給晚輩講故事，講到一半，忽然想不起那個人的名字',
+        '一場大雪之後，你發現自己已經很久沒有出過遠門了',
+      ],
+    },
+    text: '{moment}。你想，剩下的日子，該怎麼過？',
     choices: [
       {
         id: 'retire',
@@ -971,6 +1077,97 @@ export const adultEvents: GameEvent[] = [
         id: 'wander',
         text: '還走得動，再闖幾年',
         outcome: { text: '你緊了緊包袱，又上路了。', effects: [flag('still_wandering'), danshi(1)] },
+      },
+    ],
+  },
+  // ---- 倦怠：連續選同一方針太多次 ----
+  {
+    id: 'burnout_martial',
+    kind: 'normal',
+    title: '走火入魔',
+    weight: 40,
+    repeatable: true,
+    cooldown: 4,
+    maxTimes: 3,
+    conditions: { focus: ['martial'], minFocusStreak: 4, minMartial: 1 },
+    tags: ['martial'],
+    text: '你已經連著好些年日夜苦練，從沒停過一天。這天運功到一半，胸口忽然一陣絞痛，一股亂竄的真氣直衝頭頂，眼前一片發黑。',
+    choices: [
+      {
+        id: 'force',
+        text: '咬牙把那股氣強行壓下去',
+        check: {
+          stats: ['xinxing'],
+          difficulty: 6,
+          success: {
+            text: '你硬是把那股氣壓了回去。醒來時渾身是汗，功力卻好像又深了一層。',
+            effects: [train('martial', 3), xinxing(1)],
+            recap: { weight: 2, text: '{ageCn}歲那年，你練功險些走火入魔，硬是撐了過來。' },
+          },
+          failure: {
+            text: '你噴出一口血，昏死過去。醒來後，右手有好幾個月使不上力。',
+            effects: [health(-35), gengu(-1), resetStreak()],
+            recap: { weight: 3, text: '{ageCn}歲那年，你練功走火入魔，差點廢了一隻手。' },
+          },
+        },
+      },
+      {
+        id: 'stop',
+        text: '立刻散功，停下來',
+        outcome: {
+          text: '你散去了那口氣，人虛脫了好幾天。你忽然想起有人說過：練武最怕的不是慢，是急。',
+          effects: [health(-10), xinxing(2), resetStreak()],
+        },
+      },
+      {
+        id: 'doctor',
+        text: '趕緊去找大夫',
+        requires: { minMoney: 30 },
+        outcome: {
+          text: '大夫替你施了針，搖頭說：「再這樣練下去，命都要練沒了。」',
+          effects: [money(-30), health(-5), xinxing(1), resetStreak()],
+        },
+      },
+    ],
+  },
+  {
+    id: 'burnout',
+    kind: 'normal',
+    title: '倦',
+    weight: 30,
+    repeatable: true,
+    cooldown: 4,
+    maxTimes: 3,
+    conditions: { minAge: 13, minFocusStreak: 4, not: { focus: ['martial'] } },
+    tags: ['mood'],
+    vars: {
+      weary: [
+        { if: { focus: ['study'] }, values: ['書上的字，你讀著讀著就糊成了一片。你發現自己已經好幾個月沒出過門了'] },
+        { if: { focus: ['work'] }, values: ['每天睜開眼就是做活，做完活倒頭就睡。有一天，你忽然想不起上回笑是什麼時候'] },
+        { if: { focus: ['trade'] }, values: ['算盤打得太久，連做夢都在算帳。你數著錢，卻想不起自己要這麼多錢做什麼'] },
+        { if: { focus: ['travel'] }, values: ['路走得太久，鞋子磨破了好幾雙。你開始想念一個能讓自己停下來的地方'] },
+        { if: { focus: ['social'] }, values: ['酒喝了太多，朋友交了一大堆。可是夜深人靜時，你想不出一個能說真心話的人'] },
+        { if: { focus: ['medicine'] }, values: ['你已經好幾個月沒睡過一整夜。今天替病人把脈時，你的手竟然在抖'] },
+        { if: { focus: ['sect'] }, values: ['門裡的差事一件接一件，你開始懷疑，自己到底在為了什麼忙'] },
+        { if: { focus: ['rest'] }, values: ['閒得太久，你覺得骨頭都快生鏽了，整個人懶洋洋地提不起勁'] },
+      ],
+    },
+    text: '{weary}。',
+    choices: [
+      {
+        id: 'push',
+        text: '咬牙繼續',
+        outcome: { text: '你撐了下去。只是從那以後，你常常在半夜醒來。', effects: [xinxing(1), health(-15)] },
+      },
+      {
+        id: 'walk',
+        text: '放下手邊的事，出門走走',
+        outcome: { text: '你一個人走了好幾天的山路。回來的時候，心裡鬆快了不少。', effects: [health(10), fuyuan(1), resetStreak()] },
+      },
+      {
+        id: 'drink',
+        text: '找個老朋友，喝一場',
+        outcome: { text: '你們喝到天亮，什麼都說了，又好像什麼都沒說。', effects: [meili(1), money(-5), health(5), resetStreak()] },
       },
     ],
   },

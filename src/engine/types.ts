@@ -32,6 +32,8 @@ export interface Condition {
   minHealth?: number;
   maxHealth?: number;
   focus?: string[];
+  /** 本回合的方針已連續選了至少這麼多次（含本回合）。 */
+  minFocusStreak?: number;
   sects?: string[];
   hasSect?: boolean;
   ambitions?: string[];
@@ -49,6 +51,12 @@ export interface Condition {
 }
 
 export type TextSpec = string | { if?: Condition; text: string }[];
+
+/**
+ * 組合式事件的素材。事件觸發時每個變數隨機抽一個值，可在敘述、選項、結果、回顧中以 {名稱} 引用。
+ * 寫成條件清單時，所有條件符合的值會合併成同一個池子。
+ */
+export type VarSpec = string[] | { if?: Condition; values: string[] }[];
 
 export type GameEffect =
   | { type: 'stat'; stat: StatName; delta: number }
@@ -68,6 +76,8 @@ export type GameEffect =
   | { type: 'ambition'; ambition: string }
   | { type: 'schedule'; event: string; after: [number, number]; expire?: number }
   | { type: 'meet'; npc: string }
+  /** 中斷連續方針的計數，例如停下來休息之後。 */
+  | { type: 'resetStreak' }
   | { type: 'die'; cause: string };
 
 export interface Recap {
@@ -123,6 +133,7 @@ export interface GameEvent {
   maxTimes?: number;
   tags?: string[];
   rare?: boolean;
+  vars?: Record<string, VarSpec>;
   enterEffects?: GameEffect[];
   choices: GameChoice[];
 }
@@ -137,6 +148,8 @@ export interface BackgroundDef {
   desc: string;
   statMods: Partial<Record<StatName, number>>;
   money: number;
+  /** 隨機投胎時的相對機率，預設 1。 */
+  weight?: number;
   effects?: GameEffect[];
 }
 
@@ -164,7 +177,8 @@ export interface FocusDef {
   conditions?: Condition;
   tags: string[];
   growth: { effect: GameEffect; chance?: number }[];
-  summary: TextSpec;
+  /** 平淡歲月的摘要，從符合條件的句子裡隨機挑一句。 */
+  summary: VarSpec;
 }
 
 export interface SkillDef {
@@ -322,7 +336,9 @@ export interface GameState {
   recentTags: string[][];
   shownRumors: string[];
   focus?: string;
-  current?: { eventId: string; text: string };
+  /** 連續選同一方針的次數，用於邊際遞減與倦怠事件。 */
+  focusStreak?: { id: string; count: number };
+  current?: { eventId: string; text: string; vars?: Record<string, string> };
   result?: TurnResult;
   history: HistoryEntry[];
   snapshot?: Snapshot;
