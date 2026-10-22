@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, align, ambition, chiv, danshi, fame, flag, fuyuan, gengu, goTo, health, later, meet, meili, money,
+  add, align, ambition, chiv, danshi, die, fame, flag, fuyuan, gengu, goTo, health, later, meet, meili, money,
   rel, resetStreak, train, wuxing, xinxing, xp,
 } from '../dsl';
 
@@ -1091,7 +1091,13 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 3,
     conditions: { focus: ['martial'], minFocusStreak: 4, minMartial: 1 },
     tags: ['martial'],
-    text: '你已經連著好些年日夜苦練，從沒停過一天。這天運功到一半，胸口忽然一陣絞痛，一股亂竄的真氣直衝頭頂，眼前一片發黑。',
+    text: [
+      {
+        if: { maxHealth: 60 },
+        text: '你已經連著好些年日夜苦練，身上的舊傷卻一直沒好全。這天運功到一半，胸口忽然一陣絞痛，一股亂竄的真氣直衝頭頂，眼前一片發黑。你隱約覺得，這一次和以往不一樣。',
+      },
+      { text: '你已經連著好些年日夜苦練，從沒停過一天。這天運功到一半，胸口忽然一陣絞痛，一股亂竄的真氣直衝頭頂，眼前一片發黑。' },
+    ],
     choices: [
       {
         id: 'force',
@@ -1104,11 +1110,19 @@ export const adultEvents: GameEvent[] = [
             effects: [train('martial', 3), xinxing(1)],
             recap: { weight: 2, text: '{ageCn}歲那年，你練功險些走火入魔，硬是撐了過來。' },
           },
-          failure: {
-            text: '你噴出一口血，昏死過去。醒來後，右手有好幾個月使不上力。',
-            effects: [health(-35), gengu(-1), resetStreak()],
-            recap: { weight: 3, text: '{ageCn}歲那年，你練功走火入魔，差點廢了一隻手。' },
-          },
+          failure: [
+            {
+              // 身子早已虧空的人，撐不過這一次。
+              if: { maxHealth: 60 },
+              text: '你噴出一口血，那股真氣在經脈裡橫衝直撞，再也收不回來。你倒下的時候，手裡還握著練了半輩子的兵器。',
+              effects: [die('qi')],
+            },
+            {
+              text: '你噴出一口血，昏死過去。醒來後，右手有好幾個月使不上力。',
+              effects: [health(-35), gengu(-1), resetStreak()],
+              recap: { weight: 3, text: '{ageCn}歲那年，你練功走火入魔，差點廢了一隻手。' },
+            },
+          ],
         },
       },
       {

@@ -32,11 +32,19 @@ export const endings: EndingDef[] = [
   {
     id: 'zaoshi',
     title: '英年早逝',
-    priority: 80,
+    priority: 85,
     conditions: { flags: ['died_young'] },
     hint: '五十歲之前離開人世。',
     text: [
       { if: { minAge: 0, maxAge: 18 }, text: '你還沒來得及長大。那些想做的事、想見的人，都留在了來不及的地方。' },
+      {
+        if: { flags: ['died_of_illness'] },
+        text: '那場病從你出生就跟著你，最後還是把你帶走了。你這一生都在跟它賽跑，跑得比所有人以為的都遠。',
+      },
+      {
+        if: { flags: ['died_of_qi'] },
+        text: '你太想變強了。那股收不回來的真氣，是你這一生最後一次不肯停下。',
+      },
       { text: '你走得太早了。江湖還很大，你只走了一小段。' },
     ],
   },
@@ -167,6 +175,7 @@ export const deathCauses: Record<string, string> = {
   natural: '壽終正寢',
   illness: '病重不治',
   injury: '傷重不治',
+  qi: '練功走火入魔，經脈盡斷而死',
   xiangyang: '戰死於襄陽城南的巷子裡',
 };
 

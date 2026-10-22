@@ -123,7 +123,12 @@ export const npcs: Record<string, NpcDef> = {
     name: '巴特爾',
     title: '白翎箭',
     desc: '蒙古神箭手，箭袋裡總插著一排白色的箭羽。',
-    presence: [],
+    // 少年時隨使者到淮水邊的榷場；後來隨軍南下，到過釣魚城和襄陽。
+    presence: [
+      { from: 1240, to: 1257, regions: ['xiangyang'] },
+      { from: 1258, to: 1260, regions: ['shu'] },
+      { from: 1268, to: 1273, regions: ['xiangyang'] },
+    ],
     codex: true,
   },
   lao_liao: {

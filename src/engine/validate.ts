@@ -227,7 +227,17 @@ export function validateContent(content: Content): ValidationReport {
   for (const [f, where] of readFlags) {
     // dead_<npc> 由內容設定，也可能只靠 deathYear；只要對應人物存在就接受。
     if (f.startsWith('dead_') && has(content.npcs, f.slice(5))) continue;
+    // died_of_<死因> 由引擎在死亡時設定。
+    if (f.startsWith('died_of_') && has(content.deathCauses, f.slice(8))) continue;
     if (!setFlags.has(f)) errors.push(`${where}：讀取了從未被設定的旗標 ${f}`);
+  }
+
+  // ---- 名俠 ----
+  for (const npc of Object.values(content.npcs)) {
+    if (npc.codex && npc.presence.length === 0) errors.push(`名俠 ${npc.id} 沒有出沒表，永遠不會被判定在場`);
+  }
+  for (const { e, where } of effects) {
+    if (e.type === 'die' && !has(content.deathCauses, e.cause)) errors.push(`${where}：未知死因 ${e.cause}`);
   }
 
   // ---- 禁用名稱 ----

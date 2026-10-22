@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, ambition, chiv, danshi, fame, flag, fuyuan, goTo, health, join, later, master, meet, meili, money,
+  add, ambition, chiv, danshi, die, fame, flag, fuyuan, goTo, health, join, later, master, meet, meili, money,
   rel, wuxing, xinxing, xp,
 } from '../dsl';
 
@@ -640,7 +640,7 @@ export const youthEvents: GameEvent[] = [
     priority: 5,
     conditions: { minAge: 17, maxAge: 26, flags: ['hidden_illness'], notFlags: ['illness_cured'] },
     tags: ['medicine'],
-    text: '那年冬天，胎裡帶來的病根又發作了。你咳得整夜睡不著，咳出的痰裡帶著血絲。',
+    text: '那年冬天，胎裡帶來的病根又發作了。你咳得整夜睡不著，咳出的痰裡帶著血絲。鎮上的大夫搖著頭說：「這回不比從前，再拖下去，怕是要出人命。」',
     choices: [
       {
         id: 'yaogu',
@@ -688,9 +688,17 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'endure',
         text: '咬牙硬撐',
-        outcome: {
-          text: '你撐過了那個冬天。從此你知道，這副身子骨經不起太多折騰。',
-          effects: [health(-30), xinxing(2), flag('endured_illness')],
+        check: {
+          stats: ['gengu', 'xinxing'],
+          difficulty: 6,
+          success: {
+            text: '你撐過了那個冬天。從此你知道，這副身子骨經不起太多折騰。',
+            effects: [health(-30), xinxing(2), flag('endured_illness')],
+          },
+          failure: {
+            text: '開春的時候，你已經下不了床了。窗外的桃花開得很好，你看了很久，想起小時候答應過的那些事。',
+            effects: [die('illness')],
+          },
         },
       },
     ],

@@ -26,6 +26,7 @@ export function killPlayer(s: GameState, cause: string): void {
   s.player.alive = false;
   s.deathCause = cause;
   s.flags.dead = true;
+  s.flags[`died_of_${cause}`] = true;
   if (s.player.age < 50) s.flags.died_young = true;
 }
 

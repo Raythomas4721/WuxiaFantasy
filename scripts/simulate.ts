@@ -23,6 +23,9 @@ let totalTurns = 0;
 let totalEvents = 0;
 let totalFocusPicks = 0;
 const maxMartial: number[] = [];
+const youngDeathCauses = new Map<string, number>();
+const alignments: number[] = [];
+const finalMoney: number[] = [];
 const distinctEndingsFirstFive: number[] = [];
 
 for (let i = 0; i < runs; i++) {
@@ -41,7 +44,13 @@ for (let i = 0; i < runs; i++) {
     if (npc.codex && state.flags[`met_${npc.id}`]) metCount.set(npc.name, (metCount.get(npc.name) ?? 0) + 1);
   }
   totalAge += state.player.age;
-  if (state.flags.died_young) youngDeaths += 1;
+  if (state.flags.died_young) {
+    youngDeaths += 1;
+    const cause = state.deathCause ?? 'natural';
+    youngDeathCauses.set(cause, (youngDeathCauses.get(cause) ?? 0) + 1);
+  }
+  alignments.push(state.player.alignment);
+  finalMoney.push(state.player.money);
   totalTurns += state.turn;
   totalEvents += events.length;
   maxMartial.push(martialLevel(state));
@@ -65,7 +74,9 @@ line(`連玩五輪平均看到 ${(distinctEndingsFirstFive.reduce((a, b) => a + 
 line('\n【結局分布】');
 for (const en of [...CONTENT.endings].sort((a, b) => b.priority - a.priority)) {
   const n = endingCount.get(en.title) ?? 0;
-  const flagMark = n / runs > 0.3 && en.priority > 0 ? '  ← 偏高' : n === 0 ? '  ← 從未出現' : '';
+  // v0.4 目標：江湖過客 ≤ 20%，其他結局 2%～25%（設計文件 v0.4 §6.3）
+  const max = en.priority === 0 ? 0.2 : 0.25;
+  const flagMark = n === 0 ? '  ← 從未出現' : n / runs > max ? '  ← 偏高' : n / runs < 0.02 ? '  ← 偏低' : '';
   line(`  ${en.title.padEnd(6, '　')} ${pct(n)}${flagMark}`);
 }
 
@@ -77,11 +88,28 @@ for (const a of Object.values(CONTENT.ambitions)) {
 
 line('\n【名俠相遇率】');
 for (const npc of Object.values(CONTENT.npcs).filter((n) => n.codex)) {
-  line(`  ${npc.name.padEnd(4, '　')} ${pct(metCount.get(npc.name) ?? 0)}`);
+  const n = metCount.get(npc.name) ?? 0;
+  line(`  ${npc.name.padEnd(4, '　')} ${pct(n)}${n / runs < 0.2 ? '  ← 低於 20%' : ''}`);
 }
 
 line('\n【武學境界分布】');
 for (let lv = 0; lv <= 5; lv++) line(`  ${lv} 級 ${pct(maxMartial.filter((m) => m === lv).length)}`);
+line(`  4 級以上 ${pct(maxMartial.filter((m) => m >= 4).length)}（目標 ≥ 25%）`);
+
+line('\n【五十歲前的死因】');
+for (const [cause, n] of [...youngDeathCauses].sort((a, b) => b[1] - a[1])) {
+  line(`  ${CONTENT.deathCauses[cause] ?? cause} ${pct(n)}`);
+}
+
+line('\n【正邪分布】（結局時）');
+line(`  ≤ −30（邪）     ${pct(alignments.filter((a) => a <= -30).length)}`);
+line(`  −29～29（尋常） ${pct(alignments.filter((a) => a > -30 && a < 30).length)}`);
+line(`  ≥ 30（正）      ${pct(alignments.filter((a) => a >= 30).length)}`);
+
+line('\n【錢】（結局時）');
+const sortedMoney = [...finalMoney].sort((a, b) => a - b);
+const avgMoney = Math.round(finalMoney.reduce((a, b) => a + b, 0) / runs);
+line(`  平均 ${avgMoney} 文・中位數 ${sortedMoney[Math.floor(runs / 2)]} 文・≥ 500 文 ${pct(finalMoney.filter((m) => m >= 500).length)}`);
 
 line('\n【事件觸發率】（每輪人生中出現的比例）');
 const rows = CONTENT.events.map((e) => ({ id: e.id, title: e.title, n: eventCount.get(e.id) ?? 0 }));
