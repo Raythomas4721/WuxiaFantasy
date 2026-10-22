@@ -11,6 +11,8 @@ export interface AutoplayResult {
   events: string[];
   /** 每個事件實際顯示的敘述文字，用來量測文字層級的重複。 */
   texts: string[];
+  /** 這一生選了幾次方針。 */
+  focusPicks: number;
 }
 
 export interface AutoplayOptions {
@@ -29,10 +31,12 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
   let s = startLife(newGame(randomSetup(seed)));
   const events: string[] = [];
   const texts: string[] = [];
+  let focusPicks = 0;
   for (let step = 0; step < MAX_STEPS && s.phase !== 'ended'; step++) {
     if (s.phase === 'focus') {
       const focuses = focusOptions(s);
       const preferred = focuses.find((f) => f.id === options.preferFocus);
+      focusPicks += 1;
       s = chooseFocus(s, (preferred ?? policy.pick(focuses)).id);
     } else if (s.phase === 'event') {
       events.push(s.current!.eventId);
@@ -46,5 +50,5 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
     }
   }
   if (s.phase !== 'ended') throw new Error(`第 ${seed} 號人生沒有在 ${MAX_STEPS} 步內結束`);
-  return { state: s, events, texts };
+  return { state: s, events, texts, focusPicks };
 }

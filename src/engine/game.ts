@@ -1,7 +1,7 @@
 // 遊戲流程：每個公開函式都接收舊狀態、回傳新狀態，不修改傳入的物件。
 //
 // 一回合：intro → (focus) → event → result → 下一回合 … → ended
-// 七歲以前沒有方針，直接進事件。
+// 七歲以前沒有方針，直接進事件。方針選定後會延續，只在新階段、轉折、倦怠或玩家要求時重選。
 
 import { CONTENT } from '../content';
 import { checkCondition, currentYear, martialLevel, skillLevel, unmetHints } from './conditions';
@@ -10,10 +10,12 @@ import { applyEffects, killPlayer } from './effects';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
 import { getEvent, selectEvent } from './select';
+import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
 import type {
   Check,
   ChoiceView,
+  FocusContext,
   FocusDef,
   GameEvent,
   GameState,
@@ -283,11 +285,53 @@ function rollVars(s: GameState, e: GameEvent, rng: Rng): Record<string, string> 
 function beginTurn(s: GameState, rng: Rng): void {
   s.turn += 1;
   s.snapshot = takeSnapshot(s);
-  s.focus = undefined;
   s.current = undefined;
   s.result = undefined;
-  if (s.player.age < 7) presentEvent(s, rng);
-  else s.phase = 'focus';
+  if (s.player.age < 7) {
+    presentEvent(s, rng);
+    return;
+  }
+  s.focusPrompt = focusPrompt(s);
+  s.wantsFocusChange = undefined;
+  if (s.focusPrompt) s.phase = 'focus';
+  else runFocus(s, rng, s.focus!);
+}
+
+function focusContext(s: GameState): FocusContext {
+  const p = s.player;
+  return { stage: stageIndex(p.age), sect: p.sect, region: p.region, ambition: p.ambition, masters: p.masters.length };
+}
+
+/** 這回合是否要重新選方針；不用的話回傳 undefined，沿用原方針。 */
+function focusPrompt(s: GameState): GameState['focusPrompt'] {
+  const now = focusContext(s);
+  const before = s.focusContext;
+  const current = s.focus ? focusOptions(s).find((f) => f.id === s.focus) : undefined;
+  const stageText = LIFE_STAGES[now.stage].opening;
+  if (!before || !s.focus || before.stage !== now.stage) return { reason: 'stage', text: stageText };
+  if (!current) {
+    const name = CONTENT.focuses.find((f) => f.id === s.focus)?.name ?? '';
+    return { reason: 'invalid', text: `「${name}」的日子，已經過不下去了。往後得另作打算。` };
+  }
+  if (before.sect !== now.sect) {
+    return {
+      reason: 'sect',
+      text: now.sect ? `拜入${CONTENT.sects[now.sect].name}之後，日子不一樣了。` : '離開師門之後，一切都得重新打算。',
+    };
+  }
+  if (before.masters !== now.masters) return { reason: 'master', text: '有了師父，往後的日子該怎麼過，得重新想想。' };
+  if (before.ambition !== now.ambition) {
+    const amb = now.ambition ? CONTENT.ambitions[now.ambition] : undefined;
+    return { reason: 'ambition', text: amb ? `你立志「${amb.name}」。要怎麼走到那裡？` : '你的心意變了。' };
+  }
+  if (before.region !== now.region) {
+    return { reason: 'region', text: `來到${CONTENT.regions[now.region].name}，人生地不熟，得重新打算。` };
+  }
+  if (s.wantsFocusChange) return { reason: 'manual', text: '你停下腳步，想了想往後的日子。' };
+  if (streakIfChosen(s, s.focus) === FATIGUE_STREAK) {
+    return { reason: 'fatigue', text: `「${current.name}」的日子過了好些年，你漸漸有些倦了。也許該換個活法？` };
+  }
+  return undefined;
 }
 
 function finish(s: GameState): void {
@@ -316,10 +360,26 @@ export function streakIfChosen(s: GameState, focusId: string): number {
 
 export function chooseFocus(state: GameState, focusId: string): GameState {
   if (state.phase !== 'focus') throw new Error('現在不是選擇方針的時候');
-  const focus = focusOptions(state).find((f) => f.id === focusId);
-  if (!focus) throw new Error(`無法選擇方針：${focusId}`);
+  if (!focusOptions(state).some((f) => f.id === focusId)) throw new Error(`無法選擇方針：${focusId}`);
   const s = clone(state);
   const rng = new Rng(s.rng);
+  s.focusContext = focusContext(s);
+  s.focusPrompt = undefined;
+  runFocus(s, rng, focusId);
+  s.rng = rng.state;
+  return s;
+}
+
+/** 結果畫面上的「換個活法」：下一回合重新選方針。 */
+export function requestFocusChange(state: GameState): GameState {
+  if (state.phase !== 'result') throw new Error('現在不能改變方針');
+  return { ...state, wantsFocusChange: true };
+}
+
+/** 照方針過一段日子：成長（連續太久會遞減），然後抽事件。 */
+function runFocus(s: GameState, rng: Rng, focusId: string): void {
+  const focus = CONTENT.focuses.find((f) => f.id === focusId);
+  if (!focus) throw new Error(`未知方針：${focusId}`);
   const streak = streakIfChosen(s, focusId);
   // 連續做同一件事，收穫會越來越少：第四次起每多一次，成長機率再打一次折。
   const fatigue = streak >= FATIGUE_STREAK ? FATIGUE_MULT ** (streak - FATIGUE_STREAK + 1) : 1;
@@ -329,8 +389,6 @@ export function chooseFocus(state: GameState, focusId: string): GameState {
   s.focus = focusId;
   s.focusStreak = { id: focusId, count: streak };
   presentEvent(s, rng);
-  s.rng = rng.state;
-  return s;
 }
 
 export function checkChance(s: GameState, check: Check): number {

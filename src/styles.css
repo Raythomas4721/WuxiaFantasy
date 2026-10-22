@@ -289,6 +289,160 @@ small {
   color: var(--ink-3);
 }
 
+.focus-heading {
+  font-size: 1rem;
+  color: var(--ink-2);
+  margin: 1.5rem 0 0.75rem;
+}
+
+.focus-card.current {
+  border-color: var(--ink-3);
+}
+
+.focus-current {
+  margin-left: 0.5rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+  vertical-align: 0.15em;
+}
+
+.focus-advances {
+  font-size: 0.8rem;
+  color: var(--gold);
+}
+
+/* ---------- 章節開場 ---------- */
+
+.chapter-head {
+  text-align: center;
+  padding: 0.5rem 0 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.chapter-age {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  letter-spacing: 0.3em;
+}
+
+.chapter-title {
+  font-size: 1.7rem;
+  letter-spacing: 0.25em;
+  margin: 0.2rem 0 0.6rem;
+}
+
+.chapter-opening {
+  margin: 0;
+  color: var(--ink-2);
+  font-size: 1.05rem;
+}
+
+.chapter-looking {
+  list-style: none;
+  padding: 0;
+  margin: 1rem auto 0;
+  max-width: 34rem;
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.chapter-looking li::before {
+  content: '— ';
+  color: var(--ink-3);
+}
+
+.chapter-where {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+
+/* ---------- 心事 ---------- */
+
+.threads {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--paper);
+  border-radius: 0 6px 6px 0;
+}
+
+.threads-label {
+  font-size: 0.8rem;
+  color: var(--accent);
+  letter-spacing: 0.3em;
+  margin-bottom: 0.3rem;
+}
+
+.threads ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.thread {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.75rem;
+  line-height: 1.6;
+}
+
+.thread-title {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.thread-text {
+  color: var(--ink-2);
+  flex: 1 1 14rem;
+}
+
+.thread-mark {
+  margin-right: 0.3rem;
+  color: var(--accent);
+}
+
+.thread.ambition.done .thread-mark,
+.thread.ambition.done .thread-title {
+  color: var(--good);
+}
+
+.threads.compact {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.threads.compact .thread {
+  flex-direction: column;
+  font-size: 0.85rem;
+}
+
+.threads.compact .thread-text {
+  flex: none;
+}
+
+/* ---------- 換個活法 ---------- */
+
+.change-focus {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.3;
+}
+
+.change-focus.weary small {
+  color: var(--bad);
+}
+
 .fate-tags {
   display: flex;
   flex-wrap: wrap;
@@ -656,6 +810,18 @@ small {
   margin: 0.2rem 0 0;
   color: var(--ink-2);
   font-size: 0.95rem;
+}
+
+.timeline-chapter {
+  font-size: 0.95rem;
+  color: var(--accent);
+  letter-spacing: 0.2em;
+  padding: 1.25rem 0 0.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.timeline-entry:first-child .timeline-chapter {
+  padding-top: 0;
 }
 
 .timeline-choice {

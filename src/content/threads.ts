@@ -1,0 +1,160 @@
+// 心事：玩家看得到的進行中劇情線。只描述已埋下的伏筆，不劇透結果。
+// advances 列出會推進這條線的事件；方針卡上的「可能推進」由這些事件的 tags 自動算出。
+
+import type { ThreadDef } from '../engine/types';
+
+export const threads: ThreadDef[] = [
+  // ---- 個人的恩怨與牽掛 ----
+  {
+    id: 'feud',
+    title: '血仇',
+    priority: 90,
+    conditions: { flags: ['blood_feud'], notFlags: ['revenge_done', 'feud_resolved'] },
+    text: '殺父的疤臉還活在世上。這筆血債，你遲早要討回來。',
+    advances: ['revenge_chance'],
+  },
+  {
+    id: 'illness',
+    title: '胎裡的病',
+    priority: 80,
+    conditions: { flags: ['hidden_illness'], notFlags: ['illness_cured'], maxAge: 26, notFired: ['illness_relapse'] },
+    text: '你胎裡帶的病一直沒斷根，不知道哪天又會發作。',
+    advances: ['illness_relapse'],
+  },
+  {
+    id: 'shen_letter',
+    title: '未送的信',
+    priority: 75,
+    conditions: { scheduled: ['shen_letter_late'] },
+    text: '沈孤舟臨終託你的那封信，還揣在你懷裡，沒有送到雲棲庵。',
+    advances: ['shen_letter_late'],
+  },
+  {
+    id: 'shen',
+    title: '醉劍',
+    priority: 60,
+    conditions: { flagMin: { shen_wine: 1 }, notFlags: ['shen_friend', 'shen_refused'], npcAlive: ['shen_guzhou'], maxAge: 55, maxYear: 1270 },
+    text: [
+      { if: { npcPresent: 'shen_guzhou' }, text: '那個嗜酒如命的劍客還在附近的酒樓出沒。再請他喝一碗？' },
+      { text: '那個嗜酒如命的劍客，聽說常在江南、蜀中一帶的酒樓喝酒。' },
+    ],
+    advances: ['shen_wine_2', 'shen_wine_3'],
+  },
+  {
+    id: 'shen_friend',
+    title: '醉劍的心事',
+    priority: 50,
+    conditions: { flags: ['shen_friend'], notFlags: ['dead_shen_guzhou'], maxYear: 1270 },
+    text: '沈孤舟喝醉時說過，他這輩子欠了一個人一句話。',
+    advances: ['shen_last_request'],
+  },
+  {
+    id: 'companion',
+    title: '{companion}的約定',
+    priority: 55,
+    conditions: { flags: ['companion_promise'], scheduled: ['companion_return'] },
+    text: '{companion}臨走前說過：總有一天會回來。',
+    advances: ['companion_return'],
+  },
+  {
+    id: 'lu_ping',
+    title: '故人',
+    priority: 30,
+    conditions: { flags: ['saved_lu'], scheduled: ['old_friend_visit'], minAge: 13 },
+    text: '當年你在私塾外護過的陸平，不知道後來怎麼樣了。',
+    advances: ['old_friend_visit'],
+  },
+  {
+    id: 'rival',
+    title: '冤家',
+    priority: 40,
+    conditions: { flags: ['rival_bully'], minAge: 13, maxAge: 24, notFired: ['bully_returns'] },
+    text: '當年在私塾外帶頭欺負人的{rival}，聽說還記著你。',
+    advances: ['bully_returns'],
+  },
+  {
+    id: 'sworn',
+    title: '結義',
+    priority: 45,
+    conditions: { flags: ['sworn'], notFlags: ['sworn_resolved'] },
+    text: '你和秦遠拜過把子。江湖險惡，不知道他過得好不好。',
+    advances: ['sworn_help'],
+  },
+  // ---- 錯過就沒有的機緣 ----
+  {
+    id: 'yaogu',
+    title: '藥谷之約',
+    priority: 65,
+    conditions: { scheduled: ['yaogu_retry'], hasSect: false, maxAge: 35 },
+    text: [
+      { if: { regions: ['shu'] }, text: '濟世藥谷的林鶴年說過：過兩年再來。' },
+      { text: '濟世藥谷的林鶴年說過：過兩年再來。可藥谷在蜀中，你得先回到那裡。' },
+    ],
+    advances: ['yaogu_retry'],
+  },
+  {
+    id: 'baina',
+    title: '百衲會',
+    priority: 35,
+    conditions: { flags: ['helped_baina'], hasSect: false, maxAge: 40, maxYear: 1274, notFired: ['baina_join'] },
+    text: [
+      { if: { npcPresent: 'ge_baina' }, text: '葛百衲說過，百衲會的門永遠為你開著。' },
+      { text: '葛百衲說過，百衲會的門永遠為你開著。他們在襄陽落腳。' },
+    ],
+    advances: ['baina_join'],
+  },
+  {
+    id: 'bater',
+    title: '草原之約',
+    priority: 30,
+    conditions: { flags: ['grassland_pact'], maxAge: 35, maxYear: 1255, notFired: ['border_rumor_bater'] },
+    text: '草原上的巴特爾說過：朋友就是朋友，隔著幾座山也一樣。',
+    advances: ['border_rumor_bater'],
+  },
+  {
+    id: 'militia',
+    title: '襄陽義軍',
+    priority: 70,
+    conditions: {
+      ambitions: ['nation'],
+      minYear: 1250,
+      maxYear: 1273,
+      hasSect: false,
+      notFlags: ['defended_city'],
+      notFired: ['xiangyang_militia'],
+    },
+    text: [
+      { if: { regions: ['xiangyang'] }, text: '鐵槍韓守義正在襄陽城裡招募義軍。' },
+      { text: '聽說襄陽有個叫韓守義的人在招募義軍。要守國門，得先到襄陽去。' },
+    ],
+    advances: ['xiangyang_militia'],
+  },
+  // ---- 時代的鐘聲（史實） ----
+  {
+    id: 'era_shu',
+    title: '蜀中烽火',
+    priority: 20,
+    conditions: { minYear: 1258, maxYear: 1259 },
+    text: [
+      { if: { regions: ['shu'] }, text: '蒙古大汗親率大軍入蜀，合州釣魚城首當其衝。' },
+      { text: '北邊傳來消息：蒙古大汗親率大軍南下，直撲蜀中。' },
+    ],
+    advances: ['diaoyu'],
+  },
+  {
+    id: 'era_xiangyang',
+    title: '襄陽告急',
+    priority: 20,
+    conditions: { minYear: 1268, maxYear: 1273 },
+    text: '蒙古大軍把襄陽圍得水洩不通，城外的堡壘一座接著一座。',
+    advances: ['siege_xiangyang', 'xiangyang_call'],
+  },
+  {
+    id: 'era_linan',
+    title: '兵臨臨安',
+    priority: 20,
+    conditions: { minYear: 1274, maxYear: 1276 },
+    text: '襄陽陷落之後，元軍順江而下，直逼臨安。',
+    advances: ['linan_fall'],
+  },
+];

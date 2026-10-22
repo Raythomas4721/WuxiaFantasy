@@ -21,11 +21,13 @@ let totalAge = 0;
 let youngDeaths = 0;
 let totalTurns = 0;
 let totalEvents = 0;
+let totalFocusPicks = 0;
 const maxMartial: number[] = [];
 const distinctEndingsFirstFive: number[] = [];
 
 for (let i = 0; i < runs; i++) {
-  const { state, events } = playLife(baseSeed + i);
+  const { state, events, focusPicks } = playLife(baseSeed + i);
+  totalFocusPicks += focusPicks;
   for (const id of events) eventCount.set(id, (eventCount.get(id) ?? 0) + 1);
   const ending = state.ending!;
   endingCount.set(ending.title, (endingCount.get(ending.title) ?? 0) + 1);
@@ -57,7 +59,7 @@ const pct = (n: number) => `${((n / runs) * 100).toFixed(1).padStart(5)}%`;
 const line = (s = '') => console.log(s);
 
 line(`模擬 ${runs} 輪人生（種子 ${baseSeed}–${baseSeed + runs - 1}）`);
-line(`平均壽命 ${(totalAge / runs).toFixed(1)} 歲・五十歲前死亡 ${pct(youngDeaths)}・平均 ${(totalTurns / runs).toFixed(1)} 回合・平均 ${(totalEvents / runs).toFixed(1)} 個事件`);
+line(`平均壽命 ${(totalAge / runs).toFixed(1)} 歲・五十歲前死亡 ${pct(youngDeaths)}・平均 ${(totalTurns / runs).toFixed(1)} 回合・平均 ${(totalEvents / runs).toFixed(1)} 個事件・平均選方針 ${(totalFocusPicks / runs).toFixed(1)} 次`);
 line(`連玩五輪平均看到 ${(distinctEndingsFirstFive.reduce((a, b) => a + b, 0) / distinctEndingsFirstFive.length).toFixed(2)} 種結局`);
 
 line('\n【結局分布】');

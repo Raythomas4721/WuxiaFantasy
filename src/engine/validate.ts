@@ -125,7 +125,7 @@ export function validateContent(content: Content): ValidationReport {
   }
   const otherTexts = [
     ...content.endings.flatMap((en) => textStrings(en.text)),
-    ...Object.values(content.ambitions).flatMap((a) => [a.fulfilledText, a.unfulfilledText]),
+    ...Object.values(content.ambitions).flatMap((a) => [a.fulfilledText, a.unfulfilledText, a.goal]),
     ...content.eraLines.map((l) => l.text),
     ...content.rumors.map((r) => r.text),
   ];
@@ -136,7 +136,22 @@ export function validateContent(content: Content): ValidationReport {
     conditions.push({ where: `結局 ${en.id}`, c: en.conditions });
     textConditions(en.text).forEach((c) => conditions.push({ where: `結局 ${en.id}`, c }));
   }
-  for (const a of Object.values(content.ambitions)) conditions.push({ where: `志向 ${a.id}`, c: a.fulfilled });
+  for (const a of Object.values(content.ambitions)) {
+    conditions.push({ where: `志向 ${a.id}`, c: a.fulfilled });
+    if (!a.goal) errors.push(`志向 ${a.id}：沒有寫心事欄要顯示的目標`);
+  }
+  const threadIds = new Set<string>();
+  for (const th of content.threads) {
+    const w = `心事 ${th.id}`;
+    if (threadIds.has(th.id)) errors.push(`心事 id 重複：${th.id}`);
+    threadIds.add(th.id);
+    conditions.push({ where: w, c: th.conditions });
+    textConditions(th.text).forEach((c) => conditions.push({ where: w, c }));
+    for (const key of unknownPlaceholders([th.title, ...textStrings(th.text)], builtIns)) errors.push(`${w}：文字引用了未定義的變數 {${key}}`);
+    if (Array.isArray(th.text) && th.text[th.text.length - 1].if) errors.push(`${w}：條件文字清單的最後一項必須沒有條件`);
+    if (th.advances.length === 0) errors.push(`${w}：沒有指定會推進它的事件`);
+    th.advances.forEach((id) => !eventIds.has(id) && errors.push(`${w}：推進事件 ${id} 不存在`));
+  }
   for (const l of content.eraLines) if (l.if) conditions.push({ where: '時代經歷', c: l.if });
   for (const r of content.rumors) if (r.conditions) conditions.push({ where: `傳聞 ${r.id}`, c: r.conditions });
 
@@ -205,6 +220,7 @@ export function validateContent(content: Content): ValidationReport {
       const npcRefs = [...Object.keys(c.minRelation ?? {}), ...Object.keys(c.maxRelation ?? {}), ...(c.npcAlive ?? [])];
       if (c.npcPresent) npcRefs.push(c.npcPresent);
       npcRefs.forEach((n) => !has(content.npcs, n) && errors.push(`${where}：未知人物 ${n}`));
+      [...(c.notFired ?? []), ...(c.scheduled ?? [])].forEach((id) => !eventIds.has(id) && errors.push(`${where}：未知事件 ${id}`));
     });
   }
 

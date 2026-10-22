@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { CONTENT } from '../content';
 import { currentYear } from '../engine/conditions';
-import {
-  FATIGUE_STREAK, chooseFocus, chooseOption, choiceViews, describeOrigin, focusOptions, nextTurn, startLife,
-  streakIfChosen,
-} from '../engine/game';
+import { FATIGUE_STREAK, chooseOption, choiceViews, describeOrigin, nextTurn, requestFocusChange, startLife } from '../engine/game';
+import { chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber, eraName } from '../engine/text';
 import type { GameState } from '../engine/types';
 import type { LifeUnlocks } from '../save/codex';
 import { EndingView } from './EndingView';
+import { FocusView } from './FocusView';
 import { StatusPanel } from './StatusPanel';
 
 interface Props {
@@ -104,31 +103,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
       );
 
     case 'focus':
-      return (
-        <article className="panel">
-          <h2 className="panel-title">
-            {state.player.age < 13 ? '這兩年，你多半在……' : '這段日子，你打算……'}
-          </h2>
-          <div className="focus-grid">
-            {focusOptions(state).map((f) => {
-              const streak = streakIfChosen(state, f.id);
-              return (
-                <button key={f.id} className="focus-card" onClick={() => act(() => chooseFocus(state, f.id))}>
-                  <span className="pick-title">{f.name}</span>
-                  <span className="pick-desc">{f.desc}</span>
-                  {streak >= FATIGUE_STREAK ? (
-                    <span className="focus-warn">
-                      連續第 {streak} 次・收穫{streak === FATIGUE_STREAK ? '減半' : '大減'}，小心倦怠
-                    </span>
-                  ) : streak === FATIGUE_STREAK - 1 ? (
-                    <span className="focus-note">已連續 {streak - 1} 次</span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </article>
-      );
+      return <FocusView state={state} act={act} />;
 
     case 'event': {
       const e = CONTENT.events.find((x) => x.id === state.current?.eventId);
@@ -187,6 +162,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
             <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
               {state.player.alive ? '歲月流轉' : '……'}
             </button>
+            <ChangeFocusButton state={state} act={act} />
           </div>
         </article>
       );
@@ -195,6 +171,24 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
     default:
       return null;
   }
+}
+
+/** 結果畫面的次要按鈕：下一回合重新選方針。 */
+function ChangeFocusButton({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
+  const focus = CONTENT.focuses.find((f) => f.id === state.focus);
+  if (!state.player.alive || !focus || !state.focusStreak) return null;
+  const weary = state.focusStreak.count >= FATIGUE_STREAK;
+  return (
+    <button
+      className={`btn btn-ghost change-focus ${weary ? 'weary' : ''}`}
+      onClick={() => act(() => nextTurn(requestFocusChange(state)))}
+    >
+      換個活法
+      <small>
+        目前：{focus.name}・第 {state.focusStreak.count} 回{weary ? '・已倦' : ''}
+      </small>
+    </button>
+  );
 }
 
 function HistoryPanel({ state }: { state: GameState }) {
@@ -206,18 +200,25 @@ function HistoryPanel({ state }: { state: GameState }) {
         <p className="muted">這一生才剛開始。</p>
       ) : (
         <ol className="timeline">
-          {entries.map((h, i) => (
-            <li key={i} className="timeline-item">
-              <div className="timeline-when">
-                {chineseNumber(h.age)}歲 · {h.year}
-              </div>
-              <div className="timeline-what">
-                <strong>{h.title}</strong>
-                {h.choice && <span className="timeline-choice">{h.choice}</span>}
-                <p>{h.text}</p>
-              </div>
-            </li>
-          ))}
+          {entries.map((h, i) => {
+            const stage = stageIndex(h.age);
+            const newChapter = i === 0 || stageIndex(entries[i - 1].age) !== stage;
+            return (
+              <li key={i} className="timeline-entry">
+                {newChapter && <h3 className="timeline-chapter">{chapterTitle(stage)}</h3>}
+                <div className="timeline-item">
+                  <div className="timeline-when">
+                    {chineseNumber(h.age)}歲 · {h.year}
+                  </div>
+                  <div className="timeline-what">
+                    <strong>{h.title}</strong>
+                    {h.choice && <span className="timeline-choice">{h.choice}</span>}
+                    <p>{h.text}</p>
+                  </div>
+                </div>
+              </li>
+            );
+          })}
         </ol>
       )}
       <p className="muted small seed">種子 {state.seed}</p>

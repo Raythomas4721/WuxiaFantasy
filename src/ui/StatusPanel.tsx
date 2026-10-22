@@ -3,7 +3,9 @@ import { levelFromXp } from '../engine/conditions';
 import {
   LEVEL_NAMES, STAT_NAMES, STAT_ORDER, alignmentLabel, chivalryLabel, fameLabel, healthLabel,
 } from '../engine/describe';
+import { activeThreads, ambitionView } from '../engine/threads';
 import type { GameState } from '../engine/types';
+import { ThreadList } from './FocusView';
 
 function relationLabel(v: number): string {
   if (v >= 60) return '生死之交';
@@ -14,10 +16,11 @@ function relationLabel(v: number): string {
   return '仇怨';
 }
 
-/** 側欄：屬性、狀態、武學、人物。 */
+/** 側欄：屬性、狀態、心事、武學、人物。 */
 export function StatusPanel({ state }: { state: GameState }) {
   const p = state.player;
-  const ambition = p.ambition ? CONTENT.ambitions[p.ambition] : undefined;
+  const threads = activeThreads(state);
+  const hasThreads = threads.length > 0 || Boolean(ambitionView(state));
   const skills = Object.entries(p.skills)
     .map(([id, x]) => ({ id, level: levelFromXp(x) }))
     .filter((s) => s.level > 0)
@@ -64,7 +67,6 @@ export function StatusPanel({ state }: { state: GameState }) {
         <div className="status-row"><span>名望</span><span>{fameLabel(p.fame)}</span></div>
         <div className="status-row"><span>俠義</span><span>{chivalryLabel(p.chivalry)}</span></div>
         <div className="status-row"><span>江湖評價</span><span>{alignmentLabel(p.alignment)}</span></div>
-        {ambition && <div className="status-row"><span>志向</span><span>{ambition.name}</span></div>}
         <div className="status-row">
           <span>門派</span>
           <span>{p.sect ? CONTENT.sects[p.sect].name : '無門無派'}</span>
@@ -76,6 +78,13 @@ export function StatusPanel({ state }: { state: GameState }) {
           </div>
         )}
       </section>
+
+      {hasThreads && (
+        <section className="status-block">
+          <h4>心事</h4>
+          <ThreadList state={state} threads={threads} compact />
+        </section>
+      )}
 
       <section className="status-block">
         <h4>武學</h4>

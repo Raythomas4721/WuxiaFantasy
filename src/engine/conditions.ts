@@ -96,6 +96,8 @@ export function checkCondition(s: GameState, c?: Condition): boolean {
   if (c.maxRelation && !Object.entries(c.maxRelation).every(([k, v]) => (s.relations[k] ?? 0) <= v)) return false;
   if (c.npcPresent && !npcPresent(s, c.npcPresent)) return false;
   if (c.npcAlive && !c.npcAlive.every((id) => npcAlive(s, id))) return false;
+  if (c.notFired && c.notFired.some((id) => s.fired[id])) return false;
+  if (c.scheduled && !c.scheduled.every((id) => s.scheduled.some((x) => x.event === id && x.expire >= y))) return false;
   if (c.minSkill && !Object.entries(c.minSkill).every(([k, v]) => skillLevel(s, k) >= v)) return false;
   if (!within(martialLevel(s), c.minMartial, c.maxMartial)) return false;
   if (c.any && !c.any.some((sub) => checkCondition(s, sub))) return false;

@@ -43,6 +43,10 @@ export interface Condition {
   /** 該人物今年在玩家所在地區且仍在世。 */
   npcPresent?: string;
   npcAlive?: string[];
+  /** 這些事件都還沒發生過。 */
+  notFired?: string[];
+  /** 這些排程事件都還在等待中（尚未發生也未過期）。 */
+  scheduled?: string[];
   minSkill?: Record<string, number>;
   minMartial?: number;
   maxMartial?: number;
@@ -210,8 +214,22 @@ export interface AmbitionDef {
   id: string;
   name: string;
   fulfilled: Condition;
+  /** 心事欄顯示的具體目標。 */
+  goal: string;
   fulfilledText: string;
   unfulfilledText: string;
+}
+
+/** 心事：玩家看得到的進行中劇情線。 */
+export interface ThreadDef {
+  id: string;
+  title: string;
+  /** 符合時算進行中。 */
+  conditions: Condition;
+  text: TextSpec;
+  /** 會推進這條線的事件；方針卡的「可能推進」由這些事件的 tags 算出。 */
+  advances: string[];
+  priority?: number;
 }
 
 export interface EndingDef {
@@ -239,6 +257,7 @@ export interface Content {
   sects: Record<string, SectDef>;
   npcs: Record<string, NpcDef>;
   ambitions: Record<string, AmbitionDef>;
+  threads: ThreadDef[];
   endings: EndingDef[];
   eraLines: { if?: Condition; text: string }[];
   deathCauses: Record<string, string>;
@@ -318,6 +337,16 @@ export interface EndingResult {
   recaps: string[];
 }
 
+export type FocusReason = 'stage' | 'invalid' | 'sect' | 'master' | 'ambition' | 'region' | 'manual' | 'fatigue';
+
+export interface FocusContext {
+  stage: number;
+  sect?: string;
+  region: string;
+  ambition?: string;
+  masters: number;
+}
+
 export interface GameState {
   version: number;
   seed: number;
@@ -338,6 +367,12 @@ export interface GameState {
   focus?: string;
   /** 連續選同一方針的次數，用於邊際遞減與倦怠事件。 */
   focusStreak?: { id: string; count: number };
+  /** 選方針當下的處境；之後若有變化（轉折）就要重新打算。 */
+  focusContext?: FocusContext;
+  /** 本回合為何要重選方針。 */
+  focusPrompt?: { reason: FocusReason; text: string };
+  /** 玩家在結果畫面要求下回合重新打算。 */
+  wantsFocusChange?: boolean;
   current?: { eventId: string; text: string; vars?: Record<string, string> };
   result?: TurnResult;
   history: HistoryEntry[];

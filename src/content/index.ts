@@ -7,6 +7,7 @@ import { childhoodEvents } from './events/childhood';
 import { historyEvents } from './events/history';
 import { youthEvents } from './events/youth';
 import { names } from './names';
+import { threads } from './threads';
 import { backgrounds, focuses, npcs, regions, sects, skills, traits } from './world';
 
 export const CONTENT: Content = {
@@ -18,6 +19,7 @@ export const CONTENT: Content = {
   sects,
   npcs,
   ambitions,
+  threads,
   endings,
   eraLines,
   deathCauses,
