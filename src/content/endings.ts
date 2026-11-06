@@ -22,12 +22,52 @@ export const endings: EndingDef[] = [
     ],
   },
   {
+    id: 'motou',
+    title: '一代魔頭',
+    priority: 95,
+    conditions: { maxAlignment: -45, minFame: 22 },
+    hint: '江湖上人人都知道你的名字，卻沒有人敢當面說出來。',
+    text: [
+      {
+        if: { sects: ['xueyi'] },
+        text: '血衣樓的帳冊上，有一半的名字是你劃掉的。你死的那天，江湖上很多人鬆了一口氣，也有很多人不敢相信你真的死了。',
+      },
+      { text: '你的名字被說書人拿來嚇唬不睡覺的孩子。你死的那天，江湖上很多人鬆了一口氣，也有很多人不敢相信你真的死了。' },
+    ],
+  },
+  {
+    id: 'fuchou',
+    title: '復仇之後',
+    priority: 92,
+    conditions: { flags: ['revenge_done'] },
+    hint: '大仇得報。然後呢？',
+    text: [
+      {
+        if: { flags: ['ruined_scar'] },
+        text: '疤臉一無所有地死在了街頭。你以為自己會覺得痛快，可那天晚上，你坐在空蕩蕩的屋子裡，忽然想不起父親的臉了。',
+      },
+      {
+        if: { flags: ['revenge_by_hand'] },
+        text: '仇報了。你這才發現，這些年你身邊的人，一個一個都被你推開了。門檻上那道血痕還在，只是再也沒有人陪你看它。',
+      },
+      { text: '疤臉秋後問斬那天，你沒有去看。這麼多年，你第一次睡了一個整覺。醒來的時候，你忽然不知道接下來的日子該做什麼。' },
+    ],
+  },
+  {
     id: 'enyuan',
     title: '恩怨未了',
     priority: 90,
     conditions: { flags: ['blood_feud'], notFlags: ['revenge_done', 'feud_resolved'] },
     hint: '身負血仇，至死未能了結。',
     text: '門檻上那道血痕，你到死都沒能擦掉。疤臉活得好好的，也許還兒孫滿堂。這一生，你始終欠自己一個交代。',
+  },
+  {
+    id: 'lunwu',
+    title: '論武奪魁',
+    priority: 80,
+    conditions: { flags: ['lunwu_champion'] },
+    hint: '在青冥論武奪魁。',
+    text: '很多年以後，青冥台的石柱上還刻著你的名字。來論武的年輕人會在柱子前站一會兒，摸一摸那幾個字，好像這樣就能沾上一點運氣。',
   },
   {
     id: 'zaoshi',
@@ -57,6 +97,24 @@ export const endings: EndingDef[] = [
     text: '你的武功到了出神入化的地步，更難得的是，你把它傳了下去。很多年後，有人練著你教的招式，卻已經不知道你的名字。你想，這樣也好。',
   },
   {
+    id: 'panchu',
+    title: '叛出師門',
+    priority: 72,
+    conditions: { flags: ['broke_with_sect'], any: [{ minFame: 20 }, { minMartial: 3 }] },
+    hint: '離開了師門，卻走出了自己的路。',
+    text: [
+      {
+        if: { flags: ['defied_order'] },
+        text: '當年你在滿堂的人面前說了「不」。後來的很多年裡，你一個人走自己的路，走得很辛苦，卻從來沒有後悔過那一天。',
+      },
+      {
+        if: { flags: ['broke_with_xueyi'] },
+        text: '你從血衣樓活著走了出來。往後的日子，你換過很多名字、很多地方，可你知道，那是你這一生唯一一次真正替自己做了決定。',
+      },
+      { text: '師門的名冊上早就劃掉了你的名字。可江湖上提起你，說的是你自己闖出來的那些事，沒有人再問你出自哪個門下。' },
+    ],
+  },
+  {
     id: 'renxin',
     title: '妙手仁心',
     priority: 60,
@@ -68,9 +126,17 @@ export const endings: EndingDef[] = [
     id: 'daxia',
     title: '江湖大俠',
     priority: 50,
-    conditions: { minFame: 40, minChivalry: 35 },
+    conditions: { minFame: 30, minChivalry: 30, minAlignment: 5 },
     hint: '名滿江湖，且始終行俠仗義。',
     text: '說書人把你的事蹟編成了好幾段，有真有假。可每一段的結尾都一樣：那人路見不平，從沒有轉身走開過。',
+  },
+  {
+    id: 'wuming',
+    title: '無名俠客',
+    priority: 48,
+    conditions: { minChivalry: 25, maxFame: 15 },
+    hint: '做了很多好事，卻沒有人知道是你。',
+    text: '你救過的人，大多不知道你叫什麼。他們只記得那天有個人出了手，然後就走了。你覺得這樣剛剛好。',
   },
   {
     id: 'yinshi',
@@ -176,10 +242,14 @@ export const deathCauses: Record<string, string> = {
   illness: '病重不治',
   injury: '傷重不治',
   qi: '練功走火入魔，經脈盡斷而死',
+  xueyi: '死於血衣樓的夜雨針下',
   xiangyang: '戰死於襄陽城南的巷子裡',
 };
 
 export const rumors: RumorDef[] = [
+  { id: 'r_lunwu1', conditions: { minYear: 1242, maxYear: 1246, notFlags: ['lunwu_champion'] }, text: '第一屆青冥論武，奪魁的是青衡劍府的大弟子。聽說決賽只打了七招。' },
+  { id: 'r_lunwu2', conditions: { minYear: 1254, maxYear: 1258, notFlags: ['lunwu_champion'] }, text: '第二屆青冥論武，謝凌霜一個人守到了最後。有人說，劍府的掌門親自下場，本來就不公平。' },
+  { id: 'r_lunwu3', conditions: { minYear: 1266, maxYear: 1270, notFlags: ['lunwu_champion'] }, text: '第三屆青冥論武辦完了。散場那天，有人在山道上喊：下一屆，還不知道有沒有。' },
   { id: 'r_caizhou', conditions: { minYear: 1233, maxYear: 1234 }, text: '聽說北邊的金國快撐不住了，蒙古人和朝廷的兵聯手圍了蔡州。' },
   { id: 'r_jin_fall', conditions: { minYear: 1234, maxYear: 1235 }, text: '金國亡了。有人說，朝廷要趁機收復中原的故都。' },
   { id: 'r_war_begin', conditions: { minYear: 1235, maxYear: 1238 }, text: '蒙古人翻臉了，說朝廷背盟，大軍分幾路南下。' },
@@ -207,4 +277,9 @@ export const rumors: RumorDef[] = [
   { id: 'r_changfeng', text: '長風鏢局的規矩只有一條：鏢在人在。', weight: 0.5 },
   { id: 'r_lu', conditions: { flags: ['saved_lu'] }, text: '聽說長風鏢局出了個叫陸平的鏢師，走鏢從不失手。', weight: 1.5 },
   { id: 'r_bater', conditions: { flags: ['grassland_pact'], minYear: 1250 }, text: '北邊來的商人說，蒙古軍中有個神箭手，箭羽是白色的。', weight: 1.5 },
+  // 正邪：江湖怎麼看你
+  { id: 'r_wumian', conditions: { minYear: 1240 }, text: '聽說有人在城外的亂葬崗看見一個戴白面具的人。那張面具上，沒有眼睛，也沒有嘴。', weight: 0.7 },
+  { id: 'r_bad_name', conditions: { maxAlignment: -40 }, text: '茶館裡有人壓低聲音說起「{name}」這個名字，說完就四下張望，像是怕被誰聽見。', weight: 2 },
+  { id: 'r_good_name', conditions: { minAlignment: 30 }, text: '你路過一間茶館，說書人正在講{name}的事。講得太誇張了，你差點笑出聲。', weight: 2 },
+  { id: 'r_xueyi_hunt', conditions: { flags: ['hunted_by_xueyi'] }, text: '客棧的掌櫃說，昨晚有個人來打聽你，那人說話的聲音很輕。', weight: 2 },
 ];

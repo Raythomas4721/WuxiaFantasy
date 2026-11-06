@@ -2,7 +2,7 @@
 // 用隨機策略自動跑大量人生，輸出事件覆蓋率、結局分布與名俠相遇率。
 
 import { CONTENT } from '../src/content';
-import { playLife } from '../src/engine/autoplay';
+import { playLife, type AutoplayResult } from '../src/engine/autoplay';
 import { martialLevel } from '../src/engine/conditions';
 
 function arg(name: string, fallback: number): number {
@@ -25,11 +25,15 @@ let totalFocusPicks = 0;
 const maxMartial: number[] = [];
 const youngDeathCauses = new Map<string, number>();
 const alignments: number[] = [];
+const fames: number[] = [];
+const chivalries: number[] = [];
 const finalMoney: number[] = [];
 const distinctEndingsFirstFive: number[] = [];
+const allDuels: AutoplayResult['duels'] = [];
 
 for (let i = 0; i < runs; i++) {
-  const { state, events, focusPicks } = playLife(baseSeed + i);
+  const { state, events, focusPicks, duels } = playLife(baseSeed + i);
+  allDuels.push(...duels);
   totalFocusPicks += focusPicks;
   for (const id of events) eventCount.set(id, (eventCount.get(id) ?? 0) + 1);
   const ending = state.ending!;
@@ -50,6 +54,8 @@ for (let i = 0; i < runs; i++) {
     youngDeathCauses.set(cause, (youngDeathCauses.get(cause) ?? 0) + 1);
   }
   alignments.push(state.player.alignment);
+  fames.push(state.player.fame);
+  chivalries.push(state.player.chivalry);
   finalMoney.push(state.player.money);
   totalTurns += state.turn;
   totalEvents += events.length;
@@ -101,6 +107,15 @@ for (const [cause, n] of [...youngDeathCauses].sort((a, b) => b[1] - a[1])) {
   line(`  ${CONTENT.deathCauses[cause] ?? cause} ${pct(n)}`);
 }
 
+const quantiles = (xs: number[]) => {
+  const s = [...xs].sort((a, b) => a - b);
+  return [0.1, 0.5, 0.9, 0.99].map((q) => s[Math.min(s.length - 1, Math.floor(q * s.length))]).join(' / ');
+};
+line('\n【隱藏軸】（結局時，P10 / P50 / P90 / P99）');
+line(`  名望 ${quantiles(fames)}`);
+line(`  俠義 ${quantiles(chivalries)}`);
+line(`  正邪 ${quantiles(alignments)}`);
+
 line('\n【正邪分布】（結局時）');
 line(`  ≤ −30（邪）     ${pct(alignments.filter((a) => a <= -30).length)}`);
 line(`  −29～29（尋常） ${pct(alignments.filter((a) => a > -30 && a < 30).length)}`);
@@ -110,6 +125,43 @@ line('\n【錢】（結局時）');
 const sortedMoney = [...finalMoney].sort((a, b) => a - b);
 const avgMoney = Math.round(finalMoney.reduce((a, b) => a + b, 0) / runs);
 line(`  平均 ${avgMoney} 文・中位數 ${sortedMoney[Math.floor(runs / 2)]} 文・≥ 500 文 ${pct(finalMoney.filter((m) => m >= 500).length)}`);
+
+line('\n【過招】（§3.11）');
+const dpct = (w: number, n: number) => (n ? `${Math.round((w / n) * 100)}%` : '-');
+const tally = (key: (d: AutoplayResult['duels'][number]) => string | number) => {
+  const m = new Map<string | number, { n: number; w: number }>();
+  for (const d of allDuels) {
+    const x = m.get(key(d)) ?? { n: 0, w: 0 };
+    x.n++;
+    if (d.won) x.w++;
+    m.set(key(d), x);
+  }
+  return m;
+};
+line(
+  `  平均每輪 ${(allDuels.length / runs).toFixed(2)} 場・勝率 ${dpct(allDuels.filter((d) => d.won).length, allDuels.length)}・平均 ${(allDuels.reduce((s, d) => s + d.rounds, 0) / Math.max(1, allDuels.length)).toFixed(1)} 回合`,
+);
+const byDiff = [...tally((d) => Math.max(-3, Math.min(3, d.playerLevel - d.level)))].sort((a, b) => Number(a[0]) - Number(b[0]));
+line('  等級差（玩家 − 對手）：' + byDiff.map(([k, x]) => `${Number(k) > 0 ? '+' : ''}${k} ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
+line('  對手：' + [...tally((d) => d.opponent)].map(([k, x]) => `${k} ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
+
+// 好鬥的玩家：有過招的選項就選它。隨機選選項的模擬玩家常常臨陣退出，這組數字比較接近想打的真人。
+{
+  const n = Math.max(100, Math.round(runs / 4));
+  let duels = 0;
+  let wins = 0;
+  let champ = 0;
+  const ends = new Map<string, number>();
+  for (let i = 0; i < n; i++) {
+    const r = playLife(baseSeed + i, { preferDuel: true });
+    duels += r.duels.length;
+    wins += r.duels.filter((d) => d.won).length;
+    if (r.state.flags.lunwu_champion) champ++;
+    ends.set(r.state.ending!.title, (ends.get(r.state.ending!.title) ?? 0) + 1);
+  }
+  line(`  好鬥玩家（有過招就打，${n} 輪）：每輪 ${(duels / n).toFixed(2)} 場・勝率 ${dpct(wins, duels)}・論武奪魁 ${((champ / n) * 100).toFixed(1)}%`);
+  line('    結局：' + [...ends].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${((v / n) * 100).toFixed(1)}%`).join('、'));
+}
 
 line('\n【事件觸發率】（每輪人生中出現的比例）');
 const rows = CONTENT.events.map((e) => ({ id: e.id, title: e.title, n: eventCount.get(e.id) ?? 0 }));

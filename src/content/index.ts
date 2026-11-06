@@ -1,16 +1,24 @@
 // 內容總表。新增事件只需在 events/ 下新增或修改檔案，並在這裡匯入。
 
 import type { Content } from '../engine/types';
+import { cards, foeTraps, opponents, skillCards, specialCards } from './duel';
 import { ambitions, deathCauses, endings, eraLines, rumors } from './endings';
 import { adultEvents } from './events/adult';
 import { childhoodEvents } from './events/childhood';
 import { historyEvents } from './events/history';
+import { jianghuEvents } from './events/jianghu';
+import { lunwuEvents } from './events/lunwu';
 import { youthEvents } from './events/youth';
 import { names } from './names';
 import { threads } from './threads';
 import { backgrounds, focuses, npcs, regions, sects, skills, traits } from './world';
 
 export const CONTENT: Content = {
+  cards,
+  skillCards,
+  specialCards,
+  opponents,
+  foeTraps,
   backgrounds,
   regions,
   traits,
@@ -24,6 +32,6 @@ export const CONTENT: Content = {
   eraLines,
   deathCauses,
   rumors,
-  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...historyEvents],
+  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...historyEvents],
   names,
 };

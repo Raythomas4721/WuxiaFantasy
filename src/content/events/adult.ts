@@ -29,18 +29,16 @@ export const adultEvents: GameEvent[] = [
       {
         id: 'kill',
         text: '拔刀上前',
-        check: {
-          stats: ['gengu', 'danshi'],
-          difficulty: 7,
-          martial: true,
+        duel: {
+          opponent: 'scar_old',
           success: {
             text: '你一刀了結了他。四周一片尖叫，那孩子撲在他身上大哭。你走出門外，手一直在抖。',
-            effects: [flag('revenge_done'), align(-10), fame(3)],
+            effects: [flag('revenge_done'), flag('revenge_by_hand'), align(-10), fame(3)],
             recap: { weight: 5, text: '你終於殺了疤臉。他的孩子撲在他身上哭的樣子，你記了一輩子。' },
           },
           failure: {
             text: '疤臉雖老，刀法卻沒丟。你被砍中胸口，倒在血泊裡。他看著你，好像想起了什麼，最後丟下你走了。',
-            effects: [health(-40), flag('revenge_failed')],
+            effects: [health(-10), flag('revenge_failed')],
           },
         },
       },
@@ -51,6 +49,23 @@ export const adultEvents: GameEvent[] = [
           text: '你在角落坐到天黑，酒一口也沒喝。走出門時，你覺得肩上有什麼東西鬆開了。',
           effects: [flag('feud_resolved'), xinxing(2)],
           recap: { weight: 5, text: '你找到了殺父的仇人，卻在他孩子的笑聲裡放下了刀。' },
+        },
+      },
+      {
+        id: 'ruin',
+        text: '不急著殺他。設個局，讓他也嘗嘗家破人亡的滋味',
+        check: {
+          stats: ['wuxing', 'danshi'],
+          difficulty: 6,
+          success: {
+            text: '你花了三年。疤臉的鋪子、田產、名聲，一樣一樣沒了，最後連那個孩子也被債主帶走。他瘋了似地在街上找人，從你身邊走過，還是沒有認出你。',
+            effects: [flag('revenge_done'), flag('revenge_by_hand'), flag('ruined_scar'), align(-25), chiv(-10), fame(2)],
+            recap: { weight: 5, text: '你沒有殺疤臉，而是讓他一無所有。後來你才發現，你自己也沒剩下什麼。' },
+          },
+          failure: {
+            text: '局還沒做成，疤臉就察覺了，連夜帶著一家人逃得無影無蹤。',
+            effects: [flag('revenge_failed'), align(-5)],
+          },
         },
       },
       {
@@ -148,7 +163,7 @@ export const adultEvents: GameEvent[] = [
           skill: 'baicao',
           success: {
             text: '你守了一夜。天亮時，病人的氣色終於緩了過來。後來每年，總有一籃雞蛋悄悄放在你的門口。',
-            effects: [add('healed'), chiv(4), fame(3), xp('baicao', 1)],
+            effects: [add('healed'), chiv(4), fame(3), align(2), xp('baicao', 1)],
           },
           failure: {
             text: '你用盡了所有辦法，還是沒能留住。你坐在門檻上，很久都沒有說話。',
@@ -166,6 +181,23 @@ export const adultEvents: GameEvent[] = [
           skill: 'baicao',
           success: { text: '人救回來了。你收下了診金，對方千恩萬謝。', effects: [add('healed'), money(25)] },
           failure: { text: '你沒能救回來。那筆診金，你原封不動地退了回去。', effects: [xinxing(1)] },
+        },
+      },
+      {
+        id: 'gouge',
+        text: '人命關天，價錢也就由你開了',
+        check: {
+          stats: ['wuxing'],
+          difficulty: 5,
+          skill: 'baicao',
+          success: {
+            text: '人救回來了。為了湊你開的藥錢，那家人把田契押了出去。你收錢的時候，對方的手一直在抖。',
+            effects: [add('healed'), money(70), align(-6), chiv(-5)],
+          },
+          failure: {
+            text: '人沒救回來，錢你也沒退。出殯那天，那家人在你門口站了很久。',
+            effects: [money(40), align(-8), chiv(-6), fame(-2)],
+          },
         },
       },
       {
@@ -193,7 +225,7 @@ export const adultEvents: GameEvent[] = [
           skill: 'baicao',
           success: {
             text: '你從毒性一路追到藥鋪的帳本，揪出了下毒的人——是鄉紳的親姪子。消息傳開，人人都說你有一雙看得見真相的眼睛。',
-            effects: [fame(8), chiv(5), flag('solved_poison')],
+            effects: [fame(8), chiv(5), align(5), flag('solved_poison')],
             recap: { weight: 2, text: '你識破了一樁偽裝成急病的毒殺案。' },
           },
           failure: {
@@ -263,7 +295,15 @@ export const adultEvents: GameEvent[] = [
             '城裡新來了一批流民，葛百衲讓你去安頓他們',
           ],
         },
-        { if: { not: { sects: ['yaogu', 'changfeng', 'yijun', 'baina'] } }, values: ['門裡交給你一件差事'] },
+        {
+          if: { sects: ['qinghen'] },
+          values: [
+            '劍府要你下山，去教一個鄉間武館的孩子們紮馬步',
+            '有人在山下冒用劍府的名號欺負百姓，執事要你去查',
+            '謝凌霜要你把劍府藏經閣裡被蟲蛀的劍譜重抄一遍',
+          ],
+        },
+        { if: { not: { sects: ['yaogu', 'changfeng', 'yijun', 'baina', 'qinghen'] } }, values: ['門裡交給你一件差事'] },
       ],
     },
     text: '{task}。',
@@ -281,12 +321,23 @@ export const adultEvents: GameEvent[] = [
       {
         id: 'compete',
         text: '找同門比試，爭個高下',
-        check: {
-          stats: ['gengu'],
-          difficulty: 6,
-          martial: true,
+        duel: {
+          opponent: 'senior',
           success: { text: '你贏了。同門們服氣地拍你的肩：「下回輪到你帶隊。」', effects: [fame(3), add('sect_merit')] },
-          failure: { text: '你輸了，還扭傷了手腕。', effects: [health(-10), xinxing(1)] },
+          failure: { text: '你輸了，還扭傷了手腕。', effects: [xinxing(1)] },
+        },
+      },
+      {
+        id: 'pocket',
+        text: '順手撈點油水，反正沒人會查',
+        check: {
+          stats: ['wuxing'],
+          difficulty: 5,
+          success: { text: '差事辦完了，你的錢袋也鼓了。回去交差時，你臉不紅氣不喘。', effects: [money(60), align(-5)] },
+          failure: {
+            text: '帳對不上，被一個師弟看出了破綻。事情傳開後，門裡的人看你的眼神都變了。',
+            effects: [money(20), align(-12), fame(-3), add('sect_merit', -2)],
+          },
         },
       },
     ],
@@ -710,6 +761,19 @@ export const adultEvents: GameEvent[] = [
           failure: { text: '{boss}找來打手，帶頭的你被打了一頓。', effects: [health(-10), chiv(3)] },
         },
       },
+      {
+        id: 'steal',
+        text: '夜裡撬開帳房，拿回你應得的——再多拿一點',
+        check: {
+          stats: ['danshi'],
+          difficulty: 5,
+          success: { text: '天亮前你已經出了城。錢袋裡的錢，比你該拿的多了三倍。', effects: [money(70), align(-6), chiv(-2)] },
+          failure: {
+            text: '你剛摸到錢箱，燈就亮了。{boss}讓人把你吊在門口打了一頓，還四處說你是賊。',
+            effects: [health(-15), align(-8), fame(-3)],
+          },
+        },
+      },
     ],
   },
   {
@@ -744,6 +808,20 @@ export const adultEvents: GameEvent[] = [
           difficulty: 5,
           success: { text: '小賺了一筆，也摸清了門路。', effects: [money(50), wuxing(1)] },
           failure: { text: '貨裡摻了一半的爛根，賠了一點。', effects: [money(-15)] },
+        },
+      },
+      {
+        id: 'cheat',
+        text: '買下來，摻了假再高價賣出去',
+        requires: { minMoney: 30 },
+        check: {
+          stats: ['wuxing'],
+          difficulty: 5,
+          success: { text: '一斤貨摻成三斤賣，買家到現在還沒發現。你賺了一大筆。', effects: [money(130), align(-8), chiv(-4)] },
+          failure: {
+            text: '買家當場驗了貨，掀翻了你的攤子。這件事在商路上傳開，好一陣子沒人敢跟你做生意。',
+            effects: [money(-30), align(-10), fame(-3)],
+          },
         },
       },
       {
@@ -790,10 +868,8 @@ export const adultEvents: GameEvent[] = [
       {
         id: 'rescue',
         text: '連夜趕去劫牢',
-        check: {
-          stats: ['danshi', 'gengu'],
-          difficulty: 7,
-          martial: true,
+        duel: {
+          opponent: 'jailers',
           success: {
             text: '你打翻了四個獄卒，背著秦遠翻過了城牆。他在你背上笑：「就知道你會來。」',
             effects: [flag('sworn_resolved'), flag('saved_sworn'), chiv(8), fame(6), align(-5), rel('qin_yuan', 30)],
@@ -801,7 +877,7 @@ export const adultEvents: GameEvent[] = [
           },
           failure: {
             text: '你被官兵圍住，身中數刀才逃了出來。三天後，秦遠被斬於市口。',
-            effects: [flag('sworn_resolved'), flag('lost_sworn'), health(-35), chiv(5)],
+            effects: [flag('sworn_resolved'), flag('lost_sworn'), health(-10), chiv(5)],
             recap: { weight: 4, text: '你沒能從刑場上救下結義兄弟秦遠。' },
           },
         },
@@ -850,12 +926,10 @@ export const adultEvents: GameEvent[] = [
       {
         id: 'fight',
         text: '出手',
-        check: {
-          stats: ['danshi', 'gengu'],
-          difficulty: 6,
-          martial: true,
-          success: { text: '三兩下就把人打跑了。被救的人拉著你的手，非要塞給你一點謝禮。', effects: [fame(4), chiv(4)] },
-          failure: { text: '你寡不敵眾，被打得滿臉是血。好在東西保住了。', effects: [health(-20), chiv(4)] },
+        duel: {
+          opponent: 'thugs',
+          success: { text: '三兩下就把人打跑了。被救的人拉著你的手，非要塞給你一點謝禮。', effects: [fame(4), chiv(4), align(3)] },
+          failure: { text: '你寡不敵眾，被打得滿臉是血。好在東西保住了。', effects: [chiv(4)] },
         },
       },
       {
@@ -873,6 +947,20 @@ export const adultEvents: GameEvent[] = [
         text: '繞路走開',
         outcome: { text: '你繞過了那段路。身後傳來哭聲。', effects: [chiv(-2), flag('passed_by')] },
       },
+      {
+        id: 'join',
+        text: '上前，分一杯羹',
+        check: {
+          stats: ['danshi', 'gengu'],
+          difficulty: 4,
+          martial: true,
+          success: {
+            text: '{culprit}看你出手比他們還狠，客客氣氣地分了你一份。被搶的人看著你，眼神比看他們還怕。',
+            effects: [money(30), align(-8), chiv(-6)],
+          },
+          failure: { text: '{culprit}以為你是來搶生意的，幾個人圍上來把你揍了一頓。', effects: [health(-15), align(-4)] },
+        },
+      },
     ],
   },
   {
@@ -885,7 +973,7 @@ export const adultEvents: GameEvent[] = [
     maxTimes: 6,
     conditions: { minAge: 15, focus: ['travel'] },
     tags: ['travel'],
-    text: '你來到渡口。往東是江南，往西是川蜀，往北是襄陽。船家問你要去哪裡。',
+    text: '你來到渡口。往東是江南，往西是川蜀，往北是襄陽，往南有一條上青冥山的山道。船家問你要去哪裡。',
     choices: [
       {
         id: 'jiangnan',
@@ -907,6 +995,13 @@ export const adultEvents: GameEvent[] = [
         requires: { not: { regions: ['xiangyang'] } },
         hidden: true,
         outcome: { text: '船逆流而上，漢水邊的城牆越來越近。', effects: [goTo('xiangyang'), danshi(1)] },
+      },
+      {
+        id: 'qingming',
+        text: '上青冥山',
+        requires: { not: { regions: ['qingming'] } },
+        hidden: true,
+        outcome: { text: '你上了岸，又走了三天山路。青冥山的山頂藏在雲裡，山道上不時有佩劍的人和你擦身而過。', effects: [goTo('qingming'), wuxing(1)] },
       },
       {
         id: 'stay',
@@ -1119,7 +1214,7 @@ export const adultEvents: GameEvent[] = [
             },
             {
               text: '你噴出一口血，昏死過去。醒來後，右手有好幾個月使不上力。',
-              effects: [health(-35), gengu(-1), resetStreak()],
+              effects: [health(-35), gengu(-1), resetStreak(), flag('zouhuo')],
               recap: { weight: 3, text: '{ageCn}歲那年，你練功走火入魔，差點廢了一隻手。' },
             },
           ],

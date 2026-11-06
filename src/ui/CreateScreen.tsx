@@ -67,7 +67,7 @@ export function CreateScreen({ codex, onStart, onBack }: Props) {
         <h3>出身與出生地</h3>
         <p className="muted">
           生在哪裡、生在誰家，由不得你。可能是{Object.values(CONTENT.backgrounds).map((b) => b.name).join('、')}；
-          可能在{Object.values(CONTENT.regions).map((r) => r.name).join('、')}。落地之後才會知道。
+          可能在{Object.values(CONTENT.regions).filter((r) => !r.noBirth).map((r) => r.name).join('、')}。落地之後才會知道。
         </p>
       </section>
 

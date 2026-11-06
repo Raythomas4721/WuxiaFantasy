@@ -84,7 +84,7 @@ export function validateContent(content: Content): ValidationReport {
     }
     for (const ch of e.choices) {
       strings.push(ch.text);
-      for (const o of [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure)]) {
+      for (const o of [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure), ...outcomesOf(ch.duel?.success), ...outcomesOf(ch.duel?.failure)]) {
         strings.push(...textStrings(o.text));
         if (o.recap) strings.push(o.recap.text);
       }
@@ -100,15 +100,16 @@ export function validateContent(content: Content): ValidationReport {
       if (choiceIds.has(ch.id)) errors.push(`${cw}：選項 id 重複`);
       choiceIds.add(ch.id);
       if (ch.requires) conditions.push({ where: cw, c: ch.requires });
-      if (!ch.check && !ch.outcome) errors.push(`${cw}：沒有結果`);
-      const outs = [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure)];
+      if (!ch.check && !ch.outcome && !ch.duel) errors.push(`${cw}：沒有結果`);
+      if (ch.duel && !content.opponents[ch.duel.opponent]) errors.push(`${cw}：未知過招對手 ${ch.duel.opponent}`);
+      const outs = [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure), ...outcomesOf(ch.duel?.success), ...outcomesOf(ch.duel?.failure)];
       for (const o of outs) {
         if (!o.effects || o.effects.length === 0) errors.push(`${cw}：結果沒有任何效果（假選項）`);
         if (o.if) conditions.push({ where: cw, c: o.if });
         textConditions(o.text).forEach((c) => conditions.push({ where: cw, c }));
         o.effects?.forEach((x) => effects.push({ where: cw, e: x }));
       }
-      for (const spec of [ch.outcome, ch.check?.success, ch.check?.failure]) {
+      for (const spec of [ch.outcome, ch.check?.success, ch.check?.failure, ch.duel?.success, ch.duel?.failure]) {
         if (Array.isArray(spec) && spec[spec.length - 1].if) errors.push(`${cw}：條件結果清單的最後一項必須沒有條件`);
       }
     }
@@ -136,6 +137,29 @@ export function validateContent(content: Content): ValidationReport {
     conditions.push({ where: `結局 ${en.id}`, c: en.conditions });
     textConditions(en.text).forEach((c) => conditions.push({ where: `結局 ${en.id}`, c }));
   }
+  // ---- 過招 ----
+  const cardExists = (id: string) => Boolean(content.cards[id.endsWith('+') ? id.slice(0, -1) : id]);
+  for (const [id, c] of Object.entries(content.cards)) {
+    if (c.id !== id) errors.push(`招式牌 ${id}：id 不一致`);
+    if (c.kind === 'trap' && !c.trigger) errors.push(`招式牌 ${id}：伏招沒有發動條件`);
+    if (c.kind !== 'trap' && c.trigger) errors.push(`招式牌 ${id}：不是伏招卻有發動條件`);
+  }
+  for (const [skill, list] of Object.entries(content.skillCards)) {
+    if (!content.skills[skill]) errors.push(`招式清單：未知武學 ${skill}`);
+    list.forEach((id) => !cardExists(id) && errors.push(`武學 ${skill}：未知招式牌 ${id}`));
+  }
+  for (const s of Object.values(content.skills)) {
+    if (s.kind === 'martial' && !content.skillCards[s.id]) errors.push(`武學 ${s.id}：沒有 A、B、C 三張招式牌`);
+  }
+  content.specialCards.forEach((sp, i) => {
+    conditions.push({ where: `特殊牌 ${i}`, c: sp.if });
+    if (!cardExists(sp.card)) errors.push(`特殊牌：未知招式牌 ${sp.card}`);
+  });
+  for (const o of Object.values(content.opponents)) {
+    (o.traps ?? []).forEach((id) => !content.foeTraps[id] && errors.push(`過招對手 ${o.id}：未知暗招 ${id}`));
+    for (const key of unknownPlaceholders([o.name], builtIns)) errors.push(`過招對手 ${o.id}：名字引用了未定義的變數 {${key}}`);
+  }
+
   for (const a of Object.values(content.ambitions)) {
     conditions.push({ where: `志向 ${a.id}`, c: a.fulfilled });
     if (!a.goal) errors.push(`志向 ${a.id}：沒有寫心事欄要顯示的目標`);
@@ -194,6 +218,9 @@ export function validateContent(content: Content): ValidationReport {
       case 'ambition':
         if (!has(content.ambitions, e.ambition)) errors.push(`${where}：未知志向 ${e.ambition}`);
         break;
+      case 'chain':
+        if (!eventIds.has(e.event)) errors.push(`${where}：接續了不存在的事件 ${e.event}`);
+        break;
       case 'schedule':
         if (!eventIds.has(e.event)) errors.push(`${where}：排程了不存在的事件 ${e.event}`);
         break;
@@ -247,7 +274,7 @@ export function validateContent(content: Content): ValidationReport {
   }
 
   // ---- 提醒 ----
-  const scheduled = new Set(effects.flatMap(({ e }) => (e.type === 'schedule' ? [e.event] : [])));
+  const scheduled = new Set(effects.flatMap(({ e }) => (e.type === 'schedule' || e.type === 'chain' ? [e.event] : [])));
   for (const e of content.events) {
     if (e.scheduledOnly && !scheduled.has(e.id)) warnings.push(`事件 ${e.id} 只能被排程，但沒有任何地方排程它`);
   }

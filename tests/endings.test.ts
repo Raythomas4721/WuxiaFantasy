@@ -16,13 +16,15 @@ describe('英年早逝', () => {
     expect(ending.text).toContain('那場病');
   });
 
-  it('自動遊玩時，早死的人生只會被鐵骨丹心或恩怨未了搶走', () => {
+  it('自動遊玩時，早死的人生只會被優先序更高的結局搶走', () => {
+    const zaoshiPriority = CONTENT.endings.find((e) => e.id === 'zaoshi')!.priority;
+    const higher = CONTENT.endings.filter((e) => e.priority > zaoshiPriority).map((e) => e.id);
     let zaoshi = 0;
     for (let seed = 1; seed <= 400; seed++) {
       const { state } = playLife(seed);
       if (!state.flags.died_young) continue;
       if (state.ending!.id === 'zaoshi') zaoshi += 1;
-      else expect(['tiegu', 'enyuan']).toContain(state.ending!.id);
+      else expect(higher).toContain(state.ending!.id);
     }
     expect(zaoshi).toBeGreaterThan(0);
   });

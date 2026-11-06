@@ -79,6 +79,8 @@ export type GameEffect =
   | { type: 'region'; region: string }
   | { type: 'ambition'; ambition: string }
   | { type: 'schedule'; event: string; after: [number, number]; expire?: number }
+  /** 同一年接著發生的事件：結果畫面之後不推進時間，直接進入這個事件（論武的預賽、正賽、決賽）。 */
+  | { type: 'chain'; event: string }
   | { type: 'meet'; npc: string }
   /** 中斷連續方針的計數，例如停下來休息之後。 */
   | { type: 'resetStreak' }
@@ -117,7 +119,15 @@ export interface GameChoice {
   hidden?: boolean;
   hint?: string;
   check?: Check;
+  /** 過招：用招式牌打一場，贏了走 success，輸了或認輸走 failure。 */
+  duel?: DuelChoice;
   outcome?: OutcomeSpec;
+}
+
+export interface DuelChoice {
+  opponent: string;
+  success: OutcomeSpec;
+  failure: OutcomeSpec;
 }
 
 export interface GameEvent {
@@ -162,6 +172,8 @@ export interface RegionDef {
   name: string;
   place: string;
   desc: string;
+  /** 不會被隨機抽成出生地（例如青冥山）。 */
+  noBirth?: boolean;
 }
 
 export interface TraitDef {
@@ -208,6 +220,8 @@ export interface NpcDef {
   presence: { from: number; to: number; regions: string[] }[];
   /** 是否列入江湖傳聞錄的名俠圖鑑。 */
   codex: boolean;
+  /** 正派人物：玩家正邪 < 0 時，和他的關係增長減半。 */
+  righteous?: boolean;
 }
 
 export interface AmbitionDef {
@@ -248,7 +262,113 @@ export interface RumorDef {
   weight?: number;
 }
 
+// ---------- 過招：招式牌（設計文件 §3.11） ----------
+
+/** 招式的路數，連招看的是這個。 */
+export type CardTag = '拳' | '劍' | '槍' | '步' | '針' | '守' | '藥' | '氣';
+/** attack 攻、guard 守、skill 技、trap 伏招（蓋著，對手做某件事時才發動）、curse 傷與心魔。 */
+export type CardKind = 'attack' | 'guard' | 'skill' | 'trap' | 'curse';
+export type TrapTrigger = 'foeAttack' | 'foeGuard' | 'foeCharge' | 'foeFeint';
+
+/** 一張牌打出（或伏招發動）時的效果。 */
+export interface CardEffect {
+  dmg?: number;
+  hits?: number;
+  block?: number;
+  draw?: number;
+  energy?: number;
+  heal?: number;
+  /** 對手破綻：受到的傷害 × 1.5，到下回合結束。 */
+  expose?: boolean;
+  /** 內傷：對手每回合開始失去氣血，可累加。 */
+  bleed?: number;
+  /** 對手的內傷加倍。 */
+  bleedMult?: number;
+  pierce?: boolean;
+  /** 打掉對手的護體。 */
+  breakGuard?: boolean;
+  /** 破除對手一張還沒發動的暗招。 */
+  breakTrap?: boolean;
+  /** 下一張帶這些路數的牌：傷害加值或倍數。 */
+  boostNext?: { tags: CardTag[]; dmg?: number; mult?: number };
+  /** 下回合多幾點內力。 */
+  energyNext?: number;
+  /** 伏招用：這一擊傷害減半／完全閃過。 */
+  halve?: boolean;
+  dodge?: boolean;
+}
+
+export interface CardDef extends CardEffect {
+  id: string;
+  name: string;
+  kind: CardKind;
+  tag?: CardTag;
+  cost: number;
+  /** 用完移出這場過招。 */
+  exhaust?: boolean;
+  /** 對手意圖相符時的額外傷害（讀招的獎勵）。 */
+  vsIntent?: { kinds: IntentKind[]; dmg: number };
+  /** 承：這回合上一張牌是這個路數時，再加上的效果。 */
+  after?: { tags: CardTag[] } & CardEffect;
+  /** 連：這回合每已經打出一張（指定路數的）牌，傷害再加。 */
+  chain?: { tags?: CardTag[]; dmg: number };
+  /** 伏招的發動條件。 */
+  trigger?: TrapTrigger;
+  /** 傷與心魔：抽到時立刻發作（失去內力或氣血），然後補抽一張。 */
+  onDraw?: { energy?: number; hp?: number };
+  /** 一句招式描寫，{foe} 代入對手。 */
+  flavor: string;
+}
+
+export type IntentKind = 'attack' | 'combo' | 'guard' | 'charge' | 'feint';
+
+export interface Intent {
+  kind: IntentKind;
+  /** attack、combo、feint 的每一擊傷害；guard 的護體；charge 的蓄勢量。 */
+  value: number;
+  hits?: number;
+}
+
+/** 對手的暗招：玩家做了某件事時發動，每場一次。 */
+export interface FoeTrapDef {
+  id: string;
+  name: string;
+  /** thirdAttack：你一回合打出第三張攻擊牌；bigHit：你一招打出 12 以上傷害；lowHp：你氣血跌破一半；tag：你打出某路數的牌。 */
+  trigger: 'thirdAttack' | 'bigHit' | 'lowHp' | 'tag';
+  tag?: CardTag;
+  /** 對你造成傷害、抵銷你那一招的傷害、或讓你失去內力。 */
+  dmg?: number;
+  absorb?: boolean;
+  drain?: number;
+  /** 發動時的描寫。 */
+  text: string;
+  /** 看穿時顯示的條件說明。 */
+  hint: string;
+}
+
+export interface OpponentDef {
+  id: string;
+  name: string;
+  /** 固定等級，或 { relative }：依玩家主修武學等級浮動（比武、宿敵）。 */
+  level: number | { relative: number; min?: number; max?: number };
+  wuxing: number;
+  /** 莽夫多出手、老江湖多虛招又常變招、守將多守勢。 */
+  temper: 'brute' | 'veteran' | 'guard';
+  /** 生死之戰：沒有回合上限。 */
+  lethal?: boolean;
+  traps?: string[];
+  /** 看不透意圖時顯示的文字。 */
+  tells: Record<IntentKind, string>;
+}
+
 export interface Content {
+  cards: Record<string, CardDef>;
+  /** 每門武學的 A、B、C 三招。 */
+  skillCards: Record<string, [string, string, string]>;
+  /** 奇遇、指點給的特殊牌。 */
+  specialCards: { if: Condition; card: string }[];
+  opponents: Record<string, OpponentDef>;
+  foeTraps: Record<string, FoeTrapDef>;
   backgrounds: Record<string, BackgroundDef>;
   regions: Record<string, RegionDef>;
   traits: Record<string, TraitDef>;
@@ -268,7 +388,57 @@ export interface Content {
 
 // ---------- 遊戲狀態 ----------
 
-export type Phase = 'intro' | 'focus' | 'event' | 'result' | 'ended';
+export type Phase = 'intro' | 'focus' | 'event' | 'duel' | 'result' | 'ended';
+
+export interface DuelSide {
+  hp: number;
+  max: number;
+  block: number;
+  /** 破綻剩下的回合數。 */
+  exposed: number;
+  bleed: number;
+}
+
+export interface DuelLogLine {
+  who: 'me' | 'foe' | 'sys';
+  text: string;
+}
+
+/** 進行中的過招。存在 GameState 裡，重新整理也能接著打。 */
+export interface DuelState {
+  opponent: string;
+  name: string;
+  level: number;
+  lethal: boolean;
+  round: number;
+  /** 悟性夠高，看得到對手意圖的數字。 */
+  clear: boolean;
+  /** 悟性遠高於對手，看得穿他的暗招。 */
+  seeTraps: boolean;
+  me: DuelSide & {
+    energy: number;
+    energyNext: number;
+    drawPer: number;
+    deck: string[];
+    hand: string[];
+    discard: string[];
+    /** 蓋著的伏招。 */
+    traps: string[];
+    /** 這回合已打出的牌，連招用。 */
+    played: string[];
+    boost?: { tags: CardTag[]; dmg?: number; mult?: number };
+  };
+  foe: DuelSide & {
+    charge: number;
+    intent: Intent;
+    traps: { id: string; used: boolean }[];
+  };
+  /** 這一回合發生的事。 */
+  log: DuelLogLine[];
+  over?: 'win' | 'lose' | 'yield';
+  /** 觸發這場過招的事件選項。 */
+  choiceId: string;
+}
 
 export interface Player {
   name: string;
@@ -374,6 +544,9 @@ export interface GameState {
   /** 玩家在結果畫面要求下回合重新打算。 */
   wantsFocusChange?: boolean;
   current?: { eventId: string; text: string; vars?: Record<string, string> };
+  duel?: DuelState;
+  /** 結果畫面之後，同一年接著發生的事件。 */
+  chain?: string;
   result?: TurnResult;
   history: HistoryEntry[];
   snapshot?: Snapshot;
@@ -387,4 +560,6 @@ export interface ChoiceView {
   enabled: boolean;
   hint?: string;
   odds?: string;
+  /** 這個選項會開始一場過招。 */
+  duel?: boolean;
 }

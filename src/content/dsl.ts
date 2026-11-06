@@ -21,6 +21,7 @@ export const align = (delta: number): GameEffect => ({ type: 'alignment', delta 
 export const xp = (skill: string, n: number): GameEffect => ({ type: 'skill', skill, xp: n });
 export const train = (kind: 'martial' | 'medicine' | 'sect', n: number): GameEffect => ({ type: 'train', kind, xp: n });
 export const join = (sect: string): GameEffect => ({ type: 'joinSect', sect });
+export const leaveSect = (): GameEffect => ({ type: 'leaveSect' });
 export const master = (npc: string): GameEffect => ({ type: 'master', npc });
 export const goTo = (region: string): GameEffect => ({ type: 'region', region });
 export const ambition = (id: string): GameEffect => ({ type: 'ambition', ambition: id });
@@ -30,6 +31,8 @@ export const later = (event: string, min: number, max: number, expire?: number):
   after: [min, max],
   expire,
 });
+/** 同一年接著發生的事件。 */
+export const next = (event: string): GameEffect => ({ type: 'chain', event });
 export const meet = (npc: string): GameEffect => ({ type: 'meet', npc });
 export const resetStreak = (): GameEffect => ({ type: 'resetStreak' });
 export const die = (cause: string): GameEffect => ({ type: 'die', cause });

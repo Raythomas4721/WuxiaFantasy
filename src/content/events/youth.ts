@@ -2,8 +2,8 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, ambition, chiv, danshi, die, fame, flag, fuyuan, goTo, health, join, later, master, meet, meili, money,
-  rel, wuxing, xinxing, xp,
+  add, align, ambition, chiv, danshi, die, fame, flag, fuyuan, goTo, health, join, later, leaveSect, master, meet,
+  meili, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const youthEvents: GameEvent[] = [
@@ -436,17 +436,15 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'fight',
         text: '拔刀護鏢',
-        check: {
-          stats: ['gengu', 'danshi'],
-          difficulty: 6,
-          martial: true,
+        duel: {
+          opponent: 'robbers',
           success: {
             text: '一場惡戰，你砍翻了兩個賊人，其餘的一哄而散。總鏢頭當眾賞了你一錠銀子。',
-            effects: [money(40), fame(4), add('escort_success'), xp('liuyun', 1)],
+            effects: [money(40), fame(4), align(2), add('escort_success'), xp('liuyun', 1)],
           },
           failure: {
             text: '你被打得頭破血流，貨也被搶了一半。總鏢頭沒罵你，只說：「人活著就好。」',
-            effects: [health(-25), money(-10)],
+            effects: [money(-10)],
           },
         },
       },
@@ -482,6 +480,24 @@ export const youthEvents: GameEvent[] = [
           },
         },
       },
+      {
+        id: 'embezzle',
+        text: '跟賊人談好價錢，把鏢分了',
+        check: {
+          stats: ['meili', 'danshi'],
+          difficulty: 5,
+          success: {
+            text: '你和賊頭在林子裡分了貨，回去只說是被劫了。總鏢頭盯著你看了很久，什麼也沒說。第二個月，你自己辭了鏢局。從此江湖上都說，長風鏢局出過一個監守自盜的人。',
+            effects: [money(150), align(-20), chiv(-8), leaveSect(), flag('broke_with_sect'), flag('betrayed_changfeng')],
+            recap: { weight: 4, text: '你在長風鏢局監守自盜，帶著一筆不乾淨的錢離開了鏢局。' },
+          },
+          failure: {
+            text: '賊頭收了錢，轉身就把你賣了。你被五花大綁地送回鏢局，總鏢頭當著所有人的面，把你逐出了門。',
+            effects: [align(-15), fame(-5), leaveSect(), flag('broke_with_sect'), flag('expelled')],
+            recap: { weight: 4, text: '你在長風鏢局監守自盜，被當眾逐出了門。' },
+          },
+        },
+      },
     ],
   },
   // ---- 濟世藥谷 ----
@@ -503,6 +519,8 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'try',
         text: '進草棚應考',
+        requires: { minAlignment: 0 },
+        hint: '谷口的弟子認得你，搖了搖頭：「藥谷不收名聲不好的人。」',
         check: {
           stats: ['wuxing', 'xinxing'],
           difficulty: 6,
@@ -545,6 +563,8 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'retry',
         text: '再考一次',
+        requires: { minAlignment: 0 },
+        hint: '這幾年你在江湖上的名聲，林鶴年也聽說了。',
         check: {
           stats: ['wuxing', 'xinxing'],
           difficulty: 5,
@@ -719,10 +739,8 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'fight',
         text: '上台比試',
-        check: {
-          stats: ['gengu', 'danshi'],
-          difficulty: 6,
-          martial: true,
+        duel: {
+          opponent: 'tourney',
           success: {
             text: '你連勝三場，台下叫好聲不斷。主事的人把彩頭塞進你手裡，還問你願不願意留下來。',
             effects: [fame(5), money(20), flag('won_tournament')],
@@ -730,7 +748,23 @@ export const youthEvents: GameEvent[] = [
           },
           failure: {
             text: '第一場你就被人一腳踹下了台。你爬起來拍拍灰，把對方的招式記在了心裡。',
-            effects: [health(-15), xinxing(1)],
+            effects: [xinxing(1)],
+          },
+        },
+      },
+      {
+        id: 'dirty',
+        text: '上台前，在對手的茶裡加點東西',
+        check: {
+          stats: ['wuxing'],
+          difficulty: 4,
+          success: {
+            text: '對手上台時腳步虛浮，你沒費什麼力氣就贏了。彩頭拿在手裡，卻沒有想像中沉。',
+            effects: [fame(3), money(20), align(-8), flag('won_tournament')],
+          },
+          failure: {
+            text: '對手喝了一口就吐了出來，當場揪住你的領子。台下的人都看見了。',
+            effects: [fame(-5), align(-10), health(-10)],
           },
         },
       },
@@ -816,18 +850,16 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'guard',
         text: '抄起扁擔護住家門',
-        check: {
-          stats: ['danshi', 'gengu'],
-          difficulty: 6,
-          martial: true,
+        duel: {
+          opponent: 'scar_young',
           success: {
             text: '你守在門口，第一個衝進來的人被你一扁擔砸在肩上。疤臉看了你一眼，罵了一聲，帶人轉去了別家。',
-            effects: [fame(5), chiv(5), flag('drove_bandits')],
+            effects: [fame(5), chiv(5), align(3), flag('drove_bandits')],
             recap: { weight: 2, text: '{ageCn}歲那年潰兵進村，你一根扁擔守住了家門。' },
           },
           failure: {
             text: '你被一刀背砸倒在地。父親撲上來護住你，疤臉的刀落了下去。那天之後，家裡的門檻上多了一道洗不掉的血痕。',
-            effects: [health(-30), flag('father_dead'), flag('blood_feud'), later('revenge_chance', 6, 14, 20)],
+            effects: [flag('father_dead'), flag('blood_feud'), later('revenge_chance', 6, 14, 20)],
             recap: { weight: 5, text: '{ageCn}歲那年，潰兵疤臉闖進村子，父親為了護你，死在了他的刀下。' },
           },
         },
@@ -842,10 +874,18 @@ export const youthEvents: GameEvent[] = [
             text: '你帶著二十幾口人在山洞裡躲了兩夜。回來時房子燒了一半，但人都在。',
             effects: [chiv(5), meili(1), fame(3)],
           },
-          failure: {
-            text: '逃得太急，家裡值錢的東西全被搶光了。',
-            effects: [money(-40), health(-10)],
-          },
+          failure: [
+            {
+              if: { maxStats: { fuyuan: 6 } },
+              text: '半路上，父親說祖宗的牌位還在家裡，轉身跑了回去。你們在山洞裡等到天黑，他沒有回來。第二天你在村口找到他，疤臉的人把他的屍首掛在了門框上。',
+              effects: [money(-40), flag('father_dead'), flag('blood_feud'), later('revenge_chance', 6, 14, 20)],
+              recap: { weight: 5, text: '{ageCn}歲那年潰兵進村，父親回頭去拿祖宗牌位，死在了疤臉手裡。' },
+            },
+            {
+              text: '逃得太急，家裡值錢的東西全被搶光了。',
+              effects: [money(-40), health(-10)],
+            },
+          ],
         },
       },
       {
@@ -854,6 +894,15 @@ export const youthEvents: GameEvent[] = [
         outcome: {
           text: '疤臉掂了掂錢袋，滿意地走了。你看著空蕩蕩的米缸，第一次明白什麼叫亂世。',
           effects: [money(-60), xinxing(1), fame(-1)],
+        },
+      },
+      {
+        id: 'guide',
+        text: '攔住疤臉，告訴他村東的大戶家裡藏著糧',
+        outcome: {
+          text: '疤臉咧嘴一笑，丟給你一小袋碎銀，帶人往村東去了。那天夜裡村東起了火。後來村裡的人見了你，都把門關上。',
+          effects: [money(30), align(-15), chiv(-10), flag('guided_bandits')],
+          recap: { weight: 3, text: '{ageCn}歲那年潰兵進村，你給疤臉指了村東大戶的路，保住了自己的家。' },
         },
       },
     ],

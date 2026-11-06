@@ -1,7 +1,7 @@
 // 宋蒙戰爭的史實大事。大勢不可改變，玩家只能決定自己身在何處、做了什麼。
 
 import type { GameEvent } from '../../engine/types';
-import { add, chiv, die, fame, flag, goTo, health, join, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
+import { add, align, chiv, die, fame, flag, goTo, health, join, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
 
 const HAN_DEAD = flag('dead_han_shouyi');
 
@@ -94,7 +94,7 @@ export const historyEvents: GameEvent[] = [
           martial: true,
           success: {
             text: '你在城頭守了一年又一年，打退了不知多少次攻城。有一天韓守義走過來，拍著你的肩膀說：「好樣的。」',
-            effects: [flag('defended_city'), fame(5), chiv(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2)],
+            effects: [flag('defended_city'), fame(5), chiv(5), align(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2)],
             recap: { weight: 3, text: '襄陽被圍的那幾年，你一直守在城頭。' },
           },
           failure: {
@@ -110,7 +110,7 @@ export const historyEvents: GameEvent[] = [
         requires: { minSkill: { baicao: 1 } },
         outcome: {
           text: '傷兵營裡的血腥味，你一輩子都忘不掉。你數不清救活了多少人，只記得那些沒救活的臉。',
-          effects: [flag('defended_city'), add('healed', 3), chiv(8), xp('baicao', 2), fame(3)],
+          effects: [flag('defended_city'), add('healed', 3), chiv(8), align(5), xp('baicao', 2), fame(3)],
           recap: { weight: 3, text: '襄陽被圍的那幾年，你在傷兵營裡救活了數不清的人。' },
         },
       },
@@ -121,8 +121,18 @@ export const historyEvents: GameEvent[] = [
         hidden: true,
         outcome: {
           text: '葛百衲帶著你們挨家挨戶分糧。他說：「城破不破，是天的事。人餓不餓，是咱們的事。」',
-          effects: [flag('defended_city'), chiv(6), rel('ge_baina', 15), fame(2)],
+          effects: [flag('defended_city'), chiv(6), align(5), rel('ge_baina', 15), fame(2)],
           recap: { weight: 3, text: '襄陽被圍的那幾年，你跟著葛百衲在城裡分糧，沒讓一個流民餓死。' },
+        },
+      },
+      {
+        id: 'hoard',
+        text: '城裡缺糧，正是囤糧高價賣出的時候',
+        requires: { minMoney: 40 },
+        outcome: {
+          text: '一斗米在你手裡翻了十倍。你的錢箱滿了，城南巷子裡餓死的人也多了。有人在你家門板上用炭寫了兩個字，你讓人刷掉了。',
+          effects: [money(200), align(-15), chiv(-10), flag('hoarded_grain')],
+          recap: { weight: 3, text: '襄陽被圍的那幾年，你靠囤糧發了一筆財。' },
         },
       },
       {
@@ -237,10 +247,8 @@ export const historyEvents: GameEvent[] = [
       {
         id: 'shoot',
         text: '拉弓搭箭，搶先出手',
-        check: {
-          stats: ['danshi', 'gengu'],
-          difficulty: 7,
-          martial: true,
+        duel: {
+          opponent: 'bater',
           success: {
             text: '你的箭先到了。巴特爾從馬上摔下來，到死都沒有把弓拉開。戰後，你在他身上找到一根褪了色的箭羽——和你身上那根一模一樣。',
             effects: [flag('killed_bater'), flag('bater_met_war'), flag('defended_city'), fame(8), xinxing(-1)],
@@ -248,7 +256,7 @@ export const historyEvents: GameEvent[] = [
           },
           failure: {
             text: '你的箭射偏了。巴特爾的箭擦著你的耳朵飛過，釘在你身後的旗杆上。他沒有再射第二箭。',
-            effects: [flag('spared_by_bater'), flag('bater_met_war'), health(-10)],
+            effects: [flag('spared_by_bater'), flag('bater_met_war')],
             recap: { weight: 5, text: '兩軍陣前，巴特爾的箭擦過你的耳邊。他本可以射中的。' },
           },
         },
@@ -335,7 +343,7 @@ export const historyEvents: GameEvent[] = [
           difficulty: 6,
           success: {
             text: '你跟著義軍一路南撤，打了大大小小十幾仗。三年後，崖山的消息傳來，義軍散了。',
-            effects: [flag('joined_resistance'), flag('defended_city'), fame(5), chiv(5)],
+            effects: [flag('joined_resistance'), flag('defended_city'), fame(5), chiv(5), align(5)],
             recap: { weight: 3, text: '臨安陷落後，你跟著義軍一路南撤，直到崖山的消息傳來。' },
           },
           failure: {
@@ -357,6 +365,22 @@ export const historyEvents: GameEvent[] = [
           text: '你把一箱書和一柄劍埋在後院的槐樹下。也許有一天，會有人用得上。',
           effects: [flag('hid_books'), wuxing(1)],
           recap: { weight: 2, text: '臨安陷落那年，你把一箱書和一柄劍埋在了後院的槐樹下。' },
+        },
+      },
+      {
+        id: 'loot',
+        text: '城裡大亂，富戶的宅子都沒人守了',
+        check: {
+          stats: ['danshi'],
+          difficulty: 5,
+          success: {
+            text: '你帶著兩個人，趁亂搬空了一座官員的宅子。新朝的官差來查時，你已經換了身分。',
+            effects: [money(120), align(-12), chiv(-6), flag('looted_linan')],
+          },
+          failure: {
+            text: '你撞上了另一夥搶劫的人。東西沒搶到，還挨了一刀。',
+            effects: [health(-20), align(-6)],
+          },
         },
       },
     ],

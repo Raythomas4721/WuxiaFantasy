@@ -37,6 +37,10 @@ export const regions: Record<string, RegionDef> = {
   jiangnan: { id: 'jiangnan', name: '江南', place: '江南嘉興', desc: '富庶繁華，商旅往來，文風鼎盛。' },
   xiangyang: { id: 'xiangyang', name: '襄陽', place: '襄陽', desc: '漢水邊的邊防重鎮，兵荒馬亂，俠客雲集。' },
   shu: { id: 'shu', name: '川蜀', place: '川蜀', desc: '山高林深，藥材豐饒，濟世藥谷就在這裡。' },
+  qingming: {
+    id: 'qingming', name: '青冥山', place: '青冥山下', noBirth: true,
+    desc: '青衡劍府所在的名山。山頂的青冥台，是三屆論武的地方。',
+  },
 };
 
 export const traits: Record<string, TraitDef> = {
@@ -80,6 +84,8 @@ export const skills: Record<string, SkillDef> = {
   shoucheng: { id: 'shoucheng', name: '守城十八槍', kind: 'martial', desc: '襄陽義軍在城頭練出來的槍法，只求不退。' },
   shijing: { id: 'shijing', name: '市井十三拳', kind: 'martial', desc: '百衲會的拳路，招招都是街頭打架打出來的。' },
   shibi: { id: 'shibi', name: '石壁殘劍', kind: 'martial', desc: '深山石洞裡前人刻下的劍意，不知出自誰手。' },
+  qinghen: { id: 'qinghen', name: '青衡十三式', kind: 'martial', desc: '青衡劍府的劍法，十三式環環相扣，講究法度。' },
+  yeyu: { id: 'yeyu', name: '夜雨針', kind: 'martial', desc: '血衣樓的暗器手法，針出無聲，中者到天亮才覺得疼。' },
   baicao: { id: 'baicao', name: '百草辨脈術', kind: 'medicine', desc: '辨藥、診脈、施針的醫術根基。' },
 };
 
@@ -88,6 +94,8 @@ export const sects: Record<string, SectDef> = {
   yaogu: { id: 'yaogu', name: '濟世藥谷', desc: '川蜀深山中的醫家，谷主林鶴年人稱藥王。', skill: 'baicao' },
   yijun: { id: 'yijun', name: '襄陽義軍', desc: '鐵槍韓守義召集的民間義軍，守城也守人。', skill: 'shoucheng' },
   baina: { id: 'baina', name: '百衲會', desc: '乞丐與流民的互助會，亂世裡自己管自己。', skill: 'shijing' },
+  qinghen: { id: 'qinghen', name: '青衡劍府', desc: '青冥山上的劍派，江湖第一大派。門規嚴，劍不為己出。', skill: 'qinghen' },
+  xueyi: { id: 'xueyi', name: '血衣樓', desc: '沒人知道總舵在哪裡的殺手組織。收錢殺人，從不失手。', skill: 'yeyu' },
 };
 
 export const npcs: Record<string, NpcDef> = {
@@ -108,6 +116,7 @@ export const npcs: Record<string, NpcDef> = {
     deathYear: 1278,
     presence: [{ from: 1228, to: 1278, regions: ['shu'] }],
     codex: true,
+    righteous: true,
   },
   han_shouyi: {
     id: 'han_shouyi',
@@ -117,6 +126,7 @@ export const npcs: Record<string, NpcDef> = {
     deathYear: 1273,
     presence: [{ from: 1250, to: 1273, regions: ['xiangyang'] }],
     codex: true,
+    righteous: true,
   },
   bater: {
     id: 'bater',
@@ -148,6 +158,23 @@ export const npcs: Record<string, NpcDef> = {
     deathYear: 1274,
     presence: [{ from: 1235, to: 1274, regions: ['xiangyang'] }],
     codex: true,
+  },
+  wumian: {
+    id: 'wumian',
+    name: '無面客',
+    title: '血衣樓',
+    desc: '血衣樓的殺手，總戴著一張沒有五官的白面具。他只在一個人走投無路的時候出現。',
+    presence: [{ from: 1240, to: 1290, regions: ['*'] }],
+    codex: true,
+  },
+  xie_lingshuang: {
+    id: 'xie_lingshuang',
+    name: '謝凌霜',
+    title: '寒衣劍主',
+    desc: '青衡劍府的掌門。嚴厲公正，一身素白，劍法冷得像冬夜的霜。',
+    presence: [{ from: 1240, to: 1290, regions: ['qingming'] }],
+    codex: true,
+    righteous: true,
   },
   lu_ping: {
     id: 'lu_ping',

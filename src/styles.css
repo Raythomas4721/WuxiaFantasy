@@ -995,3 +995,322 @@ small {
     gap: 0.1rem;
   }
 }
+
+/* ---------- 過招 ---------- */
+
+.choice-duel {
+  font-size: 0.75rem;
+  color: var(--accent);
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 0 0.55rem;
+  letter-spacing: 0.15em;
+}
+
+.duel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.duel-head {
+  display: flex;
+  justify-content: center;
+}
+
+.duel-round {
+  font-size: 0.85rem;
+  color: var(--ink-3);
+  letter-spacing: 0.2em;
+}
+
+.duel-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.duel-side.foe {
+  border-left: 3px solid var(--accent);
+}
+
+.duel-side.me {
+  border-left: 3px solid var(--good);
+}
+
+.duel-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.duel-name strong {
+  font-size: 1.15rem;
+  letter-spacing: 0.1em;
+}
+
+.duel-energy {
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+
+.duel-hp {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.duel-hp .health-bar {
+  flex: 1 1 auto;
+}
+
+.duel-hp .small {
+  white-space: nowrap;
+  color: var(--ink-2);
+}
+
+.duel-status,
+.duel-traps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.duel-status li {
+  font-size: 0.8rem;
+  padding: 0.05rem 0.6rem;
+  border-radius: 999px;
+  background: var(--paper-2);
+  color: var(--ink-2);
+}
+
+.duel-traps li {
+  font-size: 0.8rem;
+  padding: 0.15rem 0.6rem;
+  border: 1px dashed var(--ink-3);
+  border-radius: 6px;
+  color: var(--ink-2);
+}
+
+.duel-traps li.used {
+  text-decoration: line-through;
+  color: var(--ink-3);
+}
+
+.my-traps li {
+  border-color: var(--good);
+}
+
+.duel-intent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: var(--accent-soft);
+}
+
+.intent-label {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.intent-guard,
+.intent-charge {
+  background: var(--paper-2);
+}
+
+.intent-guard .intent-label,
+.intent-charge .intent-label {
+  color: var(--gold);
+}
+
+.intent-detail {
+  color: var(--ink-2);
+  font-size: 0.95rem;
+}
+
+.duel-log {
+  list-style: none;
+  padding: 0 0.25rem;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-height: 2rem;
+}
+
+.duel-log li {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-2);
+  animation: log-in 0.25s ease-out;
+}
+
+.duel-log .log-me {
+  color: var(--ink);
+}
+
+.duel-log .log-foe {
+  color: var(--bad);
+}
+
+.duel-log .log-sys {
+  color: var(--gold);
+}
+
+@keyframes log-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.duel-hand {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.duel-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--line);
+  border-top: 3px solid var(--ink-3);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.1s, border-color 0.15s;
+}
+
+.duel-card:hover:not(:disabled) {
+  transform: translateY(-2px);
+  border-color: var(--ink-3);
+}
+
+.duel-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.duel-card.kind-attack {
+  border-top-color: var(--accent);
+}
+
+.duel-card.kind-guard {
+  border-top-color: var(--good);
+}
+
+.duel-card.kind-skill {
+  border-top-color: var(--gold);
+}
+
+.duel-card.kind-trap {
+  border-top-style: dashed;
+  border-top-color: var(--ink-2);
+}
+
+.card-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.card-cost {
+  flex: none;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--card);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.card-name {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.card-kind {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+
+.card-text {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.card-boost {
+  font-size: 0.78rem;
+  color: var(--good);
+}
+
+.duel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.duel-actions .muted {
+  margin-right: auto;
+}
+
+.duel-over {
+  text-align: center;
+  padding: 1rem;
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.duel-over p {
+  font-size: 1.15rem;
+  margin: 0 0 0.75rem;
+}
+
+.duel-over.win p {
+  color: var(--good);
+}
+
+.duel-over.lose p,
+.duel-over.yield p {
+  color: var(--bad);
+}
+
+@media (max-width: 560px) {
+  .duel-hand {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .duel-side {
+    padding: 0.65rem 0.75rem;
+  }
+}
+
+.duel-side.foe .health-fill {
+  background: var(--accent);
+}

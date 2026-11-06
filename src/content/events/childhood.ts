@@ -586,17 +586,15 @@ export const childhoodEvents: GameEvent[] = [
       {
         id: 'fight',
         text: '拉開架勢，跟他打',
-        check: {
-          stats: ['gengu', 'danshi'],
-          difficulty: 6,
-          martial: true,
+        duel: {
+          opponent: 'rival',
           success: {
             text: '不出三招，{rival}就被你按倒在地。圍觀的人拍手叫好。他爬起來，連一句狠話都不敢撂。',
             effects: [fame(4), chiv(3), flag('beat_rival'), rel('rival', -20)],
           },
           failure: {
             text: '你被他的打手圍住，打得爬不起來。{rival}蹲下來拍拍你的臉：「記住了。」',
-            effects: [health(-20), flag('humiliated'), rel('rival', -10)],
+            effects: [flag('humiliated'), rel('rival', -10)],
             recap: { weight: 1, text: '{ageCn}歲那年，你被{rival}的打手打得爬不起來。' },
           },
         },

@@ -104,6 +104,14 @@ export const threads: ThreadDef[] = [
     advances: ['baina_join'],
   },
   {
+    id: 'xueyi',
+    title: '血衣令',
+    priority: 85,
+    conditions: { sects: ['xueyi'] },
+    text: '你懷裡揣著血衣樓的令牌。令牌底下，隨時可能壓著下一張紙條。',
+    advances: ['xueyi_contract'],
+  },
+  {
     id: 'bater',
     title: '草原之約',
     priority: 30,
@@ -128,6 +136,29 @@ export const threads: ThreadDef[] = [
       { text: '聽說襄陽有個叫韓守義的人在招募義軍。要守國門，得先到襄陽去。' },
     ],
     advances: ['xiangyang_militia'],
+  },
+  {
+    id: 'lunwu_coming',
+    title: '青冥論武',
+    priority: 55,
+    conditions: {
+      minAge: 11,
+      any: [
+        { minYear: 1239, maxYear: 1241 },
+        { minYear: 1251, maxYear: 1253 },
+        { minYear: 1263, maxYear: 1265 },
+      ],
+    },
+    text: '江湖上都在傳：青冥台又要論武了。各門各派的年輕人都在磨劍。至少要練過一門武學，才能上台。',
+    advances: ['lunwu'],
+  },
+  {
+    id: 'rival_rematch',
+    title: '雪恥',
+    priority: 50,
+    conditions: { flags: ['lost_to_rival'], notFlags: ['rival_settled'], maxYear: 1265 },
+    text: '你在青冥台上輸給了{rival}。下一屆論武，這筆帳要算清楚。',
+    advances: ['lunwu_main'],
   },
   // ---- 時代的鐘聲（史實） ----
   {

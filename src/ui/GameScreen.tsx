@@ -7,6 +7,7 @@ import { chineseNumber, eraName } from '../engine/text';
 import type { GameState } from '../engine/types';
 import type { LifeUnlocks } from '../save/codex';
 import { EndingView } from './EndingView';
+import { DuelView } from './DuelView';
 import { FocusView } from './FocusView';
 import { StatusPanel } from './StatusPanel';
 
@@ -24,10 +25,12 @@ export function GameScreen({ state, unlocks, onChange, onNewLife, onCodex, onExi
   const p = state.player;
   const year = currentYear(state);
 
-  const act = (fn: () => GameState) => {
+  const act = (fn: () => GameState, scroll = true) => {
     try {
-      onChange(fn());
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const next = fn();
+      onChange(next);
+      // 過招中出牌不要捲動畫面；進出過招時才捲回頂端
+      if (scroll && !(next.phase === 'duel' && state.phase === 'duel')) window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       console.error(err);
     }
@@ -105,6 +108,9 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
     case 'focus':
       return <FocusView state={state} act={act} />;
 
+    case 'duel':
+      return <DuelView state={state} act={act} />;
+
     case 'event': {
       const e = CONTENT.events.find((x) => x.id === state.current?.eventId);
       return (
@@ -122,6 +128,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
                 onClick={() => act(() => chooseOption(state, c.id))}
               >
                 <span className="choice-text">{c.text}</span>
+                {c.duel && <span className="choice-duel">過招</span>}
                 {c.odds && <span className="choice-odds">{c.odds}</span>}
                 {c.hint && <span className="choice-hint">{c.hint}</span>}
               </button>
@@ -160,7 +167,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
           )}
           <div className="actions">
             <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
-              {state.player.alive ? '歲月流轉' : '……'}
+              {!state.player.alive ? '……' : state.chain ? '接著……' : '歲月流轉'}
             </button>
             <ChangeFocusButton state={state} act={act} />
           </div>
@@ -176,7 +183,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
 /** 結果畫面的次要按鈕：下一回合重新選方針。 */
 function ChangeFocusButton({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
   const focus = CONTENT.focuses.find((f) => f.id === state.focus);
-  if (!state.player.alive || !focus || !state.focusStreak) return null;
+  if (!state.player.alive || state.chain || !focus || !state.focusStreak) return null;
   const weary = state.focusStreak.count >= FATIGUE_STREAK;
   return (
     <button

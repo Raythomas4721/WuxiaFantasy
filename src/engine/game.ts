@@ -6,7 +6,8 @@
 import { CONTENT } from '../content';
 import { checkCondition, currentYear, martialLevel, skillLevel, unmetHints } from './conditions';
 import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
-import { applyEffects, killPlayer } from './effects';
+import { applyEffects, killPlayer, withReputation } from './effects';
+import { createDuel, endRound, fighterFor, healthLossOf, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
 import { getEvent, selectEvent } from './select';
@@ -15,8 +16,10 @@ import { chineseNumber, eraName, fill, renderText } from './text';
 import type {
   Check,
   ChoiceView,
+  DuelState,
   FocusContext,
   FocusDef,
+  GameChoice,
   GameEvent,
   GameState,
   Outcome,
@@ -63,7 +66,7 @@ export function newGame(setup: NewGameSetup): GameState {
   const backgroundId =
     setup.background ??
     rng.weighted(Object.values(CONTENT.backgrounds).map((b) => ({ item: b.id, weight: b.weight ?? 1 })))!;
-  const regionId = setup.region ?? rng.pick(Object.keys(CONTENT.regions));
+  const regionId = setup.region ?? rng.pick(Object.values(CONTENT.regions).filter((r) => !r.noBirth).map((r) => r.id));
   const bg = CONTENT.backgrounds[backgroundId];
   if (!bg) throw new Error(`未知出身：${backgroundId}`);
   if (!CONTENT.regions[regionId]) throw new Error(`未知地區：${regionId}`);
@@ -252,8 +255,8 @@ function quietTurn(s: GameState, rng: Rng): void {
   setResult(s, rng, { title: '歲月', text });
 }
 
-function presentEvent(s: GameState, rng: Rng): void {
-  const e = selectEvent(s, rng);
+function presentEvent(s: GameState, rng: Rng, next?: GameEvent): void {
+  const e = next ?? selectEvent(s, rng);
   if (!e) {
     quietTurn(s, rng);
     return;
@@ -418,7 +421,8 @@ export function choiceViews(s: GameState): ChoiceView[] {
       text: fill(c.text, s, s.current.vars),
       enabled,
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
-      odds: enabled && c.check ? oddsLabel(checkChance(s, c.check)) : undefined,
+      odds: enabled && c.check ? oddsLabel(checkChance(s, c.check)) : enabled && c.duel ? duelOdds(s, c.duel.opponent) : undefined,
+      duel: Boolean(c.duel),
     });
   }
   return views;
@@ -440,6 +444,12 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
 
   const s = clone(state);
   const rng = new Rng(s.rng);
+  if (choice.duel) {
+    s.duel = createDuel(fighterFor(s), choice.duel.opponent, choice.id, rng, s);
+    s.phase = 'duel';
+    s.rng = rng.state;
+    return s;
+  }
   let spec: OutcomeSpec;
   let check: TurnResult['check'];
   if (choice.check) {
@@ -451,9 +461,18 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
   } else {
     throw new Error(`選項沒有結果：${e.id}/${choice.id}`);
   }
+  applyChoiceOutcome(s, rng, e, choice, spec, check);
+  s.rng = rng.state;
+  return s;
+}
+
+/** 套用選項的結果：效果、人生紀錄、結果畫面。 */
+function applyChoiceOutcome(
+  s: GameState, rng: Rng, e: GameEvent, choice: GameChoice, spec: OutcomeSpec, check: TurnResult['check'],
+): void {
   const outcome = resolveOutcome(s, spec);
-  applyEffects(s, outcome.effects, rng);
-  const vars = state.current.vars;
+  applyEffects(s, withReputation(outcome.effects), rng);
+  const vars = s.current?.vars;
   const text = renderText(outcome.text, s, vars);
   s.history.push({
     turn: s.turn,
@@ -467,6 +486,54 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
   pushTags(s, e.tags ?? []);
   setResult(s, rng, { title: e.title, text, check });
   s.current = undefined;
+}
+
+// ---------- 過招 ----------
+
+/** 選項上的勝算提示：看主修武學和對手的等級差。 */
+function duelOdds(s: GameState, opponentId: string): string {
+  const mine = mainSkill(s).level;
+  const diff = mine - opponentLevel(CONTENT.opponents[opponentId], mine);
+  if (diff >= 1) return '把握很大';
+  if (diff === 0) return '有幾分把握';
+  if (diff === -1) return '勉強一試';
+  return '九死一生';
+}
+
+function duelStep(state: GameState, step: (d: DuelState, rng: Rng) => DuelState): GameState {
+  if (state.phase !== 'duel' || !state.duel) throw new Error('現在沒有在過招');
+  const s = clone(state);
+  const rng = new Rng(s.rng);
+  s.duel = step(s.duel!, rng);
+  s.rng = rng.state;
+  return s;
+}
+
+export function duelPlay(state: GameState, handIndex: number): GameState {
+  return duelStep(state, (d, rng) => playCard(d, handIndex, rng));
+}
+
+export function duelEndRound(state: GameState): GameState {
+  return duelStep(state, (d, rng) => endRound(d, rng));
+}
+
+export function duelYield(state: GameState): GameState {
+  return duelStep(state, (d) => yieldDuel(d));
+}
+
+/** 過招結束後收招：損失的氣血換算成健康，再走事件的成功或失敗結果。 */
+export function finishDuel(state: GameState): GameState {
+  if (state.phase !== 'duel' || !state.duel?.over || !state.current) throw new Error('過招還沒結束');
+  const s = clone(state);
+  const rng = new Rng(s.rng);
+  const d = s.duel!;
+  const e = getEvent(s.current!.eventId);
+  const choice = e.choices.find((c) => c.id === d.choiceId)!;
+  const won = d.over === 'win';
+  const loss = healthLossOf(d);
+  if (loss > 0) applyEffects(s, [{ type: 'health', delta: -loss }], rng);
+  s.duel = undefined;
+  applyChoiceOutcome(s, rng, e, choice, won ? choice.duel!.success : choice.duel!.failure, won ? 'success' : 'failure');
   s.rng = rng.state;
   return s;
 }
@@ -489,6 +556,17 @@ export function nextTurn(state: GameState): GameState {
   const s = clone(state);
   const rng = new Rng(s.rng);
   const p = s.player;
+
+  // 同一年接著發生的事件：不推進時間
+  if (p.alive && s.chain) {
+    const next = getEvent(s.chain);
+    s.chain = undefined;
+    s.snapshot = takeSnapshot(s);
+    s.result = undefined;
+    presentEvent(s, rng, next);
+    s.rng = rng.state;
+    return s;
+  }
 
   if (p.alive) {
     s.prevYear = currentYear(s);
