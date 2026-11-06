@@ -1,5 +1,6 @@
 import { CONTENT } from '../content';
 import { currentYear } from './conditions';
+import { addToDeck, noteSkillGain } from './deck';
 import type { Rng } from './rng';
 import type { GameEffect, GameState } from './types';
 
@@ -74,16 +75,23 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       p.alignment = clamp(p.alignment + (slow ? Math.ceil(e.delta / 2) : e.delta), -100, 100);
       break;
     }
-    case 'skill':
-      p.skills[e.skill] = (p.skills[e.skill] ?? 0) + e.xp;
+    case 'skill': {
+      const before = p.skills[e.skill] ?? 0;
+      p.skills[e.skill] = before + e.xp;
+      noteSkillGain(s, e.skill, before);
       break;
+    }
     case 'train': {
       // 悟性高的人學得快一些。
       const bonus = p.stats.wuxing >= 8 ? 1 : 0;
       let skill: string | undefined;
       if (e.kind === 'sect') skill = p.sect ? CONTENT.sects[p.sect]?.skill : undefined;
       else skill = bestSkillOfKind(s, e.kind);
-      if (skill) p.skills[skill] = (p.skills[skill] ?? 0) + e.xp + bonus;
+      if (skill) {
+        const before = p.skills[skill] ?? 0;
+        p.skills[skill] = before + e.xp + bonus;
+        noteSkillGain(s, skill, before);
+      }
       break;
     }
     case 'joinSect':
@@ -124,6 +132,9 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       break;
     case 'chain':
       s.chain = e.event;
+      break;
+    case 'card':
+      addToDeck(s, e.add, e.remove);
       break;
     case 'schedule': {
       const due = currentYear(s) + rng.int(e.after[0], e.after[1]);

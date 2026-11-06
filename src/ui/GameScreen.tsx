@@ -7,6 +7,7 @@ import { chineseNumber, eraName } from '../engine/text';
 import type { GameState } from '../engine/types';
 import type { LifeUnlocks } from '../save/codex';
 import { EndingView } from './EndingView';
+import { DeckTaskPanel } from './DeckPanel';
 import { DuelView } from './DuelView';
 import { FocusView } from './FocusView';
 import { MarketPanel } from './MarketPanel';
@@ -173,12 +174,16 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
               <p>{r.rumor}</p>
             </aside>
           )}
-          <div className="actions">
-            <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
-              {!state.player.alive ? '……' : state.chain ? '接著……' : '歲月流轉'}
-            </button>
-            <ChangeFocusButton state={state} act={act} />
-          </div>
+          <DeckTaskPanel state={state} act={act} />
+          {/* 牌庫的事要先處理完，才能往下走 */}
+          {!(state.player.alive && state.deckTasks?.length) && (
+            <div className="actions">
+              <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
+                {!state.player.alive ? '……' : state.chain ? '接著……' : '歲月流轉'}
+              </button>
+              <ChangeFocusButton state={state} act={act} />
+            </div>
+          )}
           <MarketPanel state={state} act={act} />
         </article>
       );

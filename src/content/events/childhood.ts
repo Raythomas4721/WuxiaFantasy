@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  chiv, danshi, fame, flag, fuyuan, gengu, health, item, later, meet, meili, money, rel, wuxing, xinxing, xp,
+  card, chiv, danshi, fame, flag, fuyuan, gengu, health, item, later, meet, meili, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const childhoodEvents: GameEvent[] = [
@@ -32,7 +32,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '抓木劍',
         outcome: {
           text: '你一把抓住木劍，揮得虎虎生風，差點打翻了酒碗。大人們哄堂大笑：「這孩子將來是個練武的料。」',
-          effects: [gengu(1), flag('zhua_sword')],
+          effects: [gengu(1), flag('zhua_sword'), card('pinming', 'punch')],
         },
       },
       {
@@ -40,7 +40,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '抓毛筆',
         outcome: {
           text: '你抓起毛筆，在自己臉上畫了一道黑。一屋子的人都笑出了眼淚。',
-          effects: [wuxing(1), flag('zhua_brush')],
+          effects: [wuxing(1), flag('zhua_brush'), card('kanpo', 'punch')],
         },
       },
       {
@@ -48,7 +48,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '抓銅錢',
         outcome: {
           text: '你攥緊銅錢不放，誰來拿都不給。長輩搖頭笑道：「守得住財，也算本事。」',
-          effects: [meili(1), money(10), flag('zhua_coin')],
+          effects: [meili(1), money(10), flag('zhua_coin'), card('zhouxuan', 'punch')],
         },
       },
       {
@@ -56,7 +56,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '抓那把草藥',
         outcome: {
           text: '你抓起那把草，放在鼻子前聞了又聞，竟然一聲也沒哭。',
-          effects: [xp('baicao', 1), xinxing(1), flag('zhua_herb')],
+          effects: [xp('baicao', 1), xinxing(1), flag('zhua_herb'), card('jinchuang', 'punch')],
         },
       },
       {
@@ -64,7 +64,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '什麼都不抓，爬回母親懷裡',
         outcome: {
           text: '你什麼也沒抓，爬回母親懷裡睡著了。有人說這孩子沒出息，母親卻說：「平平安安就好。」',
-          effects: [fuyuan(1), flag('zhua_none')],
+          effects: [fuyuan(1), flag('zhua_none'), card('liusanfen', 'punch')],
         },
       },
     ],
@@ -296,7 +296,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '把雙方分開，問清楚怎麼回事',
         outcome: {
           text: '你把兩邊隔開，一句一句地問。事情沒有問出結果，但那群孩子也沒再動手。陸平離開前，回頭看了你一眼。',
-          effects: [xinxing(1), rel('lu_ping', 10), flag('mediated')],
+          effects: [xinxing(1), rel('lu_ping', 10), flag('mediated'), card('jieli', 'parry')],
         },
       },
       {
@@ -307,12 +307,12 @@ export const childhoodEvents: GameEvent[] = [
           difficulty: 5,
           success: {
             text: '「要打就打我。」你張開雙手擋在前面。{rival}愣了一下，罵罵咧咧地帶人走了。陸平低聲說了句謝謝，耳根都紅了。',
-            effects: [danshi(1), chiv(5), rel('lu_ping', 30), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12)],
+            effects: [danshi(1), chiv(5), rel('lu_ping', 30), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12), card('tingshen', 'parry')],
             recap: { weight: 3, text: '{ageCn}歲那年，你在私塾外替一個叫陸平的少年擋下了一群人。' },
           },
           failure: {
             text: '你被推倒在地，鼻血流了一臉，卻始終沒有讓開。最後是先生出來，才把人趕走。陸平扶你起來，一路陪你走回家。',
-            effects: [health(-10), danshi(1), chiv(5), rel('lu_ping', 35), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12)],
+            effects: [health(-10), danshi(1), chiv(5), rel('lu_ping', 35), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12), card('tiebushan', 'parry')],
             recap: { weight: 3, text: '{ageCn}歲那年，你在私塾外替一個叫陸平的少年挨了一頓打。' },
           },
         },
@@ -323,7 +323,7 @@ export const childhoodEvents: GameEvent[] = [
         requires: { minStats: { wuxing: 6 } },
         outcome: {
           text: '你注意到{rival}身後的小跟班一直捂著袖口。你當眾點破，銅錢從他袖子裡掉了出來。圍觀的孩子一哄而散，{rival}狠狠地瞪了你一眼。',
-          effects: [wuxing(1), rel('lu_ping', 25), flag('keen_eye'), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12)],
+          effects: [wuxing(1), rel('lu_ping', 25), flag('keen_eye'), flag('saved_lu'), flag('rival_bully'), later('old_friend_visit', 8, 12), card('kanpo', 'parry')],
           recap: { weight: 2, text: '{ageCn}歲那年，你在私塾外揪出了真正的小偷，替陸平洗清了冤屈。' },
         },
       },
@@ -378,7 +378,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '看了幾天就膩了，跑去河邊摸魚',
         outcome: {
           text: '你覺得打拳不如摸魚有趣。摸魚時，你摸到一塊溫潤的小石頭，從此一直帶在身上。',
-          effects: [fuyuan(1), flag('lucky_stone')],
+          effects: [fuyuan(1), flag('lucky_stone'), card('zuibu', 'punch')],
         },
       },
     ],

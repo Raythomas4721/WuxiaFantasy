@@ -1248,6 +1248,11 @@ small {
 .card-name {
   font-weight: 700;
   letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.card-top {
+  flex-wrap: wrap;
 }
 
 .card-kind {
@@ -1313,6 +1318,177 @@ small {
 
 .duel-side.foe .health-fill {
   background: var(--accent);
+}
+
+.card-skill {
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+}
+
+/* ---------- 牌庫：戰後選牌、修心、閉關 ---------- */
+
+.deck-task {
+  margin-top: 1.25rem;
+  padding: 0.9rem 1rem 0.5rem;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.deck-task-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.05rem;
+  letter-spacing: 0.08em;
+}
+
+.deck-task-text {
+  margin: 0 0 0.75rem;
+  color: var(--ink-2);
+  font-size: 0.92rem;
+}
+
+.deck-options .duel-card {
+  min-height: 7.5rem;
+}
+
+.deck-task .actions {
+  margin-top: 0.6rem;
+}
+
+@media (max-width: 560px) {
+  .duel-hand.deck-options {
+    grid-template-columns: 1fr;
+  }
+
+  .deck-options .duel-card {
+    min-height: 0;
+  }
+}
+
+.deck-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.deck-chip {
+  padding: 0.3rem 0.65rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--ink-3);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.deck-chip:hover:not(:disabled) {
+  border-color: var(--bad);
+  text-decoration: line-through;
+}
+
+.deck-chip:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.deck-chip.kind-attack,
+.deck-row.kind-attack {
+  border-left-color: var(--accent);
+}
+
+.deck-chip.kind-guard,
+.deck-row.kind-guard {
+  border-left-color: var(--good);
+}
+
+.deck-chip.kind-skill,
+.deck-row.kind-skill {
+  border-left-color: var(--gold);
+}
+
+.deck-chip.kind-trap,
+.deck-row.kind-trap {
+  border-left-style: dashed;
+  border-left-color: var(--ink-2);
+}
+
+.deck-upgrades {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.deck-upgrade {
+  width: 100%;
+  display: grid;
+  gap: 0.15rem;
+  text-align: left;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+
+.deck-upgrade:hover {
+  border-color: var(--gold);
+}
+
+.deck-upgrade-name {
+  font-weight: 700;
+}
+
+.deck-upgrade-before {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+
+.deck-upgrade-after {
+  font-size: 0.82rem;
+  color: var(--good);
+}
+
+.realm {
+  margin: 0.5rem 0 0.25rem;
+}
+
+.deck-list > summary {
+  cursor: pointer;
+  font-size: 0.92rem;
+  padding: 0.2rem 0;
+}
+
+.deck-list .plain-list {
+  margin-top: 0.35rem;
+}
+
+.deck-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.15rem 0 0.15rem 0.5rem;
+  border-left: 3px solid var(--ink-3);
+  cursor: pointer;
+  font-size: 0.88rem;
+  list-style: none;
+}
+
+.deck-row::-webkit-details-marker {
+  display: none;
+}
+
+.deck-list p {
+  margin: 0.15rem 0 0.4rem 0.8rem;
 }
 
 /* ---------- 市集、行囊、提醒 ---------- */

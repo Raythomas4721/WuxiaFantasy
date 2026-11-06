@@ -11,6 +11,7 @@ export const backgrounds: Record<string, BackgroundDef> = {
     desc: '根骨與心性較好，金錢與人脈少。',
     statMods: { gengu: 2, xinxing: 1 },
     money: 10,
+    card: 'biandan',
     // 亂世裡農家最多。
     weight: 2,
   },
@@ -21,6 +22,7 @@ export const backgrounds: Record<string, BackgroundDef> = {
     desc: '有錢、有人脈，常隨商隊走南闖北。',
     statMods: { meili: 2, fuyuan: 1 },
     money: 120,
+    card: 'qiantong',
   },
   physician: {
     id: 'physician',
@@ -29,6 +31,7 @@ export const backgrounds: Record<string, BackgroundDef> = {
     desc: '自幼辨藥識脈，心性沉穩，武學資源少。',
     statMods: { xinxing: 1, wuxing: 1 },
     money: 40,
+    card: 'jinchuang',
     effects: [xp('baicao', 2)],
   },
 };
@@ -44,21 +47,22 @@ export const regions: Record<string, RegionDef> = {
 };
 
 export const traits: Record<string, TraitDef> = {
-  guomu: { id: 'guomu', name: '過目不忘', desc: '讀書、識藥、看招都學得比別人快。', effects: [wuxing(2)] },
-  jingu: { id: 'jingu', name: '筋骨強健', desc: '天生一副好身板，吃得起苦。', effects: [gengu(2)] },
-  jinshen: { id: 'jinshen', name: '天性謹慎', desc: '凡事三思，不輕易涉險。', effects: [xinxing(1), danshi(-1), health(5)] },
-  qingyi: { id: 'qingyi', name: '重情重義', desc: '待人真誠，別人也願意以真心相待。', effects: [chiv(5), meili(1)] },
-  linglong: { id: 'linglong', name: '八面玲瓏', desc: '說話得體，三教九流都能打交道。', effects: [meili(2)] },
-  duochuan: { id: 'duochuan', name: '命途多舛', desc: '一生風波不斷，卻也總能絕處逢生。', effects: [fuyuan(-1), danshi(2)] },
-  yili: { id: 'yili', name: '醫理天分', desc: '對草藥與脈象有種說不出的直覺。', effects: [xp('baicao', 2)] },
-  bulu: { id: 'bulu', name: '不露鋒芒', desc: '不愛出頭，卻比誰都看得清楚。', effects: [xinxing(1), wuxing(1)] },
-  yudun: { id: 'yudun', name: '天生愚鈍', desc: '學什麼都慢，但一旦學會就不會忘。', effects: [wuxing(-2), xinxing(3)] },
-  haojiu: { id: 'haojiu', name: '好酒貪杯', desc: '三碗下肚，天下都是朋友。', effects: [meili(1), danshi(1)] },
+  guomu: { id: 'guomu', name: '過目不忘', desc: '讀書、識藥、看招都學得比別人快。', effects: [wuxing(2)], card: 'kanpo' },
+  jingu: { id: 'jingu', name: '筋骨強健', desc: '天生一副好身板，吃得起苦。', effects: [gengu(2)], card: 'tiebushan' },
+  jinshen: { id: 'jinshen', name: '天性謹慎', desc: '凡事三思，不輕易涉險。', effects: [xinxing(1), danshi(-1), health(5)], card: 'liusanfen' },
+  qingyi: { id: 'qingyi', name: '重情重義', desc: '待人真誠，別人也願意以真心相待。', effects: [chiv(5), meili(1)], card: 'tingshen' },
+  linglong: { id: 'linglong', name: '八面玲瓏', desc: '說話得體，三教九流都能打交道。', effects: [meili(2)], card: 'zhouxuan' },
+  duochuan: { id: 'duochuan', name: '命途多舛', desc: '一生風波不斷，卻也總能絕處逢生。', effects: [fuyuan(-1), danshi(2)], card: 'juechu' },
+  yili: { id: 'yili', name: '醫理天分', desc: '對草藥與脈象有種說不出的直覺。', effects: [xp('baicao', 2)], card: 'jinchuang' },
+  bulu: { id: 'bulu', name: '不露鋒芒', desc: '不愛出頭，卻比誰都看得清楚。', effects: [xinxing(1), wuxing(1)], card: 'cangfeng' },
+  yudun: { id: 'yudun', name: '天生愚鈍', desc: '學什麼都慢，但一旦學會就不會忘。', effects: [wuxing(-2), xinxing(3)], card: 'bengong' },
+  haojiu: { id: 'haojiu', name: '好酒貪杯', desc: '三碗下肚，天下都是朋友。', effects: [meili(1), danshi(1)], card: 'zuibu' },
   jiachuan: {
     id: 'jiachuan',
     name: '家傳藥方',
     desc: '家中藏著一本前人留下的醫書。（達成「妙手仁心」解鎖）',
     effects: [xp('baicao', 4), xinxing(1)],
+    card: 'jinchuang',
     unlockedBy: 'renxin',
   },
   qianshi: {
@@ -66,6 +70,7 @@ export const traits: Record<string, TraitDef> = {
     name: '前世劍意',
     desc: '第一次握劍時，手竟然不覺得陌生。（達成「一代宗師」解鎖）',
     effects: [xp('hanjiang', 3), wuxing(1)],
+    card: 'hanjiang1',
     unlockedBy: 'zongshi',
   },
   guren: {
@@ -73,6 +78,7 @@ export const traits: Record<string, TraitDef> = {
     name: '故人信物',
     desc: '襁褓裡藏著一枚斷了半截的鐵槍頭。（達成「鐵骨丹心」解鎖）',
     effects: [danshi(2), fame(5)],
+    card: 'juma',
     unlockedBy: 'tiegu',
   },
 };

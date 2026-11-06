@@ -3,7 +3,9 @@ import { levelFromXp } from '../engine/conditions';
 import {
   LEVEL_NAMES, STAT_NAMES, STAT_ORDER, alignmentLabel, chivalryLabel, fameLabel, healthLabel,
 } from '../engine/describe';
+import { DUEL, REALM, mainSkill } from '../engine/duel';
 import { activeThreads, ambitionView } from '../engine/threads';
+import { DeckList } from './DeckPanel';
 import type { GameState } from '../engine/types';
 import { ThreadList } from './FocusView';
 
@@ -24,6 +26,8 @@ export function StatusPanel({ state }: { state: GameState }) {
   const shop = (p.properties ?? []).filter((x) => x.kind === 'shop').length;
   const items = (p.items ?? []).map((id) => CONTENT.items[id]).filter(Boolean);
   const hasThreads = threads.length > 0 || Boolean(ambitionView(state));
+  const main = mainSkill(state);
+  const realm = REALM[Math.min(5, main.level)];
   const skills = Object.entries(p.skills)
     .map(([id, x]) => ({ id, level: levelFromXp(x) }))
     .filter((s) => s.level > 0)
@@ -125,6 +129,11 @@ export function StatusPanel({ state }: { state: GameState }) {
             ))}
           </ul>
         )}
+        <p className="muted small realm">
+          過招時：內力 {realm.energy}・氣血 {DUEL.playerHp(p.stats.gengu, main.level)}
+          {realm.draw > 0 && `・每回合多抽 ${realm.draw} 張`}
+        </p>
+        {p.deck && <DeckList deck={p.deck} />}
       </section>
 
       <section className="status-block">

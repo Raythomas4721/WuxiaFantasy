@@ -14,6 +14,42 @@ export const cards: Record<string, CardDef> = {
     flavor: '你順著來勢一帶，把{foe}的力道卸去了一半。',
   }),
 
+  // ---- 出身的牌 ----
+  biandan: card({
+    id: 'biandan', name: '扁擔掃', kind: 'attack', tag: '槍', cost: 1, dmg: 4, breakGuard: true,
+    flavor: '你像在田埂上挑擔那樣一掄，把{foe}護在身前的手掃開了。',
+  }),
+  qiantong: card({
+    id: 'qiantong', name: '錢可通神', kind: 'skill', cost: 0, money: 5, draw: 2, exhaust: true,
+    flavor: '你朝旁邊看熱鬧的人拋了一把銅錢，趁亂多看了{foe}兩眼。',
+  }),
+
+  // ---- 奇招：不分門派，人人都可能拿到 ----
+  jieli: card({
+    id: 'jieli', name: '借力', kind: 'trap', tag: '守', cost: 1, trigger: 'foeAttack', halve: true, dmg: 4,
+    flavor: '你順著{foe}的來勢一引，借他自己的力道送了回去。',
+  }),
+  xuhuang: card({ id: 'xuhuang', name: '虛晃', kind: 'skill', cost: 0, expose: true, exhaust: true, flavor: '你肩頭一晃，{foe}跟著動了一下，露出了破綻。' }),
+  pinming: card({ id: 'pinming', name: '拚命', kind: 'attack', tag: '拳', cost: 1, dmg: 12, selfHp: 4, flavor: '你不閃不避，硬是挨著{foe}的拳頭撞了進去。' }),
+  kanpo: card({ id: 'kanpo', name: '看破', kind: 'skill', tag: '氣', cost: 0, breakTrap: true, draw: 1, exhaust: true, flavor: '你盯著{foe}看了一眼，看穿了他藏著的後手。' }),
+  tiebushan: card({ id: 'tiebushan', name: '鐵布衫', kind: 'guard', tag: '守', cost: 1, block: 8, flavor: '你運氣一頂，渾身的筋肉繃得像鐵。' }),
+  liusanfen: card({ id: 'liusanfen', name: '留三分', kind: 'guard', tag: '守', cost: 1, block: 5, energyNext: 1, flavor: '你出手只用七分力，留著三分等下一招。' }),
+  tingshen: card({
+    id: 'tingshen', name: '挺身', kind: 'guard', tag: '守', cost: 1, block: 6, boostNext: { tags: ['拳', '劍', '槍', '針'], dmg: 3 },
+    flavor: '你挺身站到前面，一步也不退。',
+  }),
+  zhouxuan: card({ id: 'zhouxuan', name: '周旋', kind: 'skill', cost: 1, draw: 1, expose: true, flavor: '你一邊遊走一邊說話，{foe}被你繞得心浮氣躁。' }),
+  juechu: card({ id: 'juechu', name: '絕處', kind: 'attack', tag: '拳', cost: 1, dmg: 5, desperate: 8, flavor: '退無可退，你反而撲了上去。' }),
+  cangfeng: card({
+    id: 'cangfeng', name: '藏鋒', kind: 'skill', tag: '氣', cost: 1, block: 4, boostNext: { tags: ['拳', '劍', '槍', '針'], dmg: 5 },
+    flavor: '你收斂起氣勢，像是怯了。{foe}沒看見你袖子裡握緊的拳頭。',
+  }),
+  bengong: card({ id: 'bengong', name: '笨功夫', kind: 'attack', tag: '拳', cost: 1, dmg: 7, flavor: '一招練了一萬遍，就不笨了。' }),
+  zuibu: card({
+    id: 'zuibu', name: '醉步', kind: 'trap', tag: '步', cost: 1, trigger: 'foeAttack', halve: true, draw: 1,
+    flavor: '你腳下一個踉蹌，{foe}那一招就從你耳邊擦了過去。',
+  }),
+
   // ---- 長拳：拳拳相連，越打越快 ----
   chongquan: card({ id: 'chongquan', name: '衝拳', kind: 'attack', tag: '拳', cost: 1, dmg: 10, flavor: '你踏步衝拳，正中{foe}的肋下。' }),
   lianhuan: card({
@@ -121,6 +157,13 @@ export const skillCards: Record<string, [string, string, string]> = {
   yeyu: ['yeyuzhen', 'wusheng', 'tougu'],
 };
 
+/** 獎勵池裡不分門派的奇招（設計文件 v0.5 §5）。 */
+export const commonCards: string[] = [
+  'breathe', 'xieli', 'jieli', 'xuhuang', 'pinming', 'kanpo', 'tiebushan', 'liusanfen', 'tingshen', 'zhouxuan', 'juechu', 'cangfeng',
+  'bengong', 'zuibu',
+];
+
+/** v0.4 的奇遇牌。v0.5 起改由事件直接加進牌庫，這張表只用來換算舊存檔。 */
 export const specialCards: { if: Condition; card: string }[] = [
   { if: { flags: ['read_shen_letter'] }, card: 'dudiao' },
   // 跟韓守義守過城、交情深厚：他親手教的拒馬

@@ -3,6 +3,7 @@
 //   隨便：亂出；直覺：自動遊玩用的策略；精算：窮舉這回合的出牌順序（只用來量測技術上限，很慢）。
 
 import { CONTENT } from '../src/content';
+import { DECK } from '../src/engine/deck';
 import { DUEL, canPlay, createDuel, endRound, playCard, type Fighter } from '../src/engine/duel';
 import { playRandomRound, playSimpleRound } from '../src/engine/duelAI';
 import { Rng } from '../src/engine/rng';
@@ -34,15 +35,24 @@ for (const temper of ['brute', 'veteran', 'guard'] as const) {
   }
 }
 
-const CARDS_AT_LEVEL = [0, 1, 2, 4, 5, 6];
+/**
+ * 一副「典型」的持久牌庫（v0.5 §2）：起手 10 張；入門挑兩招；之後每升一級多拿一兩張本門的牌、
+ * 升級幾張、修心刪掉幾張基本牌。真正的分布看 npm run simulate。
+ */
+const REWARDS_AT_LEVEL = [0, 0, 1, 2, 4, 5];
 function fighter(skill: string, level: number, opts: { wounds?: number; demons?: number; gengu?: number; wuxing?: number } = {}): Fighter {
-  const deck = ['punch', 'punch', 'punch', 'parry', 'parry', 'xieli', 'breathe'];
+  const deck = [...DECK.base, 'tiebushan', 'kanpo'];
   const [a, b, c] = CONTENT.skillCards[skill];
-  for (const id of [a, b, c, a, b, c].slice(0, CARDS_AT_LEVEL[level])) deck.push(level >= 4 ? `${id}+` : id);
-  if (level >= 5) {
-    deck.splice(deck.indexOf('punch'), 1);
-    deck.splice(deck.indexOf('parry'), 1);
+  if (level > 0) deck.push(a, b, ...[c, a, b, c, a].slice(0, REWARDS_AT_LEVEL[level]));
+  // 閉關升級本門的牌（每級一張）、修心刪掉出拳
+  let ups = Math.max(0, level - 1);
+  for (let i = deck.length - 1; i >= 0 && ups > 0; i--) {
+    if (CONTENT.skillCards[skill].includes(deck[i])) {
+      deck[i] += '+';
+      ups--;
+    }
   }
+  for (let i = 0; i < Math.max(0, level - 2); i++) deck.splice(deck.indexOf('punch'), 1);
   for (let i = 0; i < (opts.wounds ?? 0); i++) deck.push('wound');
   for (let i = 0; i < (opts.demons ?? 0); i++) deck.push('demon');
   return { hp: DUEL.playerHp(opts.gengu ?? 6, level), wuxing: opts.wuxing ?? 6, level, deck };

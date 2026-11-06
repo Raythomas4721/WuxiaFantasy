@@ -1,6 +1,6 @@
 import { CONTENT } from '../content';
 import { LEVEL_NAMES } from '../engine/describe';
-import { DUEL, canPlay, cardText, getCard, intentText, resolvedEffect } from '../engine/duel';
+import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, resolvedEffect } from '../engine/duel';
 import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
 import type { CardDef, CardKind, DuelState, GameState } from '../engine/types';
 
@@ -61,7 +61,7 @@ export function DuelView({ state, act }: Props) {
           <strong>你</strong>
           <span className="duel-energy" aria-label={`內力 ${d.me.energy}`}>
             內力 {'●'.repeat(Math.max(0, d.me.energy))}
-            {'○'.repeat(Math.max(0, DUEL.energy - d.me.energy))}
+            {'○'.repeat(Math.max(0, (d.me.energyMax ?? DUEL.energy) - d.me.energy))}
           </span>
         </div>
         <HpBar side={d.me} />
@@ -133,12 +133,17 @@ function Statuses(p: { block: number; exposed: number; bleed?: number; charge?: 
   );
 }
 
-function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; playable: boolean; onPlay: () => void }) {
-  const e = resolvedEffect(d, card);
-  const boosted = card.kind === 'attack' && e.dmg !== undefined && e.dmg !== card.dmg;
-  const trapsFull = card.kind === 'trap' && d.me.traps.length >= DUEL.trapSlots;
+/** 一張牌的牌面：過招的手牌、戰後選牌、牌庫都用它。 */
+export function CardFace({ card, disabled, onClick, note, className = '' }: {
+  card: CardDef;
+  disabled?: boolean;
+  onClick?: () => void;
+  note?: string;
+  className?: string;
+}) {
+  const skill = cardSkill(card.id);
   return (
-    <button className={`duel-card kind-${card.kind}`} disabled={!playable} onClick={onPlay}>
+    <button className={`duel-card kind-${card.kind} ${className}`} disabled={disabled} onClick={onClick}>
       <span className="card-top">
         <span className="card-cost">{card.cost}</span>
         <span className="card-name">{card.name}</span>
@@ -148,10 +153,18 @@ function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; 
         </span>
       </span>
       <span className="card-text">{cardText(card)}</span>
-      {boosted && <span className="card-boost">這回合：傷害 {e.dmg}</span>}
-      {trapsFull && <span className="card-boost">伏招已滿（最多 {DUEL.trapSlots} 張）</span>}
+      {skill && <span className="card-skill">{CONTENT.skills[skill].name}</span>}
+      {note && <span className="card-boost">{note}</span>}
     </button>
   );
+}
+
+function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; playable: boolean; onPlay: () => void }) {
+  const e = resolvedEffect(d, card);
+  const boosted = card.kind === 'attack' && e.dmg !== undefined && e.dmg !== card.dmg;
+  const trapsFull = card.kind === 'trap' && d.me.traps.length >= DUEL.trapSlots;
+  const note = boosted ? `這回合：傷害 ${e.dmg}` : trapsFull ? `伏招已滿（最多 ${DUEL.trapSlots} 張）` : undefined;
+  return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} />;
 }
 
 function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {

@@ -1,7 +1,7 @@
 // 內容總表。新增事件只需在 events/ 下新增或修改檔案，並在這裡匯入。
 
 import type { Content } from '../engine/types';
-import { cards, foeTraps, opponents, skillCards, specialCards } from './duel';
+import { cards, commonCards, foeTraps, opponents, skillCards, specialCards } from './duel';
 import { ambitions, deathCauses, endings, eraLines, rumors } from './endings';
 import { items, market, propertyRisks } from './market';
 import { adultEvents } from './events/adult';
@@ -18,6 +18,7 @@ import { backgrounds, focuses, npcs, regions, sects, skills, traits } from './wo
 export const CONTENT: Content = {
   cards,
   skillCards,
+  commonCards,
   specialCards,
   opponents,
   foeTraps,

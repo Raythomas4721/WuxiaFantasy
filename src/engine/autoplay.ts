@@ -5,7 +5,8 @@ import {
   chooseFocus, chooseOption, choiceViews, finishDuel, focusOptions, newGame, nextTurn, rollTraitOptions, startLife,
 } from './game';
 import { CONTENT } from '../content';
-import { mainSkill } from './duel';
+import { pickCard, removeBlocked, removeCard, upgradableIndexes, upgradeCard } from './deck';
+import { baseCardId, cardSkill, getCard, mainSkill } from './duel';
 import { buy, marketOffers } from './market';
 import { Rng } from './rng';
 import type { GameState } from './types';
@@ -81,6 +82,33 @@ const AMBITION_FOCUS: Record<string, string[]> = {
   peace: ['rest', 'work'],
 };
 
+/** 選牌的偏好：主修武學的牌最好，其次是其他武學的牌，再來是奇招；基本牌最不想要。 */
+function cardScore(s: GameState, id: string): number {
+  const main = mainSkill(s).skill;
+  const skill = cardSkill(id);
+  if (skill && skill === main) return 3;
+  if (skill) return 2;
+  if (id === 'punch' || id === 'parry' || baseCardId(id) === 'xieli') return 0;
+  return 1;
+}
+
+/** 模擬玩家處理牌庫變化：挑主修的牌、刪基本牌、升級主修的牌。 */
+export function autoDeckTask(s: GameState): GameState {
+  const task = s.deckTasks![0];
+  const deck = s.player.deck ?? [];
+  if (task.kind === 'pick') {
+    const best = [...task.options].sort((a, b) => cardScore(s, b) - cardScore(s, a))[0];
+    // 牌庫夠大了，又沒有本門的牌，就不拿
+    return pickCard(s, deck.length >= 24 && cardScore(s, best) < 2 ? null : best);
+  }
+  if (task.kind === 'remove') {
+    const at = ['punch', 'parry'].map((id) => deck.indexOf(id)).find((i) => i >= 0);
+    return removeCard(s, at !== undefined && !removeBlocked(s) && s.player.health > 50 ? at : null);
+  }
+  const idx = upgradableIndexes(s).sort((a, b) => cardScore(s, deck[b]) - cardScore(s, deck[a]) || getCard(deck[b]).cost - getCard(deck[a]).cost);
+  return upgradeCard(s, idx.length > 0 ? idx[0] : null);
+}
+
 export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayResult {
   const policy = new Rng(seed ^ 0x9e3779b9);
   const persona = options.persona ?? pickPersona(new Rng(seed ^ 0x5bd1e995));
@@ -113,6 +141,7 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       duels.push({ opponent: d.opponent, level: d.level, playerLevel: mainSkill(s).level, won: d.over === 'win', rounds: d.round });
       s = finishDuel({ ...s, duel: d, rng: rng.state });
     } else if (s.phase === 'result') {
+      for (let i = 0; i < 10 && s.deckTasks?.length; i++) s = autoDeckTask(s);
       // 市集：立志發財的人只買產業；其他人一半的回合會買一樣買得起的東西
       const offers = marketOffers(s).filter((o) => o.enabled);
       const saver = s.player.ambition === 'wealth';

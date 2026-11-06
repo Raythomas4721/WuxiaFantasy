@@ -1,7 +1,7 @@
 // 宋蒙戰爭的史實大事。大勢不可改變，玩家只能決定自己身在何處、做了什麼。
 
 import type { GameEvent } from '../../engine/types';
-import { add, align, chiv, die, fame, flag, goTo, health, join, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
+import { add, align, card, chiv, die, fame, flag, goTo, health, join, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
 
 const HAN_DEAD = flag('dead_han_shouyi');
 
@@ -94,7 +94,7 @@ export const historyEvents: GameEvent[] = [
           martial: true,
           success: {
             text: '你在城頭守了一年又一年，打退了不知多少次攻城。有一天韓守義走過來，拍著你的肩膀說：「好樣的。」',
-            effects: [flag('defended_city'), fame(5), chiv(5), align(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2)],
+            effects: [flag('defended_city'), fame(5), chiv(5), align(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2), card('juma+')],
             recap: { weight: 3, text: '襄陽被圍的那幾年，你一直守在城頭。' },
           },
           failure: {

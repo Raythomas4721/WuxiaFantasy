@@ -150,7 +150,7 @@ export function validateContent(content: Content): ValidationReport {
   content.propertyRisks.forEach((r) => !content.regions[r.region] && errors.push(`產業風險：未知地區 ${r.region}`));
 
   // ---- 過招 ----
-  const cardExists = (id: string) => Boolean(content.cards[id.endsWith('+') ? id.slice(0, -1) : id]);
+  const cardExists = (id: string) => Boolean(content.cards[id.replace(/\++$/, '')]);
   for (const [id, c] of Object.entries(content.cards)) {
     if (c.id !== id) errors.push(`招式牌 ${id}：id 不一致`);
     if (c.kind === 'trap' && !c.trigger) errors.push(`招式牌 ${id}：伏招沒有發動條件`);
@@ -167,6 +167,13 @@ export function validateContent(content: Content): ValidationReport {
     conditions.push({ where: `特殊牌 ${i}`, c: sp.if });
     if (!cardExists(sp.card)) errors.push(`特殊牌：未知招式牌 ${sp.card}`);
   });
+  // 起手牌庫與獎勵池（v0.5 §2）
+  for (const b of Object.values(content.backgrounds)) if (!cardExists(b.card)) errors.push(`出身 ${b.id}：未知招式牌 ${b.card}`);
+  for (const t of Object.values(content.traits)) if (!cardExists(t.card)) errors.push(`先天特質 ${t.id}：未知招式牌 ${t.card}`);
+  for (const id of content.commonCards) {
+    if (!cardExists(id)) errors.push(`奇招：未知招式牌 ${id}`);
+    else if (content.cards[id].kind === 'curse') errors.push(`奇招：獎勵池不能有傷或心魔 ${id}`);
+  }
   for (const o of Object.values(content.opponents)) {
     (o.traps ?? []).forEach((id) => !content.foeTraps[id] && errors.push(`過招對手 ${o.id}：未知暗招 ${id}`));
     if (o.easierWith) conditions.push({ where: `過招對手 ${o.id}`, c: o.easierWith });
@@ -236,6 +243,10 @@ export function validateContent(content: Content): ValidationReport {
       case 'loseItem':
         if (!content.items[e.item]) errors.push(`${where}：未知信物 ${e.item}`);
         if (e.type === 'gainItem') gainedItems.add(e.item);
+        break;
+      case 'card':
+        if (!cardExists(e.add)) errors.push(`${where}：未知招式牌 ${e.add}`);
+        if (e.remove && !cardExists(e.remove)) errors.push(`${where}：要換掉的牌不存在 ${e.remove}`);
         break;
       case 'chain':
         if (!eventIds.has(e.event)) errors.push(`${where}：接續了不存在的事件 ${e.event}`);

@@ -4,11 +4,15 @@
 import { CONTENT } from '../src/content';
 import { playLife, type AutoplayResult } from '../src/engine/autoplay';
 import { martialLevel } from '../src/engine/conditions';
+import { FOE_REALM, cardSkill } from '../src/engine/duel';
 
 function arg(name: string, fallback: number): number {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 ? Number(process.argv[i + 1]) : fallback;
 }
+
+// 調數值用：FOE_REALM=1,1,1,1.2,1.3,1.5 npm run simulate
+process.env.FOE_REALM?.split(',').forEach((v, i) => (FOE_REALM[i] = Number(v)));
 
 const runs = arg('runs', 2000);
 const baseSeed = arg('seed', 1);
@@ -32,10 +36,17 @@ const propertyOwners = { land: 0, shop: 0 };
 const itemHolders = new Map<string, number>();
 const distinctEndingsFirstFive: number[] = [];
 const allDuels: AutoplayResult['duels'] = [];
+const deckSizes: number[] = [];
+let upgradedCards = 0;
+let skillCardsInDeck = 0;
 
 for (let i = 0; i < runs; i++) {
   const { state, events, focusPicks, duels } = playLife(baseSeed + i);
   allDuels.push(...duels);
+  const deck = state.player.deck ?? [];
+  deckSizes.push(deck.length);
+  upgradedCards += deck.filter((id) => id.endsWith('+')).length;
+  skillCardsInDeck += deck.filter((id) => cardSkill(id)).length;
   totalFocusPicks += focusPicks;
   for (const id of events) eventCount.set(id, (eventCount.get(id) ?? 0) + 1);
   const ending = state.ending!;
@@ -148,7 +159,14 @@ line(
   `  平均每輪 ${(allDuels.length / runs).toFixed(2)} 場・勝率 ${dpct(allDuels.filter((d) => d.won).length, allDuels.length)}・平均 ${(allDuels.reduce((s, d) => s + d.rounds, 0) / Math.max(1, allDuels.length)).toFixed(1)} 回合`,
 );
 const byDiff = [...tally((d) => Math.max(-3, Math.min(3, d.playerLevel - d.level)))].sort((a, b) => Number(a[0]) - Number(b[0]));
+const byLevel = [...tally((d) => d.playerLevel)].sort((a, b) => Number(a[0]) - Number(b[0]));
+line('  玩家主修境界：' + byLevel.map(([k, x]) => `${k} 級 ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
 line('  等級差（玩家 − 對手）：' + byDiff.map(([k, x]) => `${Number(k) > 0 ? '+' : ''}${k} ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
+{
+  const sorted = [...deckSizes].sort((a, b) => a - b);
+  const avg = (n: number) => (n / runs).toFixed(1);
+  line(`  牌庫（v0.5 §2）：結局時平均 ${avg(deckSizes.reduce((a, b) => a + b, 0))} 張（中位數 ${sorted[Math.floor(runs / 2)]}、最多 ${sorted[runs - 1]}）・武學牌 ${avg(skillCardsInDeck)} 張・升級過 ${avg(upgradedCards)} 張`);
+}
 line('  對手：' + [...tally((d) => d.opponent)].map(([k, x]) => `${k} ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
 
 // 好鬥的玩家：有過招的選項就選它。隨機選選項的模擬玩家常常臨陣退出，這組數字比較接近想打的真人。

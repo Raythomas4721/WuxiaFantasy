@@ -42,6 +42,7 @@ function value(d: DuelState, idx: number): number {
   if (e.bleed) v += e.bleed * 2;
   if (e.bleedMult) v += d.foe.bleed * (e.bleedMult - 1) * 2;
   if (e.boostNext) v += 5;
+  if (e.selfHp) v -= e.selfHp * (d.me.hp < d.me.max / 2 ? 1.5 : 0.8);
   if (e.breakTrap && hasTrap) v += 6;
   // 墊招：手上有「承」這個路數的牌，先出它
   if (c.tag && d.me.hand.some((id, i) => i !== idx && getCard(id).after?.tags.includes(c.tag!))) v += 3;

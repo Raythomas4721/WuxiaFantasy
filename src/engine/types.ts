@@ -92,6 +92,8 @@ export type GameEffect =
   | { type: 'gainItem' | 'loseItem'; item: string }
   /** 置產：在目前所在地區買下（delta > 0）或失去產業。 */
   | { type: 'property'; kind: PropertyKind; delta: number }
+  /** 牌庫：加入一張牌，或用 add 換掉 remove（找不到 remove 時只加入）。 */
+  | { type: 'card'; add: string; remove?: string }
   | { type: 'meet'; npc: string }
   /** 中斷連續方針的計數，例如停下來休息之後。 */
   | { type: 'resetStreak' }
@@ -176,6 +178,8 @@ export interface BackgroundDef {
   /** 隨機投胎時的相對機率，預設 1。 */
   weight?: number;
   effects?: GameEffect[];
+  /** 起手牌庫裡，出身給的那一張牌。 */
+  card: string;
 }
 
 export interface RegionDef {
@@ -192,6 +196,8 @@ export interface TraitDef {
   name: string;
   desc: string;
   effects: GameEffect[];
+  /** 起手牌庫裡，先天特質給的那一張牌。 */
+  card: string;
   /** 達成此結局後才會出現在候選中。 */
   unlockedBy?: string;
 }
@@ -304,6 +310,12 @@ export interface CardEffect {
   boostNext?: { tags: CardTag[]; dmg?: number; mult?: number };
   /** 下回合多幾點內力。 */
   energyNext?: number;
+  /** 打出時花掉的錢（文）。 */
+  money?: number;
+  /** 打出時自己失去的氣血。 */
+  selfHp?: number;
+  /** 自己氣血不到一半時，傷害再加。 */
+  desperate?: number;
   /** 伏招用：這一擊傷害減半／完全閃過。 */
   halve?: boolean;
   dodge?: boolean;
@@ -403,7 +415,9 @@ export interface Content {
   cards: Record<string, CardDef>;
   /** 每門武學的 A、B、C 三招。 */
   skillCards: Record<string, [string, string, string]>;
-  /** 奇遇、指點給的特殊牌。 */
+  /** 獎勵池裡不分門派的奇招。 */
+  commonCards: string[];
+  /** v0.4 奇遇給的特殊牌，只用來換算舊存檔。 */
   specialCards: { if: Condition; card: string }[];
   opponents: Record<string, OpponentDef>;
   foeTraps: Record<string, FoeTrapDef>;
@@ -459,6 +473,8 @@ export interface DuelState {
   seeTraps: boolean;
   me: DuelSide & {
     energy: number;
+    /** 每回合的內力（由境界決定）；舊存檔沒有時用 DUEL.energy。 */
+    energyMax?: number;
     energyNext: number;
     drawPer: number;
     deck: string[];
@@ -469,6 +485,11 @@ export interface DuelState {
     /** 這回合已打出的牌，連招用。 */
     played: string[];
     boost?: { tags: CardTag[]; dmg?: number; mult?: number };
+    /** 身上能花的錢、這場已經花掉的錢（錢可通神）。 */
+    money?: number;
+    spent?: number;
+    /** 這場打出過哪些武學的牌，收招時各加一點經驗。 */
+    used?: string[];
   };
   foe: DuelSide & {
     charge: number;
@@ -503,6 +524,8 @@ export interface Player {
   masters: string[];
   ambition?: string;
   alive: boolean;
+  /** 跟著你一輩子的牌庫（設計文件 v0.5 §2）。舊存檔沒有，讀檔時從武學等級換算。 */
+  deck?: string[];
   /** 行囊裡的信物 id。舊存檔沒有這個欄位。 */
   items?: string[];
   /** 產業：種類與所在地區。 */
@@ -600,6 +623,8 @@ export interface GameState {
   /** 市集：這一回合已經買了幾樣；一生限買一次的東西。 */
   market?: { turn: number; bought: number };
   boughtOnce?: string[];
+  /** 等著玩家處理的牌庫變化：戰後選牌、入門選招、修心刪牌、閉關升級。 */
+  deckTasks?: DeckTask[];
   /** 要提醒玩家的事（例如產業毀於戰火），下一次行動後清掉。 */
   notices?: string[];
   result?: TurnResult;
@@ -608,6 +633,15 @@ export interface GameState {
   deathCause?: string;
   ending?: EndingResult;
 }
+
+/** 結果畫面上等著處理的牌庫變化，一次處理一件。 */
+export type DeckTask =
+  /** 從 options 裡挑 picks 張加入牌庫；可以跳過，跳過拿 skipMoney 文。 */
+  | { kind: 'pick'; title: string; text: string; options: string[]; picks: number; skipMoney?: number }
+  /** 刪一張牌，代價是健康或錢。 */
+  | { kind: 'remove'; title: string; text: string; cost?: { health?: number; money?: number } }
+  /** 升級一張牌。 */
+  | { kind: 'upgrade'; title: string; text: string };
 
 export interface ChoiceView {
   id: string;

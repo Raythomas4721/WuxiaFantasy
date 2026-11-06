@@ -12,6 +12,9 @@ import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, TrapTrigger,
 } from './types';
 
+/** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
+export const FOE_REALM = [1, 1.15, 1.3, 1.3, 1.5, 1.7];
+
 /** 平衡數值集中在這裡。 */
 export const DUEL = {
   energy: 3,
@@ -26,9 +29,10 @@ export const DUEL = {
   /** 對手每一招的力道浮動 ±25%。 */
   intentSwing: 0.25,
   upgradeMult: 1.35,
-  playerHp: (gengu: number, level: number) => 28 + gengu * 2 + level * 2,
-  foeHp: (level: number) => 45 + level * 10,
-  foeAttack: (level: number) => 11 + level * 2.5,
+  /** 氣血上限 = 30 ＋ 根骨 × 2 ＋ 境界加成（設計文件 v0.5 §3.1）。 */
+  playerHp: (gengu: number, level: number) => 30 + gengu * 2 + REALM[Math.min(5, level)].hp,
+  foeHp: (level: number) => Math.round((45 + level * 10) * FOE_REALM[Math.min(5, level)]),
+  foeAttack: (level: number) => (11 + level * 2.5) * FOE_REALM[Math.min(5, level)],
   foeGuard: (level: number) => 4 + level * 2,
   foeCharge: (level: number) => Math.round(3 + level * 1.5),
   /** 看穿暗招要比對手高出的悟性。 */
@@ -36,6 +40,19 @@ export const DUEL = {
   /** 健康換算：損失的氣血比例 × 這個數。 */
   healthLoss: 30,
 };
+
+/**
+ * 主修境界帶來的本事（設計文件 v0.5 §2.4）：每回合內力、氣血上限加成、每回合多抽幾張、
+ * 一張牌最多能升級幾次。
+ */
+export const REALM: { energy: number; hp: number; draw: number; upgrades: number }[] = [
+  { energy: 3, hp: 0, draw: 0, upgrades: 1 },
+  { energy: 3, hp: 0, draw: 0, upgrades: 1 },
+  { energy: 3, hp: 5, draw: 0, upgrades: 2 },
+  { energy: 4, hp: 10, draw: 0, upgrades: 2 },
+  { energy: 4, hp: 15, draw: 1, upgrades: 2 },
+  { energy: 5, hp: 20, draw: 1, upgrades: 2 },
+];
 
 const TEMPER: Record<OpponentDef['temper'], { weights: Record<IntentKind, number>; switch: number }> = {
   brute: { weights: { attack: 3.5, combo: 2, guard: 1.5, charge: 1.5, feint: 0.5 }, switch: 0 },
@@ -45,25 +62,50 @@ const TEMPER: Record<OpponentDef['temper'], { weights: Record<IntentKind, number
 
 // ---------- 牌 ----------
 
-/** 「juma+」是升級過的拒馬：數值 × 1.35，名字加「＋」。 */
-export function getCard(id: string): CardDef {
-  const upgraded = id.endsWith('+');
-  const base = CONTENT.cards[upgraded ? id.slice(0, -1) : id];
-  if (!base) throw new Error(`未知招式牌：${id}`);
-  if (!upgraded) return base;
+/** 牌 id 去掉升級記號：「juma++」→「juma」。 */
+export function baseCardId(id: string): string {
+  return id.replace(/\++$/, '');
+}
+
+/** 升級過幾次。 */
+export function upgradeCount(id: string): number {
+  return id.length - baseCardId(id).length;
+}
+
+/** 牌屬於哪一門武學（基本牌、奇招沒有）。 */
+export function cardSkill(id: string): string | undefined {
+  const base = baseCardId(id);
+  return Object.keys(CONTENT.skillCards).find((s) => CONTENT.skillCards[s].includes(base));
+}
+
+/** 升級一次：數值 × 1.35；沒有數值可以加的牌，改成少花一點內力，已經不花內力的就多抽一張。 */
+function upgradeOnce(c: CardDef): CardDef {
   const up = (n?: number) => (n === undefined ? undefined : Math.round(n * DUEL.upgradeMult));
+  const numeric = [c.dmg, c.block, c.bleed, c.heal, c.desperate, c.boostNext?.dmg].some((n) => n !== undefined);
+  if (!numeric) return c.cost > 0 ? { ...c, cost: c.cost - 1 } : { ...c, draw: (c.draw ?? 0) + 1 };
   return {
-    ...base,
-    id,
-    name: `${base.name}＋`,
-    dmg: up(base.dmg),
-    block: up(base.block),
-    bleed: up(base.bleed),
-    heal: up(base.heal),
-    chain: base.chain && { ...base.chain, dmg: up(base.chain.dmg)! },
-    vsIntent: base.vsIntent && { ...base.vsIntent, dmg: up(base.vsIntent.dmg)! },
-    after: base.after && { ...base.after, dmg: up(base.after.dmg), block: up(base.after.block) },
+    ...c,
+    dmg: up(c.dmg),
+    block: up(c.block),
+    bleed: up(c.bleed),
+    heal: up(c.heal),
+    desperate: up(c.desperate),
+    chain: c.chain && { ...c.chain, dmg: up(c.chain.dmg)! },
+    vsIntent: c.vsIntent && { ...c.vsIntent, dmg: up(c.vsIntent.dmg)! },
+    after: c.after && { ...c.after, dmg: up(c.after.dmg), block: up(c.after.block) },
+    boostNext: c.boostNext && { ...c.boostNext, dmg: up(c.boostNext.dmg) },
   };
+}
+
+/** 「juma+」是升級過一次的拒馬，「juma++」是兩次；名字加上同樣數量的「＋」。 */
+export function getCard(id: string): CardDef {
+  const base = CONTENT.cards[baseCardId(id)];
+  if (!base) throw new Error(`未知招式牌：${id}`);
+  const n = upgradeCount(id);
+  if (n === 0) return base;
+  let c = base;
+  for (let i = 0; i < n; i++) c = upgradeOnce(c);
+  return { ...c, id, name: `${base.name}${'＋'.repeat(n)}` };
 }
 
 const TRIGGER_TEXT: Record<TrapTrigger, string> = {
@@ -84,6 +126,8 @@ function effectText(e: CardEffect): string[] {
   if (e.heal) out.push(`回復 ${e.heal} 氣血`);
   if (e.draw) out.push(`抽 ${e.draw}`);
   if (e.energy) out.push(`內力 +${e.energy}`);
+  if (e.money) out.push(`花 ${e.money} 文`);
+  if (e.selfHp) out.push(`自己失去 ${e.selfHp} 氣血`);
   if (e.energyNext) out.push(`下回合內力 +${e.energyNext}`);
   if (e.expose) out.push('對手破綻');
   if (e.bleed) out.push(`內傷 ${e.bleed}`);
@@ -105,6 +149,7 @@ export function cardText(c: CardDef): string {
     return `抽到時發作：${what}，然後補抽一張`;
   }
   const parts = effectText(c);
+  if (c.desperate) parts.push(`氣血不到一半時 +${c.desperate}`);
   if (c.vsIntent) parts.push(`對手${c.vsIntent.kinds.includes('attack') ? '出手' : '守勢'}時 +${c.vsIntent.dmg}`);
   if (c.chain) parts.push(`連：這回合每出過一張${c.chain.tags ? tagList(c.chain.tags) : '牌'}，傷害 +${c.chain.dmg}`);
   if (c.after) parts.push(`承${tagList(c.after.tags)}：${effectText(c.after).join('、')}`);
@@ -116,15 +161,21 @@ export function cardText(c: CardDef): string {
 
 // ---------- 牌庫 ----------
 
-/** 每個等級從主修武學的招式清單 [A, B, C, A, B, C] 依序拿幾張。 */
-const CARDS_AT_LEVEL = [0, 1, 2, 4, 5, 6];
-const BASE_DECK = ['punch', 'punch', 'punch', 'parry', 'parry', 'xieli', 'breathe'];
+/** v0.4 依等級從 [A, B, C, A, B, C] 拿幾張；只用來把舊存檔換算成持久牌庫。 */
+const LEGACY_CARDS_AT_LEVEL = [0, 1, 2, 4, 5, 6];
+const LEGACY_BASE = ['punch', 'punch', 'punch', 'parry', 'parry', 'xieli', 'breathe'];
 
 export interface Fighter {
   hp: number;
   wuxing: number;
   level: number;
   deck: string[];
+  /** 每回合內力；省略時依等級查 REALM。 */
+  energy?: number;
+  /** 每回合多抽幾張；省略時依等級查 REALM。 */
+  extraDraw?: number;
+  /** 身上的錢，給要花錢的牌用。 */
+  money?: number;
 }
 
 /** 主修武學：等級最高的武學（同級比經驗）。 */
@@ -139,15 +190,15 @@ export function mainSkill(s: GameState): { skill?: string; level: number } {
 }
 
 /**
- * 牌庫 = 基本牌 + 主修招式 + 副修各一張 + 醫術 + 特殊牌 + 傷與心魔。
- * 4 級起主修招式全部升級；5 級再拿掉兩張基本牌。
+ * v0.4 的牌庫算法：基本牌 + 主修招式 + 副修各一張 + 醫術 + 特殊牌。
+ * 4 級起主修招式全部升級；5 級再拿掉兩張基本牌。v0.5 只用它換算舊存檔。
  */
-export function deckFor(s: GameState): string[] {
+export function legacyDeck(s: GameState): string[] {
   const { skill, level } = mainSkill(s);
-  const deck = [...BASE_DECK];
+  const deck = [...LEGACY_BASE];
   if (skill && level > 0) {
     const [a, b, c] = CONTENT.skillCards[skill];
-    for (const id of [a, b, c, a, b, c].slice(0, CARDS_AT_LEVEL[level])) deck.push(level >= 4 ? `${id}+` : id);
+    for (const id of [a, b, c, a, b, c].slice(0, LEGACY_CARDS_AT_LEVEL[level])) deck.push(level >= 4 ? `${id}+` : id);
     if (level >= 5) {
       deck.splice(deck.indexOf('punch'), 1);
       deck.splice(deck.indexOf('parry'), 1);
@@ -158,6 +209,12 @@ export function deckFor(s: GameState): string[] {
   }
   if (skillLevel(s, 'baicao') >= 2) deck.push('jinchuang');
   for (const sp of CONTENT.specialCards) if (checkCondition(s, sp.if)) deck.push(sp.card);
+  return deck;
+}
+
+/** 這一場要用的牌：持久牌庫，加上身上的傷與心魔。 */
+export function deckFor(s: GameState): string[] {
+  const deck = [...(s.player.deck ?? legacyDeck(s))];
   for (let i = 0; i < woundCount(s); i++) deck.push('wound');
   for (let i = 0; i < demonCount(s); i++) deck.push('demon');
   return deck;
@@ -178,7 +235,13 @@ export function demonCount(s: GameState): number {
 
 export function fighterFor(s: GameState): Fighter {
   const { level } = mainSkill(s);
-  return { hp: DUEL.playerHp(s.player.stats.gengu, level), wuxing: s.player.stats.wuxing, level, deck: deckFor(s) };
+  return {
+    hp: DUEL.playerHp(s.player.stats.gengu, level),
+    wuxing: s.player.stats.wuxing,
+    level,
+    deck: deckFor(s),
+    money: s.player.money,
+  };
 }
 
 export function opponentLevel(def: OpponentDef, playerLevel: number): number {
@@ -254,6 +317,8 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   const easier = s && def.easierWith && checkCondition(s, def.easierWith) ? 1 : 0;
   const level = Math.max(0, opponentLevel(def, fighter.level) - easier);
   const hp = DUEL.foeHp(level);
+  const realm = REALM[Math.min(5, fighter.level)];
+  const energy = fighter.energy ?? realm.energy;
   const d: DuelState = {
     opponent: opponentId,
     name: s ? fill(def.name, s) : def.name,
@@ -264,9 +329,10 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
     seeTraps: fighter.wuxing >= def.wuxing + DUEL.seeTrapsMargin,
     me: {
       hp: fighter.hp, max: fighter.hp, block: 0, exposed: 0, bleed: 0,
-      energy: DUEL.energy, energyNext: 0,
-      drawPer: DUEL.drawPer + (fighter.wuxing >= DUEL.drawBonusWuxing ? 1 : 0),
+      energy, energyMax: energy, energyNext: 0,
+      drawPer: DUEL.drawPer + (fighter.wuxing >= DUEL.drawBonusWuxing ? 1 : 0) + (fighter.extraDraw ?? realm.draw),
       deck: shuffle(rng, fighter.deck), hand: [], discard: [], traps: [], played: [],
+      money: fighter.money ?? 0, spent: 0, used: [],
     },
     foe: {
       hp, max: hp, block: 0, exposed: 0, bleed: 0, charge: 0,
@@ -298,6 +364,7 @@ function hit(target: DuelState['me'] | DuelState['foe'], dmg: number, pierce = f
 export function canPlay(d: DuelState, handIndex: number): boolean {
   const c = getCard(d.me.hand[handIndex]);
   if (d.over || c.kind === 'curse' || c.cost > d.me.energy) return false;
+  if (c.money && (d.me.money ?? 0) < c.money) return false;
   if (c.kind === 'trap' && d.me.traps.length >= DUEL.trapSlots) return false;
   return true;
 }
@@ -317,6 +384,7 @@ export function resolvedEffect(d: DuelState, c: CardDef): CardEffect {
     let dmg = e.dmg;
     if (c.chain) dmg += c.chain.dmg * d.me.played.filter((id) => !c.chain!.tags || c.chain!.tags.includes(getCard(id).tag!)).length;
     if (c.vsIntent && c.vsIntent.kinds.includes(d.foe.intent.kind)) dmg += c.vsIntent.dmg;
+    if (c.desperate && d.me.hp < d.me.max / 2) dmg += c.desperate;
     const b = d.me.boost;
     if (b && c.tag && b.tags.includes(c.tag)) dmg = (dmg + (b.dmg ?? 0)) * (b.mult ?? 1);
     e.dmg = dmg;
@@ -384,6 +452,12 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   const id = d.me.hand.splice(handIndex, 1)[0];
   const c = getCard(id);
   d.me.energy -= c.cost;
+  const skill = cardSkill(id);
+  if (skill && !(d.me.used ??= []).includes(skill)) d.me.used.push(skill);
+  if (c.money) {
+    d.me.money = (d.me.money ?? 0) - c.money;
+    d.me.spent = (d.me.spent ?? 0) + c.money;
+  }
 
   if (c.kind === 'trap') {
     d.me.traps.push(id);
@@ -395,6 +469,7 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   const nums = effectText({ dmg: e.dmg, hits: e.hits, block: e.block, heal: e.heal }).join('、');
   say(d, 'me', `【${c.name}】${c.flavor}${nums ? `（${nums}）` : ''}`);
   applyCardEffect(d, c, e);
+  if (c.selfHp) d.me.hp -= c.selfHp;
   d.me.played.push(id);
   if (!c.exhaust) d.me.discard.push(id);
   if (e.draw) drawCards(d, e.draw, rng);
@@ -495,7 +570,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
     checkOver(d);
     if (d.over) return d;
   }
-  d.me.energy = DUEL.energy + d.me.energyNext;
+  d.me.energy = (d.me.energyMax ?? DUEL.energy) + d.me.energyNext;
   d.me.energyNext = 0;
   d.me.played = [];
   drawCards(d, d.me.drawPer, rng);

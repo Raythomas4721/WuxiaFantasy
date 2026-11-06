@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, align, ambition, chiv, danshi, die, dropItem, fame, flag, fuyuan, goTo, health, item, join, later, leaveSect, master, meet, meili, money, rel, wuxing, xinxing, xp,
+  add, align, ambition, card, chiv, danshi, die, dropItem, fame, flag, fuyuan, goTo, health, item, join, later, leaveSect, master, meet, meili, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const youthEvents: GameEvent[] = [
@@ -322,7 +322,7 @@ export const youthEvents: GameEvent[] = [
         text: '拆開信來讀',
         outcome: {
           text: '信裡只有一句話，和一式你從沒見過的劍招。你終於明白，那套寒江劍法為什麼總是少了一式。',
-          effects: [flag('read_shen_letter'), dropItem('shen_letter'), wuxing(1), xp('hanjiang', 3)],
+          effects: [flag('read_shen_letter'), dropItem('shen_letter'), wuxing(1), xp('hanjiang', 3), card('dudiao')],
           recap: { weight: 3, text: '你拆開了沈孤舟沒能送到的信，在信裡找到了寒江劍法的最後一式。' },
         },
       },

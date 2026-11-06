@@ -9,6 +9,7 @@ import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
 import { applyEffects, killPlayer, withReputation } from './effects';
 import { MARKET } from '../content/market';
 import { createDuel, endRound, fighterFor, healthLossOf, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
+import { DECK, focusDeckTasks, pushDuelReward, startingDeck } from './deck';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
 import { getEvent, selectEvent } from './select';
@@ -109,6 +110,7 @@ export function newGame(setup: NewGameSetup): GameState {
       skills: {},
       masters: [],
       alive: true,
+      deck: startingDeck(backgroundId, setup.trait),
     },
     family,
     companion: { name: rng.pick(CONTENT.names.childNames), trait: rng.pick(CONTENT.names.personalities) },
@@ -416,6 +418,7 @@ function runFocus(s: GameState, rng: Rng, focusId: string): void {
   }
   s.focus = focusId;
   s.focusStreak = { id: focusId, count: streak };
+  focusDeckTasks(s, focusId, rng);
   presentEvent(s, rng);
 }
 
@@ -564,8 +567,12 @@ export function finishDuel(state: GameState): GameState {
   const won = d.over === 'win';
   const loss = healthLossOf(d);
   if (loss > 0) applyEffects(s, [{ type: 'health', delta: -loss }], rng);
+  if (d.me.spent) s.player.money = Math.max(0, s.player.money - d.me.spent);
+  // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
+  applyEffects(s, (d.me.used ?? []).map((skill) => ({ type: 'skill' as const, skill, xp: DECK.duelXp })), rng);
   s.duel = undefined;
   applyChoiceOutcome(s, rng, e, choice, won ? choice.duel!.success : choice.duel!.failure, won ? 'success' : 'failure');
+  if (won && s.player.alive) pushDuelReward(s, rng, d.name);
   s.rng = rng.state;
   return s;
 }
@@ -607,6 +614,7 @@ export function nextTurn(state: GameState): GameState {
   if (p.alive && s.chain) {
     const next = getEvent(s.chain);
     s.chain = undefined;
+    s.deckTasks = undefined;
     s.snapshot = takeSnapshot(s);
     s.result = undefined;
     presentEvent(s, rng, next);
@@ -615,6 +623,8 @@ export function nextTurn(state: GameState): GameState {
   }
 
   s.notices = undefined;
+  // 沒處理的牌庫變化就算放下了（畫面上會先要玩家處理完）
+  s.deckTasks = undefined;
   if (p.alive) {
     s.prevYear = currentYear(s);
     p.age += timeStep(s);

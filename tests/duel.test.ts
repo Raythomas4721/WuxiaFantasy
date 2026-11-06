@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
 import {
-  DUEL, canPlay, createDuel, deckFor, endRound, getCard, playCard, resolvedEffect, yieldDuel, type Fighter,
+  DUEL, canPlay, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
 } from '../src/engine/duel';
 import { playSimpleRound } from '../src/engine/duelAI';
 import { chooseOption, choiceViews, finishDuel, newGame } from '../src/engine/game';
@@ -28,23 +28,24 @@ function rigged(opponent: string, hand: string[], intent: DuelState['foe']['inte
 }
 
 describe('牌庫', () => {
-  it('主修武學依等級加入招式，4 級起升級', () => {
-    expect(deckFor(person({ hanjiang: 5 }))).toEqual(expect.arrayContaining(['hanjiang1', 'xietiao']));
-    const lv4 = deckFor(person({ hanjiang: 22 }));
-    expect(lv4).toContain('hanjiang1+');
-    expect(lv4).not.toContain('hanjiang1');
+  it('舊存檔換算：主修武學依等級加入招式，4 級起升級，奇遇牌也算進去', () => {
+    expect(legacyDeck(person({ hanjiang: 5 }))).toEqual(expect.arrayContaining(['hanjiang1', 'xietiao']));
+    const lv4 = person({ hanjiang: 22 });
+    lv4.flags.read_shen_letter = true;
+    expect(legacyDeck(lv4)).toContain('hanjiang1+');
+    expect(legacyDeck(lv4)).not.toContain('hanjiang1');
+    expect(legacyDeck(lv4)).toContain('dudiao');
     expect(getCard('juma+').block).toBe(Math.round(getCard('juma').block! * DUEL.upgradeMult));
   });
 
-  it('受傷、血仇與奇遇會改變牌庫', () => {
+  it('上場的牌 = 持久牌庫 + 受傷與血仇帶來的傷、心魔', () => {
     const s = person({ hanjiang: 5 });
     s.player.health = 40;
     s.flags.blood_feud = true;
-    s.flags.read_shen_letter = true;
     const deck = deckFor(s);
+    expect(deck.slice(0, s.player.deck!.length)).toEqual(s.player.deck);
     expect(deck.filter((x) => x === 'wound')).toHaveLength(1);
     expect(deck).toContain('demon');
-    expect(deck).toContain('dudiao');
   });
 });
 

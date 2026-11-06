@@ -1,5 +1,6 @@
 // 瀏覽器存檔。localStorage 可能不可用（無痕模式等），所有讀寫都要能失敗。
 
+import { ensureDeck } from '../engine/deck';
 import { SAVE_VERSION } from '../engine/game';
 import type { GameState } from '../engine/types';
 
@@ -10,7 +11,8 @@ export function loadSave(): GameState | null {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as GameState;
-    return s.version === SAVE_VERSION ? s : null;
+    // v0.4 的存檔沒有持久牌庫：照當時的武學等級換算一副
+    return s.version === SAVE_VERSION ? ensureDeck(s) : null;
   } catch {
     return null;
   }
