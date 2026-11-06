@@ -3,9 +3,11 @@
 import type { Content } from '../engine/types';
 import { cards, foeTraps, opponents, skillCards, specialCards } from './duel';
 import { ambitions, deathCauses, endings, eraLines, rumors } from './endings';
+import { items, market, propertyRisks } from './market';
 import { adultEvents } from './events/adult';
 import { childhoodEvents } from './events/childhood';
 import { historyEvents } from './events/history';
+import { fortuneEvents } from './events/fortune';
 import { jianghuEvents } from './events/jianghu';
 import { lunwuEvents } from './events/lunwu';
 import { youthEvents } from './events/youth';
@@ -19,6 +21,9 @@ export const CONTENT: Content = {
   specialCards,
   opponents,
   foeTraps,
+  items,
+  market,
+  propertyRisks,
   backgrounds,
   regions,
   traits,
@@ -32,6 +37,6 @@ export const CONTENT: Content = {
   eraLines,
   deathCauses,
   rumors,
-  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...historyEvents],
+  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents],
   names,
 };

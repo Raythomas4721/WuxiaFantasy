@@ -137,6 +137,18 @@ export function validateContent(content: Content): ValidationReport {
     conditions.push({ where: `結局 ${en.id}`, c: en.conditions });
     textConditions(en.text).forEach((c) => conditions.push({ where: `結局 ${en.id}`, c }));
   }
+  // ---- 市集與行囊 ----
+  const marketIds = new Set<string>();
+  for (const m of content.market) {
+    const w = `市集 ${m.id}`;
+    if (marketIds.has(m.id)) errors.push(`市集貨物 id 重複：${m.id}`);
+    marketIds.add(m.id);
+    if (m.requires) conditions.push({ where: w, c: m.requires });
+    m.effects.forEach((e) => effects.push({ where: w, e }));
+    (m.regions ?? []).forEach((r) => !content.regions[r] && errors.push(`${w}：未知地區 ${r}`));
+  }
+  content.propertyRisks.forEach((r) => !content.regions[r.region] && errors.push(`產業風險：未知地區 ${r.region}`));
+
   // ---- 過招 ----
   const cardExists = (id: string) => Boolean(content.cards[id.endsWith('+') ? id.slice(0, -1) : id]);
   for (const [id, c] of Object.entries(content.cards)) {
@@ -157,6 +169,7 @@ export function validateContent(content: Content): ValidationReport {
   });
   for (const o of Object.values(content.opponents)) {
     (o.traps ?? []).forEach((id) => !content.foeTraps[id] && errors.push(`過招對手 ${o.id}：未知暗招 ${id}`));
+    if (o.easierWith) conditions.push({ where: `過招對手 ${o.id}`, c: o.easierWith });
     for (const key of unknownPlaceholders([o.name], builtIns)) errors.push(`過招對手 ${o.id}：名字引用了未定義的變數 {${key}}`);
   }
 
@@ -188,6 +201,7 @@ export function validateContent(content: Content): ValidationReport {
   const focusIds = new Set(content.focuses.map((f) => f.id));
   const setFlags = new Set<string>(ENGINE_FLAGS);
   const readFlags = new Map<string, string>();
+  const gainedItems = new Set<string>();
 
   for (const { where, e } of effects) {
     switch (e.type) {
@@ -217,6 +231,11 @@ export function validateContent(content: Content): ValidationReport {
         break;
       case 'ambition':
         if (!has(content.ambitions, e.ambition)) errors.push(`${where}：未知志向 ${e.ambition}`);
+        break;
+      case 'gainItem':
+      case 'loseItem':
+        if (!content.items[e.item]) errors.push(`${where}：未知信物 ${e.item}`);
+        if (e.type === 'gainItem') gainedItems.add(e.item);
         break;
       case 'chain':
         if (!eventIds.has(e.event)) errors.push(`${where}：接續了不存在的事件 ${e.event}`);
@@ -248,6 +267,7 @@ export function validateContent(content: Content): ValidationReport {
       if (c.npcPresent) npcRefs.push(c.npcPresent);
       npcRefs.forEach((n) => !has(content.npcs, n) && errors.push(`${where}：未知人物 ${n}`));
       [...(c.notFired ?? []), ...(c.scheduled ?? [])].forEach((id) => !eventIds.has(id) && errors.push(`${where}：未知事件 ${id}`));
+      [...(c.items ?? []), ...(c.notItems ?? [])].forEach((id) => !content.items[id] && errors.push(`${where}：未知信物 ${id}`));
     });
   }
 
@@ -271,6 +291,10 @@ export function validateContent(content: Content): ValidationReport {
   const allText = JSON.stringify(content);
   for (const name of BANNED_NAMES) {
     if (allText.includes(name)) errors.push(`出現禁用名稱：${name}`);
+  }
+
+  for (const id of Object.keys(content.items)) {
+    if (!gainedItems.has(id)) errors.push(`信物 ${id}：沒有任何地方能取得`);
   }
 
   // ---- 提醒 ----

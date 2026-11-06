@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  chiv, danshi, fame, flag, fuyuan, gengu, health, later, meet, meili, money, rel, wuxing, xinxing, xp,
+  chiv, danshi, fame, flag, fuyuan, gengu, health, item, later, meet, meili, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const childhoodEvents: GameEvent[] = [
@@ -445,12 +445,12 @@ export const childhoodEvents: GameEvent[] = [
           difficulty: 5,
           success: {
             text: '你只中了三箭，卻有一箭射落了他掛在靶上的小旗。少年大笑，拍著你的肩膀說了一串你聽不懂的話，最後拔下一根白色的箭羽塞給你。他叫巴特爾。',
-            effects: [gengu(1), rel('bater', 30), meet('bater'), flag('grassland_pact')],
+            effects: [gengu(1), rel('bater', 30), meet('bater'), flag('grassland_pact'), item('bailing')],
             recap: { weight: 3, text: '{ageCn}歲那年，在北方的榷場，一個叫巴特爾的蒙古少年送了你一根白色的箭羽。' },
           },
           failure: {
             text: '你連弓都拉不滿，箭歪歪地插在土裡。少年笑得在地上打滾，笑完了卻手把手地教你拉弓。臨別時，他塞給你一根白色的箭羽。他叫巴特爾。',
-            effects: [rel('bater', 20), meet('bater'), flag('grassland_pact')],
+            effects: [rel('bater', 20), meet('bater'), flag('grassland_pact'), item('bailing')],
             recap: { weight: 3, text: '{ageCn}歲那年，在北方的榷場，一個叫巴特爾的蒙古少年教你拉弓，送了你一根白色的箭羽。' },
           },
         },
@@ -460,7 +460,7 @@ export const childhoodEvents: GameEvent[] = [
         text: '拿出隨身的糖糕，跟他換弓來看看',
         outcome: {
           text: '他咬了一口糖糕，眼睛一下子亮了。你們用手比劃了一整個下午。臨別時，他送你一根白色的箭羽。他叫巴特爾。',
-          effects: [meili(1), rel('bater', 25), meet('bater'), flag('grassland_pact')],
+          effects: [meili(1), rel('bater', 25), meet('bater'), flag('grassland_pact'), item('bailing')],
           recap: { weight: 3, text: '{ageCn}歲那年，你用一塊糖糕換來了蒙古少年巴特爾的友誼，和一根白色的箭羽。' },
         },
       },

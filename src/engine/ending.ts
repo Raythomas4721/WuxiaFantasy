@@ -32,6 +32,11 @@ export function computeEnding(s: GameState): EndingResult {
     .sort((a, b) => a.turn - b.turn)
     .map((h) => h.recap?.text ?? '');
 
+  const keepsake = (s.player.items ?? [])
+    .map((id) => CONTENT.items[id])
+    .filter(Boolean)
+    .sort((a, b) => b.weight - a.weight)[0];
+
   return {
     id: def.id,
     title: def.title,
@@ -40,5 +45,6 @@ export function computeEnding(s: GameState): EndingResult {
     eraLine: era ? fill(era.text, s) : '',
     deathLine: `${eraName(year)}（${year}），你${cause}，享年${chineseNumber(s.player.age)}歲。`,
     recaps,
+    keepsake: keepsake ? fill(keepsake.ending, s) : undefined,
   };
 }

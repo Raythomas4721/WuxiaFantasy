@@ -2,8 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, align, ambition, chiv, danshi, die, fame, flag, fuyuan, goTo, health, join, later, leaveSect, master, meet,
-  meili, money, rel, wuxing, xinxing, xp,
+  add, align, ambition, chiv, danshi, die, dropItem, fame, flag, fuyuan, goTo, health, item, join, later, leaveSect, master, meet, meili, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const youthEvents: GameEvent[] = [
@@ -287,7 +286,7 @@ export const youthEvents: GameEvent[] = [
         text: '收下信，等手頭的事了了再去',
         outcome: {
           text: '他點點頭，什麼也沒說。三天後，他在睡夢中走了。那封信，你一直揣在懷裡。',
-          effects: [flag('dead_shen_guzhou'), flag('shen_letter_pending'), later('shen_letter_late', 2, 4)],
+          effects: [flag('dead_shen_guzhou'), flag('shen_letter_pending'), item('shen_letter'), later('shen_letter_late', 2, 4)],
         },
       },
       {
@@ -314,7 +313,7 @@ export const youthEvents: GameEvent[] = [
         text: '把信燒在師太的墓前',
         outcome: {
           text: '火光裡，你彷彿聽見沈孤舟在笑。你在墓前一直坐到天黑。',
-          effects: [flag('promise_late_shen'), xinxing(2)],
+          effects: [flag('promise_late_shen'), dropItem('shen_letter'), xinxing(2)],
           recap: { weight: 3, text: '沈孤舟託你的那封信，你送遲了一年。' },
         },
       },
@@ -323,7 +322,7 @@ export const youthEvents: GameEvent[] = [
         text: '拆開信來讀',
         outcome: {
           text: '信裡只有一句話，和一式你從沒見過的劍招。你終於明白，那套寒江劍法為什麼總是少了一式。',
-          effects: [flag('read_shen_letter'), wuxing(1), xp('hanjiang', 3)],
+          effects: [flag('read_shen_letter'), dropItem('shen_letter'), wuxing(1), xp('hanjiang', 3)],
           recap: { weight: 3, text: '你拆開了沈孤舟沒能送到的信，在信裡找到了寒江劍法的最後一式。' },
         },
       },
@@ -347,12 +346,12 @@ export const youthEvents: GameEvent[] = [
           difficulty: 6,
           success: {
             text: '你們各射十箭，打成了平手。他哈哈大笑，從箭袋裡抽出一根白羽箭送你：「巴特爾。朋友。」',
-            effects: [rel('bater', 25), meet('bater'), flag('grassland_pact'), fame(3)],
+            effects: [rel('bater', 25), meet('bater'), flag('grassland_pact'), item('bailing'), fame(3)],
             recap: { weight: 3, text: '{ageCn}歲那年，你在淮水邊的榷場和蒙古箭手巴特爾比箭，結成了朋友。' },
           },
           failure: {
             text: '你輸得一塌糊塗。他卻沒笑你，拍拍你的肩膀，送了你一根白羽箭：「巴特爾。下次，再比。」',
-            effects: [rel('bater', 15), meet('bater'), flag('grassland_pact')],
+            effects: [rel('bater', 15), meet('bater'), flag('grassland_pact'), item('bailing')],
             recap: { weight: 3, text: '{ageCn}歲那年，你在淮水邊的榷場輸給了蒙古箭手巴特爾，他送了你一根白羽箭。' },
           },
         },
@@ -363,7 +362,7 @@ export const youthEvents: GameEvent[] = [
         requires: { minMoney: 5 },
         outcome: {
           text: '他喝了一口江南的米酒，皺著眉頭說太甜，卻把一整罈都喝光了。臨別時，他送你一根白羽箭。他叫巴特爾。',
-          effects: [money(-5), rel('bater', 20), meet('bater'), flag('grassland_pact')],
+          effects: [money(-5), rel('bater', 20), meet('bater'), flag('grassland_pact'), item('bailing')],
           recap: { weight: 3, text: '{ageCn}歲那年，你在淮水邊請蒙古箭手巴特爾喝了一罈米酒。' },
         },
       },
@@ -529,12 +528,12 @@ export const youthEvents: GameEvent[] = [
             {
               if: { flags: ['plague_helper'] },
               text: '你三個都答對了。林鶴年看了你的答卷，又看了看你的臉，笑了：「當年那個煎藥的孩子？進來吧。」',
-              effects: [join('yaogu'), master('lin_henian'), meet('lin_henian'), rel('lin_henian', 20), xp('baicao', 4)],
+              effects: [join('yaogu'), master('lin_henian'), meet('lin_henian'), rel('lin_henian', 20), xp('baicao', 4), item('yaowang_notes')],
               recap: { weight: 3, text: '{ageCn}歲那年，你拜入濟世藥谷，成了藥王林鶴年的弟子。他還記得當年那個煎藥的孩子。' },
             },
             {
               text: '你三個都答對了。一個白鬍子老人接過你的答卷，看了很久：「我是林鶴年。從今天起，你是藥谷的人了。」',
-              effects: [join('yaogu'), master('lin_henian'), meet('lin_henian'), rel('lin_henian', 20), xp('baicao', 4)],
+              effects: [join('yaogu'), master('lin_henian'), meet('lin_henian'), rel('lin_henian', 20), xp('baicao', 4), item('yaowang_notes')],
               recap: { weight: 3, text: '{ageCn}歲那年，你通過了考驗，拜入濟世藥谷，成了藥王林鶴年的弟子。' },
             },
           ],
@@ -571,7 +570,7 @@ export const youthEvents: GameEvent[] = [
           skill: 'baicao',
           success: {
             text: '這一回，你三個都答對了。林鶴年捋著鬍子：「我就知道你會回來。」',
-            effects: [join('yaogu'), master('lin_henian'), rel('lin_henian', 25), xp('baicao', 4)],
+            effects: [join('yaogu'), master('lin_henian'), rel('lin_henian', 25), xp('baicao', 4), item('yaowang_notes')],
             recap: { weight: 3, text: '{ageCn}歲那年，你第二次叩開濟世藥谷的大門，終於成了藥王林鶴年的弟子。' },
           },
           failure: {
@@ -859,7 +858,7 @@ export const youthEvents: GameEvent[] = [
           },
           failure: {
             text: '你被一刀背砸倒在地。父親撲上來護住你，疤臉的刀落了下去。那天之後，家裡的門檻上多了一道洗不掉的血痕。',
-            effects: [flag('father_dead'), flag('blood_feud'), later('revenge_chance', 6, 14, 20)],
+            effects: [flag('father_dead'), flag('blood_feud'), item('father_relic'), later('revenge_chance', 6, 14, 20)],
             recap: { weight: 5, text: '{ageCn}歲那年，潰兵疤臉闖進村子，父親為了護你，死在了他的刀下。' },
           },
         },
@@ -878,7 +877,7 @@ export const youthEvents: GameEvent[] = [
             {
               if: { maxStats: { fuyuan: 6 } },
               text: '半路上，父親說祖宗的牌位還在家裡，轉身跑了回去。你們在山洞裡等到天黑，他沒有回來。第二天你在村口找到他，疤臉的人把他的屍首掛在了門框上。',
-              effects: [money(-40), flag('father_dead'), flag('blood_feud'), later('revenge_chance', 6, 14, 20)],
+              effects: [money(-40), flag('father_dead'), flag('blood_feud'), item('father_relic'), later('revenge_chance', 6, 14, 20)],
               recap: { weight: 5, text: '{ageCn}歲那年潰兵進村，父親回頭去拿祖宗牌位，死在了疤臉手裡。' },
             },
             {

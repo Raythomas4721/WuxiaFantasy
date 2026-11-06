@@ -4,9 +4,10 @@
 // 七歲以前沒有方針，直接進事件。方針選定後會延續，只在新階段、轉折、倦怠或玩家要求時重選。
 
 import { CONTENT } from '../content';
-import { checkCondition, currentYear, martialLevel, skillLevel, unmetHints } from './conditions';
+import { checkCondition, currentYear, martialLevel, npcAlive, skillLevel, unmetHints } from './conditions';
 import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
 import { applyEffects, killPlayer, withReputation } from './effects';
+import { MARKET } from '../content/market';
 import { createDuel, endRound, fighterFor, healthLossOf, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
@@ -227,6 +228,11 @@ function describeGains(s: GameState): string[] {
 }
 
 function pickRumor(s: GameState, rng: Rng): string | undefined {
+  if (s.flags.inquire) {
+    delete s.flags.inquire;
+    const news = whereabouts(s, rng);
+    if (news) return news;
+  }
   if (!rng.chance(RUMOR_CHANCE)) return undefined;
   const pool = CONTENT.rumors
     .filter((r) => !s.shownRumors.includes(r.id) && checkCondition(s, r.conditions))
@@ -235,6 +241,18 @@ function pickRumor(s: GameState, rng: Rng): string | undefined {
   if (!r) return undefined;
   s.shownRumors.push(r.id);
   return fill(r.text, s);
+}
+
+/** 打聽來的消息：一位還活著、此刻有固定行蹤的名俠在哪裡。 */
+function whereabouts(s: GameState, rng: Rng): string | undefined {
+  const year = currentYear(s);
+  const known = Object.values(CONTENT.npcs).filter(
+    (n) => n.codex && npcAlive(s, n.id) && n.presence.some((p) => year >= p.from && year <= p.to && !p.regions.includes('*')),
+  );
+  if (known.length === 0) return undefined;
+  const n = rng.pick(known);
+  const where = n.presence.find((p) => year >= p.from && year <= p.to)!.regions.map((r) => CONTENT.regions[r]?.name ?? r);
+  return `你花錢打聽到：${n.title ? `「${n.title}」` : ''}${n.name}這幾年在${where.join('、')}一帶。`;
 }
 
 function pushTags(s: GameState, tags: string[]): void {
@@ -290,6 +308,9 @@ function beginTurn(s: GameState, rng: Rng): void {
   s.snapshot = takeSnapshot(s);
   s.current = undefined;
   s.result = undefined;
+  // 產業收入算在這一回合的收穫裡
+  const income = (s.player.properties ?? []).reduce((sum, x) => sum + MARKET.income[x.kind], 0);
+  if (income > 0) s.player.money += income;
   if (s.player.age < 7) {
     presentEvent(s, rng);
     return;
@@ -387,11 +408,22 @@ function runFocus(s: GameState, rng: Rng, focusId: string): void {
   // 連續做同一件事，收穫會越來越少：第四次起每多一次，成長機率再打一次折。
   const fatigue = streak >= FATIGUE_STREAK ? FATIGUE_MULT ** (streak - FATIGUE_STREAK + 1) : 1;
   for (const g of focus.growth) {
-    if (rng.chance((g.chance ?? 1) * fatigue)) applyEffects(s, [g.effect], rng);
+    if (!rng.chance((g.chance ?? 1) * fatigue)) continue;
+    applyEffects(s, [g.effect], rng);
+    if (focusId === 'trade' && g.effect.type === 'money' && g.effect.delta > 0 && s.player.properties?.some((x) => x.kind === 'shop')) {
+      s.player.money += Math.round(g.effect.delta * MARKET.shopTradeBonus);
+    }
   }
   s.focus = focusId;
   s.focusStreak = { id: focusId, count: streak };
   presentEvent(s, rng);
+}
+
+/** 檢定的勝算；打點過門路的人，拜師入門的檢定 +20%。 */
+function choiceChance(s: GameState, check: Check): number {
+  const joins = [check.success].flat().some((o) => o.effects?.some((e) => e.type === 'joinSect'));
+  const bonus = joins && s.flags.connections ? 0.2 : 0;
+  return Math.min(0.95, checkChance(s, check) + bonus);
 }
 
 export function checkChance(s: GameState, check: Check): number {
@@ -421,7 +453,7 @@ export function choiceViews(s: GameState): ChoiceView[] {
       text: fill(c.text, s, s.current.vars),
       enabled,
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
-      odds: enabled && c.check ? oddsLabel(checkChance(s, c.check)) : enabled && c.duel ? duelOdds(s, c.duel.opponent) : undefined,
+      odds: enabled && c.check ? oddsLabel(choiceChance(s, c.check)) : enabled && c.duel ? duelOdds(s, c.duel.opponent) : undefined,
       duel: Boolean(c.duel),
     });
   }
@@ -453,7 +485,7 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
   let spec: OutcomeSpec;
   let check: TurnResult['check'];
   if (choice.check) {
-    const ok = rng.chance(checkChance(s, choice.check));
+    const ok = rng.chance(choiceChance(s, choice.check));
     check = ok ? 'success' : 'failure';
     spec = ok ? choice.check.success : choice.check.failure;
   } else if (choice.outcome) {
@@ -550,6 +582,20 @@ function timeStep(s: GameState): number {
   return 4;
 }
 
+/** 戰亂毀掉產業：這段時間裡發生的城破，當地產業全沒了。 */
+function loseProperties(s: GameState): void {
+  const year = currentYear(s);
+  for (const risk of CONTENT.propertyRisks) {
+    if (risk.year <= s.prevYear || risk.year > year) continue;
+    const before = s.player.properties ?? [];
+    const after = before.filter((x) => x.region !== risk.region);
+    if (after.length === before.length) continue;
+    s.player.properties = after;
+    s.notices = [...(s.notices ?? []), risk.text];
+    s.history.push({ turn: s.turn, age: s.player.age, year: risk.year, title: '產業', text: risk.text });
+  }
+}
+
 /** 結果畫面之後：推進時間、判定壽終，進入下一回合或結局。 */
 export function nextTurn(state: GameState): GameState {
   if (state.phase !== 'result') throw new Error('現在不能進入下一回合');
@@ -568,10 +614,12 @@ export function nextTurn(state: GameState): GameState {
     return s;
   }
 
+  s.notices = undefined;
   if (p.alive) {
     s.prevYear = currentYear(s);
     p.age += timeStep(s);
     p.health = Math.min(100, p.health + 5);
+    loseProperties(s);
 
     let death = 0;
     if (p.age >= 50) death += 0.03 + (p.age - 50) * 0.012;

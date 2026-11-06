@@ -28,6 +28,8 @@ const alignments: number[] = [];
 const fames: number[] = [];
 const chivalries: number[] = [];
 const finalMoney: number[] = [];
+const propertyOwners = { land: 0, shop: 0 };
+const itemHolders = new Map<string, number>();
 const distinctEndingsFirstFive: number[] = [];
 const allDuels: AutoplayResult['duels'] = [];
 
@@ -57,6 +59,8 @@ for (let i = 0; i < runs; i++) {
   fames.push(state.player.fame);
   chivalries.push(state.player.chivalry);
   finalMoney.push(state.player.money);
+  for (const kind of ['land', 'shop'] as const) if (state.player.properties?.some((x) => x.kind === kind)) propertyOwners[kind]++;
+  for (const id of state.player.items ?? []) itemHolders.set(id, (itemHolders.get(id) ?? 0) + 1);
   totalTurns += state.turn;
   totalEvents += events.length;
   maxMartial.push(martialLevel(state));
@@ -125,6 +129,8 @@ line('\n【錢】（結局時）');
 const sortedMoney = [...finalMoney].sort((a, b) => a - b);
 const avgMoney = Math.round(finalMoney.reduce((a, b) => a + b, 0) / runs);
 line(`  平均 ${avgMoney} 文・中位數 ${sortedMoney[Math.floor(runs / 2)]} 文・≥ 500 文 ${pct(finalMoney.filter((m) => m >= 500).length)}`);
+line(`  結局時有田地 ${pct(propertyOwners.land)}・有鋪面 ${pct(propertyOwners.shop)}`);
+line('  結局時行囊裡的信物：' + Object.values(CONTENT.items).map((it) => `${it.name} ${pct(itemHolders.get(it.id) ?? 0).trim()}`).join('、'));
 
 line('\n【過招】（§3.11）');
 const dpct = (w: number, n: number) => (n ? `${Math.round((w / n) * 100)}%` : '-');

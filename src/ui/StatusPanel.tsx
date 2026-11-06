@@ -20,6 +20,9 @@ function relationLabel(v: number): string {
 export function StatusPanel({ state }: { state: GameState }) {
   const p = state.player;
   const threads = activeThreads(state);
+  const land = (p.properties ?? []).filter((x) => x.kind === 'land').length;
+  const shop = (p.properties ?? []).filter((x) => x.kind === 'shop').length;
+  const items = (p.items ?? []).map((id) => CONTENT.items[id]).filter(Boolean);
   const hasThreads = threads.length > 0 || Boolean(ambitionView(state));
   const skills = Object.entries(p.skills)
     .map(([id, x]) => ({ id, level: levelFromXp(x) }))
@@ -64,6 +67,12 @@ export function StatusPanel({ state }: { state: GameState }) {
           <div className="health-fill" style={{ width: `${p.health}%` }} />
         </div>
         <div className="status-row"><span>錢財</span><span>{p.money} 文</span></div>
+        {land + shop > 0 && (
+          <div className="status-row">
+            <span>產業</span>
+            <span>{[land > 0 && `田地 ${land}`, shop > 0 && `鋪面 ${shop}`].filter(Boolean).join('、')}</span>
+          </div>
+        )}
         <div className="status-row"><span>名望</span><span>{fameLabel(p.fame)}</span></div>
         <div className="status-row"><span>俠義</span><span>{chivalryLabel(p.chivalry)}</span></div>
         <div className="status-row"><span>江湖評價</span><span>{alignmentLabel(p.alignment)}</span></div>
@@ -83,6 +92,22 @@ export function StatusPanel({ state }: { state: GameState }) {
         <section className="status-block">
           <h4>心事</h4>
           <ThreadList state={state} threads={threads} compact />
+        </section>
+      )}
+
+      {items.length > 0 && (
+        <section className="status-block">
+          <h4>行囊</h4>
+          <ul className="plain-list items">
+            {items.map((it) => (
+              <li key={it.id}>
+                <details>
+                  <summary>{it.name}</summary>
+                  <p className="muted small">{it.desc}</p>
+                </details>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 

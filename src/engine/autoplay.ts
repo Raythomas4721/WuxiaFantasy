@@ -6,6 +6,7 @@ import {
 } from './game';
 import { CONTENT } from '../content';
 import { mainSkill } from './duel';
+import { buy, marketOffers } from './market';
 import { Rng } from './rng';
 import type { GameState } from './types';
 
@@ -69,6 +70,17 @@ function pickChoice(s: GameState, ids: string[], persona: Persona, rng: Rng): st
   return rng.pick(scored.filter((x) => x.score === best).map((x) => x.id));
 }
 
+/** 模擬玩家照志向會偏好的方針。 */
+const AMBITION_FOCUS: Record<string, string[]> = {
+  martial: ['martial'],
+  chivalry: ['travel', 'social'],
+  healer: ['medicine', 'study'],
+  wealth: ['work', 'trade'],
+  nation: ['martial', 'travel'],
+  revenge: ['martial'],
+  peace: ['rest', 'work'],
+};
+
 export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayResult {
   const policy = new Rng(seed ^ 0x9e3779b9);
   const persona = options.persona ?? pickPersona(new Rng(seed ^ 0x5bd1e995));
@@ -80,7 +92,10 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
   for (let step = 0; step < MAX_STEPS && s.phase !== 'ended'; step++) {
     if (s.phase === 'focus') {
       const focuses = focusOptions(s);
-      const preferred = focuses.find((f) => f.id === options.preferFocus);
+      // 有志向的人，一半的時候會照志向過日子
+      const wanted = s.player.ambition && policy.chance(0.5) ? AMBITION_FOCUS[s.player.ambition] ?? [] : [];
+      const fits = focuses.filter((f) => wanted.includes(f.id));
+      const preferred = focuses.find((f) => f.id === options.preferFocus) ?? (fits.length > 0 ? policy.pick(fits) : undefined);
       focusPicks += 1;
       s = chooseFocus(s, (preferred ?? policy.pick(focuses)).id);
     } else if (s.phase === 'event') {
@@ -98,6 +113,11 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       duels.push({ opponent: d.opponent, level: d.level, playerLevel: mainSkill(s).level, won: d.over === 'win', rounds: d.round });
       s = finishDuel({ ...s, duel: d, rng: rng.state });
     } else if (s.phase === 'result') {
+      // 市集：立志發財的人只買產業；其他人一半的回合會買一樣買得起的東西
+      const offers = marketOffers(s).filter((o) => o.enabled);
+      const saver = s.player.ambition === 'wealth';
+      const wanted = saver ? offers.filter((o) => o.id === 'land' || o.id === 'shop') : offers;
+      if (wanted.length > 0 && (saver || policy.chance(0.5))) s = buy(s, policy.pick(wanted).id);
       s = nextTurn(s);
     } else {
       throw new Error(`autoplay 無法處理階段：${s.phase}`);

@@ -47,6 +47,13 @@ export interface Condition {
   notFired?: string[];
   /** 這些排程事件都還在等待中（尚未發生也未過期）。 */
   scheduled?: string[];
+  /** 行囊裡有這些信物／沒有這些信物。 */
+  items?: string[];
+  notItems?: string[];
+  /** 擁有這種產業。 */
+  property?: PropertyKind;
+  /** 家產（現金加上產業的價值）至少這麼多。 */
+  minWealth?: number;
   minSkill?: Record<string, number>;
   minMartial?: number;
   maxMartial?: number;
@@ -81,6 +88,10 @@ export type GameEffect =
   | { type: 'schedule'; event: string; after: [number, number]; expire?: number }
   /** 同一年接著發生的事件：結果畫面之後不推進時間，直接進入這個事件（論武的預賽、正賽、決賽）。 */
   | { type: 'chain'; event: string }
+  /** 行囊：得到或失去一件信物。 */
+  | { type: 'gainItem' | 'loseItem'; item: string }
+  /** 置產：在目前所在地區買下（delta > 0）或失去產業。 */
+  | { type: 'property'; kind: PropertyKind; delta: number }
   | { type: 'meet'; npc: string }
   /** 中斷連續方針的計數，例如停下來休息之後。 */
   | { type: 'resetStreak' }
@@ -356,9 +367,36 @@ export interface OpponentDef {
   temper: 'brute' | 'veteran' | 'guard';
   /** 生死之戰：沒有回合上限。 */
   lethal?: boolean;
+  /** 符合條件時，對手降一級（打點、信物）。 */
+  easierWith?: Condition;
   traps?: string[];
   /** 看不透意圖時顯示的文字。 */
   tells: Record<IntentKind, string>;
+}
+
+/** 行囊裡的劇情信物：不能買賣。 */
+export interface ItemDef {
+  id: string;
+  name: string;
+  /** 來歷，點開時顯示。 */
+  desc: string;
+  /** 結局回顧用的一句話；權重越高越優先。 */
+  ending: string;
+  weight: number;
+}
+
+/** 市集的貨物。 */
+export interface MarketItemDef {
+  id: string;
+  name: string;
+  price: number;
+  desc: string;
+  /** 在哪些地區買得到；省略表示各地都有。 */
+  regions?: string[];
+  /** 一生限買一次。 */
+  once?: boolean;
+  requires?: Condition;
+  effects: GameEffect[];
 }
 
 export interface Content {
@@ -369,6 +407,10 @@ export interface Content {
   specialCards: { if: Condition; card: string }[];
   opponents: Record<string, OpponentDef>;
   foeTraps: Record<string, FoeTrapDef>;
+  items: Record<string, ItemDef>;
+  market: MarketItemDef[];
+  /** 戰亂毀掉產業：某一年，某地區的產業全沒了。 */
+  propertyRisks: { year: number; region: string; text: string }[];
   backgrounds: Record<string, BackgroundDef>;
   regions: Record<string, RegionDef>;
   traits: Record<string, TraitDef>;
@@ -461,7 +503,13 @@ export interface Player {
   masters: string[];
   ambition?: string;
   alive: boolean;
+  /** 行囊裡的信物 id。舊存檔沒有這個欄位。 */
+  items?: string[];
+  /** 產業：種類與所在地區。 */
+  properties?: { kind: PropertyKind; region: string }[];
 }
+
+export type PropertyKind = 'land' | 'shop';
 
 export interface PersonRef {
   name: string;
@@ -505,6 +553,8 @@ export interface EndingResult {
   eraLine: string;
   deathLine: string;
   recaps: string[];
+  /** 最重要的一件信物的回顧。 */
+  keepsake?: string;
 }
 
 export type FocusReason = 'stage' | 'invalid' | 'sect' | 'master' | 'ambition' | 'region' | 'manual' | 'fatigue';
@@ -547,6 +597,11 @@ export interface GameState {
   duel?: DuelState;
   /** 結果畫面之後，同一年接著發生的事件。 */
   chain?: string;
+  /** 市集：這一回合已經買了幾樣；一生限買一次的東西。 */
+  market?: { turn: number; bought: number };
+  boughtOnce?: string[];
+  /** 要提醒玩家的事（例如產業毀於戰火），下一次行動後清掉。 */
+  notices?: string[];
   result?: TurnResult;
   history: HistoryEntry[];
   snapshot?: Snapshot;

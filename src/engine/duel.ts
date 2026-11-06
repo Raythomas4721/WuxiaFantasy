@@ -251,7 +251,8 @@ function pickIntent(d: DuelState, rng: Rng, except?: IntentKind): Intent {
 export function createDuel(fighter: Fighter, opponentId: string, choiceId: string, rng: Rng, s?: GameState): DuelState {
   const def = CONTENT.opponents[opponentId];
   if (!def) throw new Error(`未知對手：${opponentId}`);
-  const level = opponentLevel(def, fighter.level);
+  const easier = s && def.easierWith && checkCondition(s, def.easierWith) ? 1 : 0;
+  const level = Math.max(0, opponentLevel(def, fighter.level) - easier);
   const hp = DUEL.foeHp(level);
   const d: DuelState = {
     opponent: opponentId,

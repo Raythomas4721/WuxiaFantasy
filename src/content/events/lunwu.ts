@@ -2,7 +2,9 @@
 // 論武是同一年連打三場：上山報名 → 預賽 → 正賽 → 決賽，用 next() 接續，不推進時間。
 
 import type { Condition, GameEvent, Outcome } from '../../engine/types';
-import { add, chiv, fame, flag, goTo, join, meet, next, rel, wuxing, xinxing, xp } from '../dsl';
+import {
+  add, chiv, fame, flag, goTo, item, join, meet, next, rel, wuxing, xinxing, xp,
+} from '../dsl';
 
 const FIRST: Condition = { maxYear: 1250 };
 const SECOND: Condition = { minYear: 1251, maxYear: 1260 };
@@ -56,7 +58,7 @@ export const lunwuEvents: GameEvent[] = [
         hint: '至少要練過一門武學',
         outcome: {
           text: '你在報名的冊子上寫下自己的名字。執事看了你一眼，在名字旁邊畫了一個小圈。',
-          effects: [add('lunwu_entered'), meet('xie_lingshuang'), next('lunwu_prelim')],
+          effects: [add('lunwu_entered'), meet('xie_lingshuang'), item('lunwu_token'), next('lunwu_prelim')],
         },
       },
       {

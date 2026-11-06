@@ -306,7 +306,7 @@ export const focuses: FocusDef[] = [
     name: '謀生',
     desc: '賺取錢財，磨練心性。',
     tags: ['work', 'village'],
-    growth: [{ effect: money(20) }, { effect: xinxing(1), chance: 0.3 }],
+    growth: [{ effect: money(25) }, { effect: xinxing(1), chance: 0.3 }],
     summary: [
       '這段日子你踏踏實實地做活，攢下了一點積蓄。',
       '你在碼頭扛了一陣子貨，肩膀上磨出了一層厚皮。',
@@ -320,7 +320,7 @@ export const focuses: FocusDef[] = [
     desc: '走南闖北做買賣，有賺有賠。',
     conditions: { any: [{ backgrounds: ['merchant'] }, { minAge: 18 }] },
     tags: ['trade', 'travel'],
-    growth: [{ effect: money(15) }, { effect: meili(1), chance: 0.3 }],
+    growth: [{ effect: money(35) }, { effect: meili(1), chance: 0.3 }],
     summary: [
       '你跟著貨船走了幾趟，見識了不少地方，也學會了怎麼跟人討價還價。',
       '這一趟生意不賺不賠，倒是結識了幾個客商。',

@@ -214,6 +214,7 @@ export const opponents: Record<string, OpponentDef> = {
   },
   jianfu_examiner: {
     id: 'jianfu_examiner', name: '劍府考官', level: { relative: 0, min: 1, max: 3 }, wuxing: 7, temper: 'guard',
+    easierWith: { any: [{ items: ['lunwu_token'] }, { flags: ['connections'] }] },
     tells: tells({ guard: '考官只守不攻，像是在等你露出本事。' }),
   },
   jianfu_senior: {

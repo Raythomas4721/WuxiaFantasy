@@ -31,6 +31,9 @@ export const later = (event: string, min: number, max: number, expire?: number):
   after: [min, max],
   expire,
 });
+/** 行囊：得到／失去信物。 */
+export const item = (id: string): GameEffect => ({ type: 'gainItem', item: id });
+export const dropItem = (id: string): GameEffect => ({ type: 'loseItem', item: id });
 /** 同一年接著發生的事件。 */
 export const next = (event: string): GameEffect => ({ type: 'chain', event });
 export const meet = (npc: string): GameEffect => ({ type: 'meet', npc });

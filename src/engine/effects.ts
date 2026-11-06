@@ -89,6 +89,8 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
     case 'joinSect':
       p.sect = e.sect;
       s.flags[`joined_${e.sect}`] = true;
+      // 打點過的門路用掉了
+      delete s.flags.connections;
       break;
     case 'leaveSect':
       p.sect = undefined;
@@ -101,6 +103,24 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       break;
     case 'ambition':
       p.ambition = e.ambition;
+      break;
+    case 'gainItem':
+      p.items = [...new Set([...(p.items ?? []), e.item])];
+      break;
+    case 'loseItem':
+      p.items = (p.items ?? []).filter((x) => x !== e.item);
+      break;
+    case 'property':
+      if (e.delta > 0) {
+        for (let i = 0; i < e.delta; i++) p.properties = [...(p.properties ?? []), { kind: e.kind, region: p.region }];
+      } else {
+        const list = [...(p.properties ?? [])];
+        for (let i = 0; i < -e.delta; i++) {
+          const at = list.findIndex((x) => x.kind === e.kind);
+          if (at >= 0) list.splice(at, 1);
+        }
+        p.properties = list;
+      }
       break;
     case 'chain':
       s.chain = e.event;

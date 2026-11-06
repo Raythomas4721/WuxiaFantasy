@@ -49,6 +49,8 @@ export function EndingView({ state, unlocks, onNewLife, onCodex, onExit }: Props
         </section>
       )}
 
+      {e.keepsake && <p className="ending-keepsake">{e.keepsake}</p>}
+
       {unlocks && (unlocks.newEnding || unlocks.newNpcs.length > 0 || unlocks.newTraits.length > 0 || unlocks.newRare.length > 0) && (
         <section className="ending-unlocks">
           <h3>江湖傳聞錄新增</h3>

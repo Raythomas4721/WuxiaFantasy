@@ -31,11 +31,19 @@ export const adultEvents: GameEvent[] = [
         text: '拔刀上前',
         duel: {
           opponent: 'scar_old',
-          success: {
-            text: '你一刀了結了他。四周一片尖叫，那孩子撲在他身上大哭。你走出門外，手一直在抖。',
-            effects: [flag('revenge_done'), flag('revenge_by_hand'), align(-10), fame(3)],
-            recap: { weight: 5, text: '你終於殺了疤臉。他的孩子撲在他身上哭的樣子，你記了一輩子。' },
-          },
+          success: [
+            {
+              if: { items: ['father_relic'] },
+              text: '你用父親那把舊柴刀了結了他。四周一片尖叫，那孩子撲在他身上大哭。你走出門外，把柴刀上的血擦乾淨，那是你第一次擦它。',
+              effects: [flag('revenge_done'), flag('revenge_by_hand'), align(-10), fame(3)],
+              recap: { weight: 5, text: '你用父親留下的柴刀殺了疤臉。那把刀上的血，你終於擦乾淨了。' },
+            },
+            {
+              text: '你一刀了結了他。四周一片尖叫，那孩子撲在他身上大哭。你走出門外，手一直在抖。',
+              effects: [flag('revenge_done'), flag('revenge_by_hand'), align(-10), fame(3)],
+              recap: { weight: 5, text: '你終於殺了疤臉。他的孩子撲在他身上哭的樣子，你記了一輩子。' },
+            },
+          ],
           failure: {
             text: '疤臉雖老，刀法卻沒丟。你被砍中胸口，倒在血泊裡。他看著你，好像想起了什麼，最後丟下你走了。',
             effects: [health(-10), flag('revenge_failed')],

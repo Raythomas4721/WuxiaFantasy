@@ -9,6 +9,7 @@ import type { LifeUnlocks } from '../save/codex';
 import { EndingView } from './EndingView';
 import { DuelView } from './DuelView';
 import { FocusView } from './FocusView';
+import { MarketPanel } from './MarketPanel';
 import { StatusPanel } from './StatusPanel';
 
 interface Props {
@@ -70,6 +71,13 @@ export function GameScreen({ state, unlocks, onChange, onNewLife, onCodex, onExi
         </aside>
 
         <main className="game-main">
+          {!showHistory && state.notices && state.notices.length > 0 && (
+            <aside className="notice">
+              {state.notices.map((n, i) => (
+                <p key={i}>{n}</p>
+              ))}
+            </aside>
+          )}
           {showHistory ? (
             <HistoryPanel state={state} />
           ) : (
@@ -81,7 +89,7 @@ export function GameScreen({ state, unlocks, onChange, onNewLife, onCodex, onExi
   );
 }
 
-function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
+function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState, scroll?: boolean) => void }) {
   switch (state.phase) {
     case 'intro':
       return (
@@ -171,6 +179,7 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
             </button>
             <ChangeFocusButton state={state} act={act} />
           </div>
+          <MarketPanel state={state} act={act} />
         </article>
       );
     }

@@ -115,12 +115,52 @@ export const endings: EndingDef[] = [
     ],
   },
   {
+    id: 'zhiji',
+    title: '一世知己',
+    priority: 70,
+    conditions: {
+      any: [
+        { any: [{ flags: ['promise_kept_shen'] }, { flags: ['promise_late_shen'] }], minRelation: { shen_guzhou: 60 } },
+        { flags: ['kept_bater_pact'], minRelation: { bater: 60 } },
+        { flags: ['companion_close'], minRelation: { companion: 60 } },
+      ],
+    },
+    hint: '和一位故人交情至深，並且完成了他的託付。',
+    text: [
+      {
+        if: { any: [{ flags: ['promise_kept_shen'] }, { flags: ['promise_late_shen'] }] },
+        text: '你這一生交過很多朋友，記得最清楚的，卻是一個醉醺醺的劍客。你替他送了一封信。他沒能聽到回話，但你知道，他會懂的。',
+      },
+      {
+        if: { flags: ['kept_bater_pact'] },
+        text: '你和巴特爾一輩子只見過幾次面，隔著兩國的仗。可是每到秋天，你都會朝北方望一望，想著草原上那個拉弓的人。',
+      },
+      { text: '{companion}走的那天，你守在床邊。你們從小一起長大，吵過、散過，最後還是坐回了老地方。這一生，有這麼一個人，就夠了。' },
+    ],
+  },
+  {
     id: 'renxin',
     title: '妙手仁心',
     priority: 60,
     conditions: { minSkill: { baicao: 3 }, flagMin: { healed: 3 } },
     hint: '醫術精湛，救人無數。',
     text: '你一生救過的人，自己都數不清了。出殯那天，送行的隊伍從街頭排到了街尾，有人哭著說：「我這條命，是大夫給的。」',
+  },
+  {
+    id: 'fujia',
+    title: '富甲一方',
+    priority: 58,
+    conditions: { minWealth: 1000 },
+    hint: '家產（現金加上田地、鋪面）達到一千文。',
+    text: '亂世裡，你守住了一份家業。鋪子的門板每天早上照常卸下來，夥計們叫你一聲東家。很多人家破人亡的那些年，你家的灶從沒冷過。',
+  },
+  {
+    id: 'biaoxing',
+    title: '鏢行天下',
+    priority: 56,
+    conditions: { flags: ['chief_escort'] },
+    hint: '在長風鏢局當上總鏢頭。',
+    text: '長風鏢局的鏢旗插遍了半個天下。路上的山賊遠遠看見那面旗，就知道這一趟不好惹——那是你的旗。',
   },
   {
     id: 'daxia',
@@ -192,8 +232,8 @@ export const ambitions: Record<string, AmbitionDef> = {
   wealth: {
     id: 'wealth',
     name: '富甲一方',
-    fulfilled: { minMoney: 500 },
-    goal: '攢下五百文家財。',
+    fulfilled: { minWealth: 600 },
+    goal: '家產（現金加上田地、鋪面）攢到六百文。',
     fulfilledText: '少年時你說要讓家裡再也不愁吃穿。你做到了，家裡的米缸再也沒有空過。',
     unfulfilledText: '少年時你說要賺很多很多錢。亂世裡，錢來得快，去得更快。',
   },

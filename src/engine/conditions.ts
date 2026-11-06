@@ -56,6 +56,12 @@ export function npcPresent(s: GameState, id: string): boolean {
   );
 }
 
+/** 家產：現金加上產業的買價。 */
+export function wealthOf(s: GameState): number {
+  const price = (kind: string) => CONTENT.market.find((m) => m.id === kind)?.price ?? 0;
+  return s.player.money + (s.player.properties ?? []).reduce((sum, x) => sum + price(x.kind), 0);
+}
+
 function within(v: number, min?: number, max?: number): boolean {
   return (min === undefined || v >= min) && (max === undefined || v <= max);
 }
@@ -97,6 +103,10 @@ export function checkCondition(s: GameState, c?: Condition): boolean {
   if (c.npcPresent && !npcPresent(s, c.npcPresent)) return false;
   if (c.npcAlive && !c.npcAlive.every((id) => npcAlive(s, id))) return false;
   if (c.notFired && c.notFired.some((id) => s.fired[id])) return false;
+  if (c.items && !c.items.every((id) => p.items?.includes(id))) return false;
+  if (c.notItems && c.notItems.some((id) => p.items?.includes(id))) return false;
+  if (c.property && !p.properties?.some((x) => x.kind === c.property)) return false;
+  if (c.minWealth !== undefined && wealthOf(s) < c.minWealth) return false;
   if (c.scheduled && !c.scheduled.every((id) => s.scheduled.some((x) => x.event === id && x.expire >= y))) return false;
   if (c.minSkill && !Object.entries(c.minSkill).every(([k, v]) => skillLevel(s, k) >= v)) return false;
   if (!within(martialLevel(s), c.minMartial, c.maxMartial)) return false;

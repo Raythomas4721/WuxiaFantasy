@@ -245,6 +245,17 @@ export const historyEvents: GameEvent[] = [
         },
       },
       {
+        id: 'arrow',
+        text: '舉起那支白翎箭',
+        requires: { items: ['bailing'] },
+        hidden: true,
+        outcome: {
+          text: '你把那支褪了色的白翎箭高高舉起。巴特爾愣住了，拉滿的弓一點一點鬆開。他從箭袋裡抽出一支一模一樣的箭，朝你舉了舉，然後掉轉馬頭，帶著部下退出了戰場。',
+          effects: [flag('spared_bater'), flag('kept_bater_pact'), flag('bater_met_war'), rel('bater', 30), chiv(3)],
+          recap: { weight: 5, text: '兩軍陣前，你舉起童年時巴特爾送你的白翎箭。他認出了你，退兵而去。' },
+        },
+      },
+      {
         id: 'shoot',
         text: '拉弓搭箭，搶先出手',
         duel: {
