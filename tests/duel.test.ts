@@ -4,7 +4,7 @@ import {
   DUEL, canPlay, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
 } from '../src/engine/duel';
 import { playSimpleRound } from '../src/engine/duelAI';
-import { chooseOption, choiceViews, finishDuel, newGame } from '../src/engine/game';
+import { NODE, chooseOption, choiceViews, finishDuel, newGame } from '../src/engine/game';
 import { Rng } from '../src/engine/rng';
 import type { DuelState, GameState } from '../src/engine/types';
 
@@ -165,6 +165,6 @@ describe('事件裡的過招', () => {
     expect(s.result?.check).toBe('success');
     expect(s.flags.won_tournament).toBe(true);
     // 健康就是血量：剩一半氣血，健康就剩一半
-    expect(s.player.health).toBe(50);
+    expect(s.player.health).toBe(50 + NODE.winHeal); // 剩一半氣血，打贏再喘口氣
   });
 });

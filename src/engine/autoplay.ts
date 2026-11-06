@@ -134,7 +134,7 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       const node = CONTENT.events.find((e) => e.id === s.current!.eventId)?.node;
       if (node) {
         // 關卡：身子撐得住就打，撐不住就繞開；生死之戰要更有把握
-        const need = enabled.find((c) => c.duel)?.lethal ? 70 : node.tier === 'minor' ? 50 : 65;
+        const need = enabled.find((c) => c.duel)?.lethal ? 70 : node.tier === 'minor' ? 40 : 55;
         const fight = enabled.find((c) => c.duel);
         s = chooseOption(s, fight && (options.preferDuel || s.player.health >= need) ? fight.id : enabled.find((c) => !c.duel)!.id);
         continue;

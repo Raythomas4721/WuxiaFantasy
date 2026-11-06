@@ -631,6 +631,8 @@ export interface GameState {
   boughtOnce?: string[];
   /** 關卡打完之後，同一段日子還有一件劇情事件要發生。 */
   followUp?: boolean;
+  /** 這段日子還沒處理的關卡。 */
+  nodeQueue?: NodeKind[];
   /** 結果畫面預告的下一段日子：照哪個方針、會遇到什麼關卡。 */
   upcoming?: { focus: string; node: NodeKind };
   /** 已經打過章末首領的章節。 */

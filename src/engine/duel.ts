@@ -38,7 +38,7 @@ export const DUEL = {
   /** 看穿暗招要比對手高出的悟性。 */
   seeTrapsMargin: 3,
   /** 比試（點到為止）輸了，健康最低剩這麼多。 */
-  sparFloor: 10,
+  sparFloor: 20,
   /** 生死之戰突圍：剩下的氣血比例再扣這麼多健康。 */
   fleeCost: 15,
 };

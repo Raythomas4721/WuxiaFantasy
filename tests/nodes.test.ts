@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
-import { chooseFocus, chooseOption, choiceViews, dueBoss, finishDuel, newGame, nextTurn } from '../src/engine/game';
+import { DUEL } from '../src/engine/duel';
+import { NODE, chooseFocus, chooseOption, choiceViews, dueBoss, finishDuel, newGame, nextTurn } from '../src/engine/game';
 import type { GameState } from '../src/engine/types';
 
 /** 1260 年、沒有強制事件擋路、正在選方針的成年人。 */
@@ -33,7 +34,7 @@ describe('關卡', () => {
     expect(s.followUp).toBe(true);
     s = chooseOption(s, 'fight');
     s = endDuel(s, 'win', 0.6);
-    expect(Math.abs(s.player.health - 60)).toBeLessThanOrEqual(1);
+    expect(Math.abs(s.player.health - 60 - NODE.winHeal)).toBeLessThanOrEqual(1);
     expect(s.deckTasks?.[0].kind).toBe('pick');
     const age = s.player.age;
     s = nextTurn(s);
@@ -78,10 +79,10 @@ describe('健康就是血量', () => {
     expect(d.me.hp).toBe(Math.round(d.me.max / 2));
   });
 
-  it('比試輸了只是受傷，健康最低剩 10', () => {
+  it('比試輸了只是受傷，健康不會低於比試的底線', () => {
     const s = endDuel(duelWith('tourney'), 'lose', 0);
     expect(s.player.alive).toBe(true);
-    expect(s.player.health).toBe(10);
+    expect(s.player.health).toBe(DUEL.sparFloor);
   });
 
   it('生死之戰：選項上有標示；輸了就死，突圍能活但傷得更重', () => {

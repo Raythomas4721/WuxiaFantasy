@@ -273,14 +273,20 @@ function setResult(s: GameState, rng: Rng, result: Omit<TurnResult, 'gains' | 'r
 
 /** 平衡數值集中在這裡。 */
 export const NODE = {
+  /** 一段日子擲幾個關卡。 */
+  perPeriod: 2,
   /** 歇：回復多少健康；行醫的人多回一些。 */
   restHeal: 15,
   restHealMedicine: 25,
   /** 每過一年回復多少健康；一段日子最多回復多少。 */
-  healPerYear: 15,
-  healMax: 40,
+  healPerYear: 25,
+  healMax: 60,
+  /** 一段日子至少回復多少（少年時一段日子只有一年）。 */
+  healMin: 35,
+  /** 打贏之後喘口氣，回復的健康。 */
+  winHeal: 15,
   /** 同一年接連發生的事件之間回復的健康。 */
-  chainHeal: 15,
+  chainHeal: 25,
   /** 健康低於這裡，這段日子有可能病死。 */
   frailHealth: 15,
   /** 晚年的章末首領在幾歲出現。 */
@@ -320,15 +326,37 @@ function runNode(s: GameState, rng: Rng, focusId: string): void {
     presentEvent(s, rng);
     return;
   }
-  const boss = dueBoss(s);
-  const node = s.upcoming?.focus === focusId ? s.upcoming.node : rollNode(focusId, rng);
+  // 一段日子擲兩個關卡；這段日子有章末首領的話，首領之後只再擲一個
+  const first = s.upcoming?.focus === focusId ? s.upcoming.node : rollNode(focusId, rng);
   s.upcoming = undefined;
-  const encounter = boss ?? (node === 'fight' || node === 'elite' ? pickEncounter(s, node === 'elite' ? 'elite' : 'minor', rng) : undefined);
-  if (encounter) {
+  const boss = dueBoss(s);
+  s.nodeQueue = boss ? [first] : [first, ...Array.from({ length: NODE.perPeriod - 1 }, () => rollNode(focusId, rng))];
+  if (boss) {
     s.followUp = true;
-    presentEvent(s, rng, encounter);
+    presentEvent(s, rng, boss);
     return;
   }
+  continueNodes(s, rng);
+}
+
+/** 依序處理這段日子剩下的關卡：遇到要打的就停下來開打，都處理完了才進劇情。 */
+function continueNodes(s: GameState, rng: Rng): void {
+  while (s.nodeQueue?.length) {
+    const node = s.nodeQueue.shift()!;
+    const encounter = node === 'fight' || node === 'elite' ? pickEncounter(s, node === 'elite' ? 'elite' : 'minor', rng) : undefined;
+    if (encounter) {
+      s.followUp = true;
+      presentEvent(s, rng, encounter);
+      return;
+    }
+    applyQuietNode(s, node, s.focus ?? '');
+  }
+  s.nodeQueue = undefined;
+  presentEvent(s, rng);
+}
+
+/** 不用打的關卡：歇、悟、武館。 */
+function applyQuietNode(s: GameState, node: NodeKind, focusId: string): void {
   const notes: string[] = [];
   if (node === 'rest') {
     const heal = focusId === 'medicine' ? NODE.restHealMedicine : NODE.restHeal;
@@ -350,7 +378,6 @@ function runNode(s: GameState, rng: Rng, focusId: string): void {
     notes.push('⚖ 你路過一家武館，館主說，花點錢可以教你一招，也可以幫你把練歪的招式改掉。');
   }
   if (notes.length > 0) s.notices = [...(s.notices ?? []), ...notes];
-  presentEvent(s, rng);
 }
 
 function quietTurn(s: GameState, rng: Rng): void {
@@ -655,8 +682,9 @@ export function finishDuel(state: GameState): GameState {
   const choice = e.choices.find((c) => c.id === d.choiceId)!;
   const won = d.over === 'win';
   // 健康就是血量：打完之後，健康 = 剩下的氣血比例；生死之戰打輸就死了
-  const health = healthAfter(d);
-  s.player.health = health;
+  // 打贏了喘口氣，回一點健康（生死之戰之外的輸贏都不會低於比試的底線）
+  const health = healthAfter(d) + (won && healthAfter(d) > 0 ? NODE.winHeal : 0);
+  s.player.health = Math.min(100, health);
   if (health <= 0) killPlayer(s, 'duel');
   if (d.me.spent) s.player.money = Math.max(0, s.player.money - d.me.spent);
   // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
@@ -716,7 +744,8 @@ export function nextTurn(state: GameState): GameState {
     s.deckTasks = undefined;
     s.snapshot = takeSnapshot(s);
     s.result = undefined;
-    presentEvent(s, rng, next);
+    if (!next && s.nodeQueue?.length) continueNodes(s, rng);
+    else presentEvent(s, rng, next);
     s.rng = rng.state;
     return s;
   }
@@ -729,7 +758,7 @@ export function nextTurn(state: GameState): GameState {
     const years = timeStep(s);
     p.age += years;
     // 傷會隨著歲月慢慢好起來（健康就是血量，v0.5 §3.1）
-    p.health = Math.min(100, p.health + Math.min(NODE.healMax, NODE.healPerYear * years));
+    p.health = Math.min(100, p.health + Math.max(NODE.healMin, Math.min(NODE.healMax, NODE.healPerYear * years)));
     loseProperties(s);
 
     let death = 0;
