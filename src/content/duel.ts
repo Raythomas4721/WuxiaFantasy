@@ -240,7 +240,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ guard: '官兵們結成盾陣，把牢門堵得死死的。', attack: '一個獄卒舉著鐵尺撲了上來。' }),
   },
   bodyguard: {
-    id: 'bodyguard', name: '目標的護衛', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', traps: ['tiebu'], lethal: true,
+    id: 'bodyguard', name: '目標的護衛', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', hpMult: 0.78, traps: ['tiebu'], lethal: true,
     tells: tells({ guard: '護衛把主人擋在身後，寸步不讓。' }),
   },
   lunwu_wanderer: {
@@ -305,19 +305,19 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 精英 ----
   bandit_chief: {
-    id: 'bandit_chief', name: '黑風寨的寨主', level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', traps: ['fanshou'],
+    id: 'bandit_chief', name: '黑風寨的寨主', level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', hpMult: 0.75, traps: ['fanshou'],
     tells: tells({ attack: '他把鬼頭刀往肩上一扛，咧嘴笑了。', feint: '他的刀尖晃來晃去，像在逗你。' }),
   },
   xueyi_assassin: {
-    id: 'xueyi_assassin', name: '血衣樓的刺客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', traps: ['huijian'],
+    id: 'xueyi_assassin', name: '血衣樓的刺客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', hpMult: 0.75, traps: ['huijian'],
     tells: tells({ attack: '他手裡的短刃反著握，貼在小臂上。', feint: '他的身形一晃，好像同時從兩邊過來。', charge: '他屏住了呼吸，連影子都不動了。' }),
   },
   mongol_centurion: {
-    id: 'mongol_centurion', name: '蒙古百夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'],
+    id: 'mongol_centurion', name: '蒙古百夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', hpMult: 0.75, traps: ['yuanbing'],
     tells: tells({ guard: '他身後的騎兵排成了一列。', attack: '他舉起了彎刀。' }),
   },
   fallen_swordsman: {
-    id: 'fallen_swordsman', name: '落魄劍客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', traps: ['huijian'],
+    id: 'fallen_swordsman', name: '落魄劍客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', hpMult: 0.75, traps: ['huijian'],
     tells: tells({ attack: '他的劍很舊，握劍的手卻很穩。', guard: '他垂著劍，像是根本懶得出手。' }),
   },
   // ---- 章末首領（§1.1）----
@@ -342,11 +342,11 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他的刀還在鞘裡，殺氣已經到了。' }),
   },
   mongol_chiliarch: {
-    id: 'mongol_chiliarch', name: '蒙古千夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', lethal: true, traps: ['yuanbing', 'huishen'],
+    id: 'mongol_chiliarch', name: '蒙古千夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', hpMult: 0.78, lethal: true, traps: ['yuanbing', 'huishen'],
     tells: tells({ guard: '他身後是一整列騎兵。', attack: '他舉起了彎刀，騎兵們跟著發出了吼聲。' }),
   },
   scar_boss: {
-    id: 'scar_boss', name: '疤臉', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_boss', name: '疤臉', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。', attack: '他咧開嘴，那道疤跟著扭了起來。' }),
   },
   young_challenger: {
@@ -354,11 +354,11 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他出手又快又急，像當年的你。' }),
   },
   scar_old: {
-    id: 'scar_old', name: '疤臉', level: 2, wuxing: 6, temper: 'veteran', lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_old', name: '疤臉', level: 2, wuxing: 6, temper: 'veteran', hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。' }),
   },
   bater: {
-    id: 'bater', name: '巴特爾', level: 3, wuxing: 7, temper: 'veteran', lethal: true, traps: ['huishen'],
+    id: 'bater', name: '巴特爾', level: 3, wuxing: 7, temper: 'veteran', hpMult: 0.78, lethal: true, traps: ['huishen'],
     tells: tells({
       attack: '他把弓拉成了滿月。',
       combo: '他從箭袋裡一次抽出了三支箭。',
