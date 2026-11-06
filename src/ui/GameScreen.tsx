@@ -9,6 +9,7 @@ import type { LifeUnlocks } from '../save/codex';
 import { EndingView } from './EndingView';
 import { DeckTaskPanel } from './DeckPanel';
 import { DuelView } from './DuelView';
+import { NODE_INFO } from '../content/nodes';
 import { FocusView } from './FocusView';
 import { MarketPanel } from './MarketPanel';
 import { StatusPanel } from './StatusPanel';
@@ -120,32 +121,8 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
     case 'duel':
       return <DuelView state={state} act={act} />;
 
-    case 'event': {
-      const e = CONTENT.events.find((x) => x.id === state.current?.eventId);
-      return (
-        <article className="panel">
-          <h2 className="panel-title">{e?.title}</h2>
-          <div className="story">
-            <p>{state.current?.text}</p>
-          </div>
-          <div className="choices">
-            {choiceViews(state).map((c) => (
-              <button
-                key={c.id}
-                className="choice"
-                disabled={!c.enabled}
-                onClick={() => act(() => chooseOption(state, c.id))}
-              >
-                <span className="choice-text">{c.text}</span>
-                {c.duel && <span className="choice-duel">過招</span>}
-                {c.odds && <span className="choice-odds">{c.odds}</span>}
-                {c.hint && <span className="choice-hint">{c.hint}</span>}
-              </button>
-            ))}
-          </div>
-        </article>
-      );
-    }
+    case 'event':
+      return <EventView state={state} act={act} />;
 
     case 'result': {
       const r = state.result;
@@ -179,10 +156,19 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
           {!(state.player.alive && state.deckTasks?.length) && (
             <div className="actions">
               <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
-                {!state.player.alive ? '……' : state.chain ? '接著……' : '歲月流轉'}
+                {!state.player.alive ? '……' : state.chain || state.followUp ? '接著……' : '歲月流轉'}
               </button>
               <ChangeFocusButton state={state} act={act} />
             </div>
+          )}
+          {state.upcoming && state.player.alive && !state.deckTasks?.length && (
+            <p className="upcoming">
+              下一段日子：
+              <strong>
+                {NODE_INFO[state.upcoming.node].icon} {NODE_INFO[state.upcoming.node].name}
+              </strong>
+              <span className="muted small">（照「{CONTENT.focuses.find((f) => f.id === state.upcoming!.focus)?.name}」過日子；換個活法就會不一樣）</span>
+            </p>
           )}
           <MarketPanel state={state} act={act} />
         </article>
@@ -194,10 +180,51 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
   }
 }
 
+const TIER_LABEL = { minor: '⚔ 小戰', elite: '☠ 精英', boss: '章末之戰' } as const;
+
+/** 事件畫面：關卡會標出種類；生死之戰的選項要按兩次才會開打。 */
+function EventView({ state, act }: { state: GameState; act: (fn: () => GameState, scroll?: boolean) => void }) {
+  const [armed, setArmed] = useState<string | undefined>();
+  const e = CONTENT.events.find((x) => x.id === state.current?.eventId);
+  return (
+    <article className="panel">
+      <h2 className="panel-title">
+        {e?.title}
+        {e?.node && <span className={`node-badge tier-${e.node.tier}`}>{TIER_LABEL[e.node.tier]}</span>}
+      </h2>
+      <div className="story">
+        <p>{state.current?.text}</p>
+      </div>
+      <div className="choices">
+        {choiceViews(state).map((c) => (
+          <button
+            key={c.id}
+            className={`choice ${c.lethal ? 'lethal' : ''} ${armed === c.id ? 'armed' : ''}`}
+            disabled={!c.enabled}
+            onClick={() => {
+              if (c.lethal && armed !== c.id) {
+                setArmed(c.id);
+                return;
+              }
+              setArmed(undefined);
+              act(() => chooseOption(state, c.id));
+            }}
+          >
+            <span className="choice-text">{armed === c.id ? '輸了，這一生就到這裡。確定要打？再按一次' : c.text}</span>
+            {c.lethal ? <span className="choice-lethal">生死之戰</span> : c.duel && <span className="choice-duel">過招</span>}
+            {c.odds && <span className="choice-odds">{c.odds}</span>}
+            {c.hint && <span className="choice-hint">{c.hint}</span>}
+          </button>
+        ))}
+      </div>
+    </article>
+  );
+}
+
 /** 結果畫面的次要按鈕：下一回合重新選方針。 */
 function ChangeFocusButton({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
   const focus = CONTENT.focuses.find((f) => f.id === state.focus);
-  if (!state.player.alive || state.chain || !focus || !state.focusStreak) return null;
+  if (!state.player.alive || state.chain || state.followUp || !focus || !state.focusStreak) return null;
   const weary = state.focusStreak.count >= FATIGUE_STREAK;
   return (
     <button

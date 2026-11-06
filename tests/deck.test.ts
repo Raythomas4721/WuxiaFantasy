@@ -102,10 +102,15 @@ describe('戰後選牌', () => {
 });
 
 describe('修心與閉關', () => {
-  it('休養時可以修心刪一張牌，代價是健康', () => {
+  it('擲到「歇」：回復健康，也可以修心刪一張牌（代價是健康）', () => {
     let s = person();
-    s.player.age = 20;
+    s.player.age = 1260 - s.player.birthYear; // 避開論武的年份
+    s.prevYear = 1259;
     s.phase = 'focus';
+    s.player.ambition = 'peace';
+    s.upcoming = { focus: 'rest', node: 'rest' };
+    s.bosses = [2, 3, 4];
+    for (const e of CONTENT.events) if (e.kind === 'forced') s.fired[e.id] = { count: 1, lastYear: 0 };
     s = chooseFocus(s, 'rest');
     expect(s.deckTasks?.[0].kind).toBe('remove');
     const health = s.player.health;

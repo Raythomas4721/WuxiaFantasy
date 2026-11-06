@@ -284,6 +284,7 @@ export const deathCauses: Record<string, string> = {
   qi: '練功走火入魔，經脈盡斷而死',
   xueyi: '死於血衣樓的夜雨針下',
   xiangyang: '戰死於襄陽城南的巷子裡',
+  duel: '在一場生死之戰裡倒下，再也沒有起來',
 };
 
 export const rumors: RumorDef[] = [

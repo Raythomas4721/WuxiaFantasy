@@ -10,6 +10,8 @@ import { historyEvents } from './events/history';
 import { fortuneEvents } from './events/fortune';
 import { jianghuEvents } from './events/jianghu';
 import { lunwuEvents } from './events/lunwu';
+import { nodeEvents } from './events/nodes';
+import { nodeWeights } from './nodes';
 import { youthEvents } from './events/youth';
 import { names } from './names';
 import { threads } from './threads';
@@ -29,6 +31,7 @@ export const CONTENT: Content = {
   regions,
   traits,
   focuses,
+  nodeWeights,
   skills,
   sects,
   npcs,
@@ -38,6 +41,6 @@ export const CONTENT: Content = {
   eraLines,
   deathCauses,
   rumors,
-  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents],
+  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents, ...nodeEvents],
   names,
 };

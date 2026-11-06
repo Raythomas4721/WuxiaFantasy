@@ -240,7 +240,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ guard: '官兵們結成盾陣，把牢門堵得死死的。', attack: '一個獄卒舉著鐵尺撲了上來。' }),
   },
   bodyguard: {
-    id: 'bodyguard', name: '目標的護衛', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', traps: ['tiebu'],
+    id: 'bodyguard', name: '目標的護衛', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', traps: ['tiebu'], lethal: true,
     tells: tells({ guard: '護衛把主人擋在身後，寸步不讓。' }),
   },
   lunwu_wanderer: {
@@ -277,6 +277,81 @@ export const opponents: Record<string, OpponentDef> = {
   jianfu_heir: {
     id: 'jianfu_heir', name: '劍府新秀', level: 3, wuxing: 8, temper: 'guard', traps: ['huijian', 'shuangjiang'],
     tells: tells({ guard: '他的劍法和謝凌霜如出一轍，守得滴水不漏。' }),
+  },
+  // ---- 路上的小戰（設計文件 v0.5 §1.2、§6）----
+  kid_bully: {
+    id: 'kid_bully', name: '巷口的孩子王', level: 0, wuxing: 3, temper: 'brute',
+    tells: tells({ attack: '他擼起袖子，一拳就要揮過來。', guard: '他抱著頭往後縮。', charge: '他吸了一大口氣，臉漲得通紅。' }),
+  },
+  deserters: {
+    id: 'deserters', name: '潰兵', level: { relative: -1, min: 0, max: 4 }, wuxing: 3, temper: 'brute',
+    tells: tells({ attack: '他掄起一把缺了口的刀，眼睛都紅了。', combo: '幾個潰兵亂哄哄地撲了上來。' }),
+  },
+  bandits: {
+    id: 'bandits', name: '山賊', level: { relative: -1, min: 0, max: 4 }, wuxing: 4, temper: 'veteran',
+    tells: tells({ feint: '帶頭的山賊吹了聲口哨，林子裡好像還有人。', charge: '山賊們慢慢圍了上來。' }),
+  },
+  smugglers: {
+    id: 'smugglers', name: '私鹽販子', level: { relative: -1, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', traps: ['fanshou'],
+    tells: tells({ feint: '他一手按著鹽袋，一手在袖子裡摸著什麼。' }),
+  },
+  constables: {
+    id: 'constables', name: '官差', level: { relative: -1, min: 1, max: 4 }, wuxing: 4, temper: 'guard', traps: ['yuanbing'],
+    tells: tells({ guard: '官差們橫著鐵尺，把路堵住了。', attack: '一個官差抖開鐵鍊就朝你套過來。' }),
+  },
+  mongol_scout: {
+    id: 'mongol_scout', name: '蒙古遊騎', level: { relative: -1, min: 1, max: 5 }, wuxing: 5, temper: 'brute', traps: ['huishen'],
+    tells: tells({ attack: '他在馬上彎弓搭箭。', combo: '他撥馬繞著你轉，箭一支接一支。', guard: '他撥馬拉開了距離。' }),
+  },
+  // ---- 精英 ----
+  bandit_chief: {
+    id: 'bandit_chief', name: '黑風寨的寨主', level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', traps: ['fanshou'],
+    tells: tells({ attack: '他把鬼頭刀往肩上一扛，咧嘴笑了。', feint: '他的刀尖晃來晃去，像在逗你。' }),
+  },
+  xueyi_assassin: {
+    id: 'xueyi_assassin', name: '血衣樓的刺客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', traps: ['huijian'],
+    tells: tells({ attack: '他手裡的短刃反著握，貼在小臂上。', feint: '他的身形一晃，好像同時從兩邊過來。', charge: '他屏住了呼吸，連影子都不動了。' }),
+  },
+  mongol_centurion: {
+    id: 'mongol_centurion', name: '蒙古百夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'],
+    tells: tells({ guard: '他身後的騎兵排成了一列。', attack: '他舉起了彎刀。' }),
+  },
+  fallen_swordsman: {
+    id: 'fallen_swordsman', name: '落魄劍客', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'veteran', traps: ['huijian'],
+    tells: tells({ attack: '他的劍很舊，握劍的手卻很穩。', guard: '他垂著劍，像是根本懶得出手。' }),
+  },
+  // ---- 章末首領（§1.1）----
+  rival_boss: {
+    id: 'rival_boss', name: '{rival}', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', traps: ['weiou', 'fanshou'],
+    tells: tells({ attack: '他這幾年練得很苦，拳頭比從前硬多了。', feint: '他嘴上罵著，眼睛卻在找你的破綻。' }),
+  },
+  town_champion: {
+    id: 'town_champion', name: '連守七場的擂主', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', traps: ['tiebu'],
+    tells: tells({ guard: '他穩穩站在擂台中央，等你過去。' }),
+  },
+  sect_champion: {
+    id: 'sect_champion', name: '同門裡的第一人', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', traps: ['huijian'],
+    tells: tells({ guard: '他的架勢一絲不亂，是師父手把手教出來的。' }),
+  },
+  escort_robber: {
+    id: 'escort_robber', name: '劫鏢的賊首', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', traps: ['weiou', 'fanshou'],
+    tells: tells({ feint: '他吹了一聲口哨，兩邊的林子裡都有了動靜。' }),
+  },
+  famous_blade: {
+    id: 'famous_blade', name: '成名的刀客', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'veteran', traps: ['tiebu'],
+    tells: tells({ attack: '他的刀還在鞘裡，殺氣已經到了。' }),
+  },
+  mongol_chiliarch: {
+    id: 'mongol_chiliarch', name: '蒙古千夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', lethal: true, traps: ['yuanbing', 'huishen'],
+    tells: tells({ guard: '他身後是一整列騎兵。', attack: '他舉起了彎刀，騎兵們跟著發出了吼聲。' }),
+  },
+  scar_boss: {
+    id: 'scar_boss', name: '疤臉', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', lethal: true, traps: ['fanshou', 'tiebu'],
+    tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。', attack: '他咧開嘴，那道疤跟著扭了起來。' }),
+  },
+  young_challenger: {
+    id: 'young_challenger', name: '上門挑戰的年輕人', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'brute',
+    tells: tells({ attack: '他出手又快又急，像當年的你。' }),
   },
   scar_old: {
     id: 'scar_old', name: '疤臉', level: 2, wuxing: 6, temper: 'veteran', lethal: true, traps: ['fanshou', 'tiebu'],

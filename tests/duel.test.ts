@@ -40,7 +40,7 @@ describe('牌庫', () => {
 
   it('上場的牌 = 持久牌庫 + 受傷與血仇帶來的傷、心魔', () => {
     const s = person({ hanjiang: 5 });
-    s.player.health = 40;
+    s.player.health = 20;
     s.flags.blood_feud = true;
     const deck = deckFor(s);
     expect(deck.slice(0, s.player.deck!.length)).toEqual(s.player.deck);
@@ -164,6 +164,7 @@ describe('事件裡的過招', () => {
     expect(s.phase).toBe('result');
     expect(s.result?.check).toBe('success');
     expect(s.flags.won_tournament).toBe(true);
-    expect(s.player.health).toBe(100 - DUEL.healthLoss / 2);
+    // 健康就是血量：剩一半氣血，健康就剩一半
+    expect(s.player.health).toBe(50);
   });
 });

@@ -8,11 +8,11 @@ import { checkCondition, currentYear, martialLevel, npcAlive, skillLevel, unmetH
 import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
 import { applyEffects, killPlayer, withReputation } from './effects';
 import { MARKET } from '../content/market';
-import { createDuel, endRound, fighterFor, healthLossOf, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
-import { DECK, focusDeckTasks, pushDuelReward, startingDeck } from './deck';
+import { createDuel, endRound, fighterFor, healthAfter, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
+import { DECK, pushDuelReward, pushTask, startingDeck, upgradableIndexes } from './deck';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
-import { getEvent, selectEvent } from './select';
+import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
 import type {
@@ -24,6 +24,7 @@ import type {
   GameChoice,
   GameEvent,
   GameState,
+  NodeKind,
   Outcome,
   OutcomeSpec,
   Snapshot,
@@ -264,6 +265,92 @@ function pushTags(s: GameState, tags: string[]): void {
 function setResult(s: GameState, rng: Rng, result: Omit<TurnResult, 'gains' | 'rumor'>): void {
   s.result = { ...result, gains: describeGains(s), rumor: pickRumor(s, rng) };
   s.phase = 'result';
+  // 這段日子結束了：預告下一段日子的關卡，讓玩家決定要不要換方針
+  s.upcoming = s.player.alive && !s.followUp && !s.chain && s.focus ? { focus: s.focus, node: rollNode(s.focus, rng) } : undefined;
+}
+
+// ---------- 關卡（設計文件 v0.5 §1） ----------
+
+/** 平衡數值集中在這裡。 */
+export const NODE = {
+  /** 歇：回復多少健康；行醫的人多回一些。 */
+  restHeal: 15,
+  restHealMedicine: 25,
+  /** 每過一年回復多少健康；一段日子最多回復多少。 */
+  healPerYear: 15,
+  healMax: 40,
+  /** 同一年接連發生的事件之間回復的健康。 */
+  chainHeal: 15,
+  /** 健康低於這裡，這段日子有可能病死。 */
+  frailHealth: 15,
+  /** 晚年的章末首領在幾歲出現。 */
+  lastBossAge: 62,
+  /** 武館：一張牌多少錢；花錢刪牌的起價與每次加價。 */
+  cardPrice: 40,
+  removePrice: 50,
+  removeStep: 25,
+};
+
+export function rollNode(focusId: string, rng: Rng): NodeKind {
+  const weights = CONTENT.nodeWeights[focusId] ?? { story: 1 };
+  return rng.weighted((Object.entries(weights) as [NodeKind, number][]).map(([item, weight]) => ({ item, weight }))) ?? 'story';
+}
+
+/** 這段日子要打的章末首領：剛結束的那一章（晚年在 62 歲）。每章只打一次。 */
+export function dueBoss(s: GameState): GameEvent | undefined {
+  const stage = stageIndex(s.player.age);
+  const k = s.player.age >= NODE.lastBossAge ? 5 : stage - 1;
+  if (k < 2 || s.bosses?.includes(k)) return undefined;
+  s.bosses = [...(s.bosses ?? []), k];
+  return CONTENT.events
+    .filter((e) => e.kind === 'node' && e.node?.tier === 'boss' && e.node.stage === k && eventAllowed(s, e))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))[0];
+}
+
+function pickEncounter(s: GameState, tier: 'minor' | 'elite', rng: Rng): GameEvent | undefined {
+  const pool = CONTENT.events.filter((e) => e.kind === 'node' && e.node?.tier === tier && eventAllowed(s, e));
+  return pool.length > 0 ? rng.pick(pool) : undefined;
+}
+
+/** 照方針擲出的關卡：小戰、精英先打，打完同一段日子再接劇情；歇、悟、武館直接生效。 */
+function runNode(s: GameState, rng: Rng, focusId: string): void {
+  // 立志、史實大事、論武這些強制事件優先，這段日子不擲關卡
+  if (forcedEvent(s)) {
+    s.upcoming = undefined;
+    presentEvent(s, rng);
+    return;
+  }
+  const boss = dueBoss(s);
+  const node = s.upcoming?.focus === focusId ? s.upcoming.node : rollNode(focusId, rng);
+  s.upcoming = undefined;
+  const encounter = boss ?? (node === 'fight' || node === 'elite' ? pickEncounter(s, node === 'elite' ? 'elite' : 'minor', rng) : undefined);
+  if (encounter) {
+    s.followUp = true;
+    presentEvent(s, rng, encounter);
+    return;
+  }
+  const notes: string[] = [];
+  if (node === 'rest') {
+    const heal = focusId === 'medicine' ? NODE.restHealMedicine : NODE.restHeal;
+    s.player.health = Math.min(100, s.player.health + heal);
+    notes.push(`☕ 你找了個清靜的地方，好好歇了一陣子（健康 +${heal}）。`);
+    if ((s.player.deck?.length ?? 0) > DECK.minDeck) {
+      pushTask(s, {
+        kind: 'remove',
+        title: '修心',
+        text: `歇著的時候，正好把雜亂的招式理一理。刪一張牌，但這段休養少回 ${DECK.meditateHealth} 點健康。`,
+        cost: { health: DECK.meditateHealth },
+      });
+    }
+  } else if (node === 'insight' && upgradableIndexes(s).length > 0) {
+    notes.push('☯ 你閉關了一陣子，把一招翻來覆去地練。');
+    pushTask(s, { kind: 'upgrade', title: '閉關有得', text: '練到某一天，忽然有了新的體會。升級一張牌。' });
+  } else if (node === 'market') {
+    s.dojo = { turn: s.turn };
+    notes.push('⚖ 你路過一家武館，館主說，花點錢可以教你一招，也可以幫你把練歪的招式改掉。');
+  }
+  if (notes.length > 0) s.notices = [...(s.notices ?? []), ...notes];
+  presentEvent(s, rng);
 }
 
 function quietTurn(s: GameState, rng: Rng): void {
@@ -418,8 +505,7 @@ function runFocus(s: GameState, rng: Rng, focusId: string): void {
   }
   s.focus = focusId;
   s.focusStreak = { id: focusId, count: streak };
-  focusDeckTasks(s, focusId, rng);
-  presentEvent(s, rng);
+  runNode(s, rng, focusId);
 }
 
 /** 檢定的勝算；打點過門路的人，拜師入門的檢定 +20%。 */
@@ -458,6 +544,7 @@ export function choiceViews(s: GameState): ChoiceView[] {
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
       odds: enabled && c.check ? oddsLabel(choiceChance(s, c.check)) : enabled && c.duel ? duelOdds(s, c.duel.opponent) : undefined,
       duel: Boolean(c.duel),
+      lethal: c.duel ? Boolean(CONTENT.opponents[c.duel.opponent]?.lethal) : undefined,
     });
   }
   return views;
@@ -503,10 +590,12 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
 
 /** 套用選項的結果：效果、人生紀錄、結果畫面。 */
 function applyChoiceOutcome(
-  s: GameState, rng: Rng, e: GameEvent, choice: GameChoice, spec: OutcomeSpec, check: TurnResult['check'],
+  s: GameState, rng: Rng, e: GameEvent, choice: GameChoice, spec: OutcomeSpec, check: TurnResult['check'], afterDuel = false,
 ): void {
   const outcome = resolveOutcome(s, spec);
-  applyEffects(s, withReputation(outcome.effects), rng);
+  // 過招的傷已經算在剩下的氣血裡，結果裡的健康損失不再重複扣
+  const effects = afterDuel ? outcome.effects?.filter((x) => !(x.type === 'health' && x.delta < 0)) : outcome.effects;
+  applyEffects(s, withReputation(effects), rng);
   const vars = s.current?.vars;
   const text = renderText(outcome.text, s, vars);
   s.history.push({
@@ -565,14 +654,21 @@ export function finishDuel(state: GameState): GameState {
   const e = getEvent(s.current!.eventId);
   const choice = e.choices.find((c) => c.id === d.choiceId)!;
   const won = d.over === 'win';
-  const loss = healthLossOf(d);
-  if (loss > 0) applyEffects(s, [{ type: 'health', delta: -loss }], rng);
+  // 健康就是血量：打完之後，健康 = 剩下的氣血比例；生死之戰打輸就死了
+  const health = healthAfter(d);
+  s.player.health = health;
+  if (health <= 0) killPlayer(s, 'duel');
   if (d.me.spent) s.player.money = Math.max(0, s.player.money - d.me.spent);
   // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
   applyEffects(s, (d.me.used ?? []).map((skill) => ({ type: 'skill' as const, skill, xp: DECK.duelXp })), rng);
   s.duel = undefined;
-  applyChoiceOutcome(s, rng, e, choice, won ? choice.duel!.success : choice.duel!.failure, won ? 'success' : 'failure');
-  if (won && s.player.alive) pushDuelReward(s, rng, d.name);
+  applyChoiceOutcome(s, rng, e, choice, won ? choice.duel!.success : choice.duel!.failure, won ? 'success' : 'failure', true);
+  if (!s.player.alive) {
+    s.followUp = undefined;
+    s.upcoming = undefined;
+    s.history.push({ turn: s.turn, age: s.player.age, year: currentYear(s), title: '終章', text: `你${CONTENT.deathCauses[s.deathCause ?? 'duel']}。` });
+  }
+  if (won && s.player.alive) pushDuelReward(s, rng, d.name, e.node?.tier);
   s.rng = rng.state;
   return s;
 }
@@ -610,10 +706,13 @@ export function nextTurn(state: GameState): GameState {
   const rng = new Rng(s.rng);
   const p = s.player;
 
-  // 同一年接著發生的事件：不推進時間
-  if (p.alive && s.chain) {
-    const next = getEvent(s.chain);
+  // 同一年接著發生的事件、關卡打完之後的劇情：不推進時間
+  if (p.alive && (s.chain || s.followUp)) {
+    const next = s.chain ? getEvent(s.chain) : undefined;
+    // 同一年接連幾場（論武的預賽、正賽、決賽）：中間能喘口氣
+    if (s.chain) p.health = Math.min(100, p.health + NODE.chainHeal);
     s.chain = undefined;
+    s.followUp = undefined;
     s.deckTasks = undefined;
     s.snapshot = takeSnapshot(s);
     s.result = undefined;
@@ -627,13 +726,15 @@ export function nextTurn(state: GameState): GameState {
   s.deckTasks = undefined;
   if (p.alive) {
     s.prevYear = currentYear(s);
-    p.age += timeStep(s);
-    p.health = Math.min(100, p.health + 5);
+    const years = timeStep(s);
+    p.age += years;
+    // 傷會隨著歲月慢慢好起來（健康就是血量，v0.5 §3.1）
+    p.health = Math.min(100, p.health + Math.min(NODE.healMax, NODE.healPerYear * years));
     loseProperties(s);
 
     let death = 0;
     if (p.age >= 50) death += 0.03 + (p.age - 50) * 0.012;
-    if (p.health < 25) death += 0.15;
+    if (p.health < NODE.frailHealth) death += 0.15;
     if (p.age >= 85) death = 1;
     if (rng.chance(death)) {
       killPlayer(s, p.age >= 50 && p.health >= 25 ? 'natural' : 'illness');

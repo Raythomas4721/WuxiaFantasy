@@ -145,8 +145,10 @@ export interface DuelChoice {
 
 export interface GameEvent {
   id: string;
-  /** forced：條件符合就必定發生；normal：依權重抽選。 */
-  kind: 'forced' | 'normal';
+  /** forced：條件符合就必定發生；normal：依權重抽選；node：方針擲出的關卡（小戰、精英、章末首領）。 */
+  kind: 'forced' | 'normal' | 'node';
+  /** 關卡事件的等級；首領另外標明是第幾章的章末首領（LIFE_STAGES 的索引）。 */
+  node?: { tier: 'minor' | 'elite' | 'boss'; stage?: number };
   title: string;
   text: TextSpec;
   conditions?: Condition;
@@ -379,6 +381,8 @@ export interface OpponentDef {
   temper: 'brute' | 'veteran' | 'guard';
   /** 生死之戰：沒有回合上限。 */
   lethal?: boolean;
+  /** 氣血倍數（章末首領比同級的人耐打）。 */
+  hpMult?: number;
   /** 符合條件時，對手降一級（打點、信物）。 */
   easierWith?: Condition;
   traps?: string[];
@@ -429,6 +433,8 @@ export interface Content {
   regions: Record<string, RegionDef>;
   traits: Record<string, TraitDef>;
   focuses: FocusDef[];
+  /** 方針 → 關卡權重。 */
+  nodeWeights: Record<string, Partial<Record<NodeKind, number>>>;
   skills: Record<string, SkillDef>;
   sects: Record<string, SectDef>;
   npcs: Record<string, NpcDef>;
@@ -623,6 +629,15 @@ export interface GameState {
   /** 市集：這一回合已經買了幾樣；一生限買一次的東西。 */
   market?: { turn: number; bought: number };
   boughtOnce?: string[];
+  /** 關卡打完之後，同一段日子還有一件劇情事件要發生。 */
+  followUp?: boolean;
+  /** 結果畫面預告的下一段日子：照哪個方針、會遇到什麼關卡。 */
+  upcoming?: { focus: string; node: NodeKind };
+  /** 已經打過章末首領的章節。 */
+  bosses?: number[];
+  /** 武館：哪一回合開門、這回合買過牌沒有、一生花錢刪過幾張牌。 */
+  dojo?: { turn: number; bought?: boolean };
+  dojoRemovals?: number;
   /** 等著玩家處理的牌庫變化：戰後選牌、入門選招、修心刪牌、閉關升級。 */
   deckTasks?: DeckTask[];
   /** 要提醒玩家的事（例如產業毀於戰火），下一次行動後清掉。 */
@@ -643,6 +658,9 @@ export type DeckTask =
   /** 升級一張牌。 */
   | { kind: 'upgrade'; title: string; text: string };
 
+/** 方針擲出的關卡（設計文件 v0.5 §1.2）：小戰、精英、劇情、武館、休養、閉關。 */
+export type NodeKind = 'fight' | 'elite' | 'story' | 'market' | 'rest' | 'insight';
+
 export interface ChoiceView {
   id: string;
   text: string;
@@ -651,4 +669,6 @@ export interface ChoiceView {
   odds?: string;
   /** 這個選項會開始一場過招。 */
   duel?: boolean;
+  /** 生死之戰：輸了這一生就結束。 */
+  lethal?: boolean;
 }

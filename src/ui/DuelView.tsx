@@ -89,8 +89,12 @@ export function DuelView({ state, act }: Props) {
             <span className="muted small">
               牌庫 {d.me.deck.length}・棄牌 {d.me.discard.length}・手牌 {d.me.hand.length}／{DUEL.handMax}
             </span>
-            <button className="btn btn-ghost btn-small" onClick={() => act(() => duelYield(state))}>
-              認輸
+            <button
+              className="btn btn-ghost btn-small"
+              title={d.lethal ? '保住性命，但傷得更重' : undefined}
+              onClick={() => act(() => duelYield(state))}
+            >
+              {d.lethal ? '突圍' : '認輸'}
             </button>
             <button className="btn btn-primary" onClick={() => act(() => duelEndRound(state))}>
               結束回合
@@ -168,7 +172,11 @@ function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; 
 }
 
 function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {
-  const text = { win: `你勝過了${d.name}。`, lose: `你敗給了${d.name}。`, yield: `你向${d.name}認輸了。` }[d.over!];
+  const text = {
+    win: `你勝過了${d.name}。`,
+    lose: d.lethal ? `你倒在了${d.name}的面前。` : `你敗給了${d.name}。`,
+    yield: d.lethal ? `你拚著一身傷，從${d.name}手下突圍而出。` : `你向${d.name}認輸了。`,
+  }[d.over!];
   return (
     <div className={`duel-over ${d.over}`}>
       <p>{text}</p>

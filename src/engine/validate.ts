@@ -104,7 +104,8 @@ export function validateContent(content: Content): ValidationReport {
       if (ch.duel && !content.opponents[ch.duel.opponent]) errors.push(`${cw}：未知過招對手 ${ch.duel.opponent}`);
       const outs = [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure), ...outcomesOf(ch.duel?.success), ...outcomesOf(ch.duel?.failure)];
       for (const o of outs) {
-        if (!o.effects || o.effects.length === 0) errors.push(`${cw}：結果沒有任何效果（假選項）`);
+        // 關卡事件的勝負與避戰本身就改變了氣血（健康），不算假選項
+        if (!e.node && (!o.effects || o.effects.length === 0)) errors.push(`${cw}：結果沒有任何效果（假選項）`);
         if (o.if) conditions.push({ where: cw, c: o.if });
         textConditions(o.text).forEach((c) => conditions.push({ where: cw, c }));
         o.effects?.forEach((x) => effects.push({ where: cw, e: x }));

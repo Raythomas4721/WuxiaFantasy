@@ -60,8 +60,8 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       p.money = Math.max(0, p.money + e.delta);
       break;
     case 'health':
-      p.health = clamp(p.health + e.delta, 0, 100);
-      if (p.health <= 0) killPlayer(s, 'injury');
+      // 事件裡的傷不會直接要命（最低剩 1）；傷得太重的人，之後每段日子都有可能撐不過去
+      p.health = clamp(p.health + e.delta, 1, 100);
       break;
     case 'fame':
       p.fame = clamp(p.fame + e.delta, 0, 100);

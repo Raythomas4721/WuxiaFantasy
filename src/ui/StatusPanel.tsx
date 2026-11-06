@@ -65,7 +65,12 @@ export function StatusPanel({ state }: { state: GameState }) {
       <section className="status-block">
         <div className="status-row">
           <span>健康</span>
-          <span>{healthLabel(p.health)}</span>
+          <span>
+            {healthLabel(p.health)}
+            <span className="muted small">
+              {' '}（氣血 {Math.round((DUEL.playerHp(p.stats.gengu, main.level) * p.health) / 100)}／{DUEL.playerHp(p.stats.gengu, main.level)}）
+            </span>
+          </span>
         </div>
         <div className="health-bar" aria-label={`健康 ${p.health}`}>
           <div className="health-fill" style={{ width: `${p.health}%` }} />

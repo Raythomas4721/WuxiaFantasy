@@ -39,6 +39,13 @@ function eventWeight(s: GameState, e: GameEvent): number {
   return w;
 }
 
+/** 這回合必定發生的強制事件（史實大事、立志、論武）。 */
+export function forcedEvent(s: GameState): GameEvent | undefined {
+  return CONTENT.events
+    .filter((e) => e.kind === 'forced' && !e.scheduledOnly && eventAllowed(s, e))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))[0];
+}
+
 /**
  * 依優先序決定本回合的事件：
  * 1. 強制事件（史實大事、立志等），依 priority 由高到低
@@ -49,10 +56,8 @@ function eventWeight(s: GameState, e: GameEvent): number {
 export function selectEvent(s: GameState, rng: Rng): GameEvent | null {
   const year = currentYear(s);
 
-  const forced = CONTENT.events
-    .filter((e) => e.kind === 'forced' && !e.scheduledOnly && eventAllowed(s, e))
-    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
-  if (forced.length > 0) return forced[0];
+  const forced = forcedEvent(s);
+  if (forced) return forced;
 
   s.scheduled = s.scheduled.filter((x) => x.expire >= year);
   const dueIndex = s.scheduled

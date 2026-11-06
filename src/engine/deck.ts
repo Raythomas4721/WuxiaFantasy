@@ -4,7 +4,7 @@
 
 import { CONTENT } from '../content';
 import { levelFromXp, skillLevel } from './conditions';
-import { REALM, baseCardId, getCard, legacyDeck, mainSkill, upgradeCount } from './duel';
+import { REALM, baseCardId, cardSkill, getCard, legacyDeck, mainSkill, upgradeCount } from './duel';
 import type { Rng } from './rng';
 import type { DeckTask, GameState } from './types';
 
@@ -24,8 +24,9 @@ export const DECK = {
   meditateHealth: 15,
   /** 牌庫最少留幾張。 */
   minDeck: 8,
-  /** 這些方針有機會「閉關有得」，升級一張牌。 */
-  retreat: { martial: 0.25, sect: 0.3, study: 0.45 } as Record<string, number>,
+  /** 精英、首領的獎勵裡，武學的牌權重再乘上這個數。 */
+  eliteSkillBoost: 2,
+  bossSkillBoost: 3,
   /** 獎勵池的權重：主修武學、其他已入門的武學、奇招。 */
   weights: { main: 4, other: 2, common: 1 },
 };
@@ -96,9 +97,9 @@ export function rewardPool(s: GameState): { id: string; weight: number }[] {
   return [...pool].map(([id, weight]) => ({ id, weight }));
 }
 
-/** 不重複地抽 n 張。 */
-export function rewardOptions(s: GameState, rng: Rng, n = DECK.rewardOptions): string[] {
-  const pool = rewardPool(s);
+/** 不重複地抽 n 張；skillBoost 讓武學的牌更容易出現（精英、首領）。 */
+export function rewardOptions(s: GameState, rng: Rng, n = DECK.rewardOptions, skillBoost = 1): string[] {
+  const pool = rewardPool(s).map((x) => ({ ...x, weight: x.weight * (cardSkill(x.id) ? skillBoost : 1) }));
   const out: string[] = [];
   while (out.length < n && pool.length > 0) {
     const id = rng.weighted(pool.map((x) => ({ item: x.id, weight: x.weight })))!;
@@ -108,14 +109,19 @@ export function rewardOptions(s: GameState, rng: Rng, n = DECK.rewardOptions): s
   return out;
 }
 
-/** 戰後選牌。就地修改。 */
-export function pushDuelReward(s: GameState, rng: Rng, foeName: string): void {
-  const options = rewardOptions(s, rng);
+/** 戰後選牌：精英的獎勵多半是武學的牌；首領給的牌已經升級過一次。就地修改。 */
+export function pushDuelReward(s: GameState, rng: Rng, foeName: string, tier?: 'minor' | 'elite' | 'boss'): void {
+  const boost = tier === 'boss' ? DECK.bossSkillBoost : tier === 'elite' ? DECK.eliteSkillBoost : 1;
+  let options = rewardOptions(s, rng, DECK.rewardOptions, boost);
+  if (tier === 'boss') options = options.map((id) => `${id}+`);
   if (options.length === 0) return;
   pushTask(s, {
     kind: 'pick',
     title: `勝過${foeName}`,
-    text: '這一場打下來，你對武學又多了一分體會。挑一招記下來，或者把這份心得放下。',
+    text:
+      tier === 'boss'
+        ? '這一戰之後，你對武學的體會又深了一層。挑一招，它已經比從前更精純了。'
+        : '這一場打下來，你對武學又多了一分體會。挑一招記下來，或者把這份心得放下。',
     options,
     picks: 1,
     skipMoney: DECK.skipMoney,
@@ -192,7 +198,10 @@ export function removeCard(state: GameState, index: number | null): GameState {
     if (id === undefined) throw new Error(`牌庫沒有第 ${index} 張`);
     s.player.deck!.splice(index, 1);
     if (task.cost?.health) s.player.health -= task.cost.health;
-    if (task.cost?.money) s.player.money -= task.cost.money;
+    if (task.cost?.money) {
+      s.player.money -= task.cost.money;
+      s.dojoRemovals = (s.dojoRemovals ?? 0) + 1;
+    }
     noteGain(s, `牌庫 −${getCard(id).name}`);
   }
   doneTask(s);
@@ -210,20 +219,4 @@ export function upgradeCard(state: GameState, index: number | null): GameState {
   }
   doneTask(s);
   return s;
-}
-
-/** 方針帶來的牌庫變化：休養時可以修心刪牌；習武、師門、讀書有機會閉關有得。就地修改。 */
-export function focusDeckTasks(s: GameState, focusId: string, rng: Rng): void {
-  if (focusId === 'rest' && (s.player.deck?.length ?? 0) > DECK.minDeck) {
-    pushTask(s, {
-      kind: 'remove',
-      title: '修心',
-      text: `這段日子清靜，正好把雜亂的招式理一理。刪一張牌，但這段休養少回 ${DECK.meditateHealth} 點健康。`,
-      cost: { health: DECK.meditateHealth },
-    });
-  }
-  const chance = DECK.retreat[focusId];
-  if (chance && rng.chance(chance) && upgradableIndexes(s).length > 0) {
-    pushTask(s, { kind: 'upgrade', title: '閉關有得', text: '你把一招翻來覆去地練，練到某一天，忽然有了新的體會。升級一張牌。' });
-  }
 }

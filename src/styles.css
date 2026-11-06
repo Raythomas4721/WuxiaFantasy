@@ -1572,3 +1572,65 @@ small {
   color: var(--ink-2);
   font-style: italic;
 }
+
+/* ---------- 關卡、生死之戰、下一段日子（v0.5 C2） ---------- */
+
+.node-badge {
+  margin-left: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  padding: 0.05rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--ink-2);
+  vertical-align: middle;
+}
+
+.node-badge.tier-elite {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.node-badge.tier-boss {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.choice-lethal {
+  font-size: 0.75rem;
+  color: var(--card);
+  background: var(--bad);
+  border-radius: 999px;
+  padding: 0 0.55rem;
+  letter-spacing: 0.15em;
+}
+
+.choice.lethal {
+  border-color: var(--bad);
+}
+
+.choice.armed {
+  background: var(--paper-2);
+  box-shadow: inset 0 0 0 2px var(--bad);
+}
+
+.choice.armed .choice-text {
+  color: var(--bad);
+  font-weight: 700;
+}
+
+.upcoming {
+  margin: 0.75rem 0 0;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+
+.upcoming strong {
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+
+.market.dojo {
+  border-top-color: var(--gold);
+}

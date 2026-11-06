@@ -37,8 +37,10 @@ export const DUEL = {
   foeCharge: (level: number) => Math.round(3 + level * 1.5),
   /** 看穿暗招要比對手高出的悟性。 */
   seeTrapsMargin: 3,
-  /** 健康換算：損失的氣血比例 × 這個數。 */
-  healthLoss: 30,
+  /** 比試（點到為止）輸了，健康最低剩這麼多。 */
+  sparFloor: 10,
+  /** 生死之戰突圍：剩下的氣血比例再扣這麼多健康。 */
+  fleeCost: 15,
 };
 
 /**
@@ -176,6 +178,8 @@ export interface Fighter {
   extraDraw?: number;
   /** 身上的錢，給要花錢的牌用。 */
   money?: number;
+  /** 開打時的氣血（健康就是血量）；省略時是滿的。 */
+  startHp?: number;
 }
 
 /** 主修武學：等級最高的武學（同級比經驗）。 */
@@ -221,7 +225,8 @@ export function deckFor(s: GameState): string[] {
 }
 
 export function woundCount(s: GameState): number {
-  return s.player.health < 25 ? 2 : s.player.health < 50 ? 1 : 0;
+  // 健康就是血量，傷已經反映在氣血上；只有傷得很重時才會多一張「傷」
+  return s.player.health < 30 ? 1 : 0;
 }
 
 /** 心魔：血仇未了一張；走火入魔的傷還沒養好（健康 < 70）一張。 */
@@ -235,12 +240,14 @@ export function demonCount(s: GameState): number {
 
 export function fighterFor(s: GameState): Fighter {
   const { level } = mainSkill(s);
+  const hp = DUEL.playerHp(s.player.stats.gengu, level);
   return {
-    hp: DUEL.playerHp(s.player.stats.gengu, level),
+    hp,
     wuxing: s.player.stats.wuxing,
     level,
     deck: deckFor(s),
     money: s.player.money,
+    startHp: Math.max(1, Math.round((hp * s.player.health) / 100)),
   };
 }
 
@@ -316,7 +323,7 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   if (!def) throw new Error(`未知對手：${opponentId}`);
   const easier = s && def.easierWith && checkCondition(s, def.easierWith) ? 1 : 0;
   const level = Math.max(0, opponentLevel(def, fighter.level) - easier);
-  const hp = DUEL.foeHp(level);
+  const hp = Math.round(DUEL.foeHp(level) * (def.hpMult ?? 1));
   const realm = REALM[Math.min(5, fighter.level)];
   const energy = fighter.energy ?? realm.energy;
   const d: DuelState = {
@@ -328,7 +335,7 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
     clear: fighter.wuxing >= def.wuxing,
     seeTraps: fighter.wuxing >= def.wuxing + DUEL.seeTrapsMargin,
     me: {
-      hp: fighter.hp, max: fighter.hp, block: 0, exposed: 0, bleed: 0,
+      hp: Math.min(fighter.hp, fighter.startHp ?? fighter.hp), max: fighter.hp, block: 0, exposed: 0, bleed: 0,
       energy, energyMax: energy, energyNext: 0,
       drawPer: DUEL.drawPer + (fighter.wuxing >= DUEL.drawBonusWuxing ? 1 : 0) + (fighter.extraDraw ?? realm.draw),
       deck: shuffle(rng, fighter.deck), hand: [], discard: [], traps: [], played: [],
@@ -597,8 +604,14 @@ export function intentText(d: DuelState): { label: string; detail: string } {
   return { label: `${labels[it.kind]} ${value}`, detail: def.tells[it.kind] };
 }
 
-/** 損失的氣血換算成健康損失。 */
-export function healthLossOf(d: DuelState): number {
-  const lost = Math.max(0, d.me.max - Math.max(0, d.me.hp)) / d.me.max;
-  return Math.round(lost * DUEL.healthLoss);
+/**
+ * 健康就是血量（設計文件 v0.5 §3）：打完之後，健康 = 剩下的氣血比例。
+ * 比試最低剩 10；生死之戰突圍再扣 15（最低 5）；生死之戰打輸回傳 0（死）。
+ */
+export function healthAfter(d: DuelState): number {
+  const left = Math.round((Math.max(0, d.me.hp) / d.me.max) * 100);
+  if (!d.lethal) return Math.max(DUEL.sparFloor, Math.min(100, left));
+  if (d.over === 'lose') return 0;
+  if (d.over === 'yield') return Math.max(5, left - DUEL.fleeCost);
+  return Math.max(1, Math.min(100, left));
 }

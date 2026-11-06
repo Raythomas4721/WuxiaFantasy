@@ -37,6 +37,7 @@ const itemHolders = new Map<string, number>();
 const distinctEndingsFirstFive: number[] = [];
 const allDuels: AutoplayResult['duels'] = [];
 const deckSizes: number[] = [];
+let duelDeaths = 0;
 let upgradedCards = 0;
 let skillCardsInDeck = 0;
 
@@ -45,6 +46,7 @@ for (let i = 0; i < runs; i++) {
   allDuels.push(...duels);
   const deck = state.player.deck ?? [];
   deckSizes.push(deck.length);
+  if (state.deathCause === 'duel') duelDeaths++;
   upgradedCards += deck.filter((id) => id.endsWith('+')).length;
   skillCardsInDeck += deck.filter((id) => cardSkill(id)).length;
   totalFocusPicks += focusPicks;
@@ -159,6 +161,11 @@ line(
   `  平均每輪 ${(allDuels.length / runs).toFixed(2)} 場・勝率 ${dpct(allDuels.filter((d) => d.won).length, allDuels.length)}・平均 ${(allDuels.reduce((s, d) => s + d.rounds, 0) / Math.max(1, allDuels.length)).toFixed(1)} 回合`,
 );
 const byDiff = [...tally((d) => Math.max(-3, Math.min(3, d.playerLevel - d.level)))].sort((a, b) => Number(a[0]) - Number(b[0]));
+const byTier = [...tally((d) => d.tier ?? 'story')];
+const TIER: Record<string, string> = { minor: '小戰', elite: '精英', boss: '首領', story: '劇情' };
+line('  每輪（v0.5 §10）：' + byTier.map(([k, x]) => `${TIER[k]} ${(x.n / runs).toFixed(1)} 場・勝 ${dpct(x.w, x.n)}`).join('、'));
+const lethal = allDuels.filter((d) => d.lethal);
+line(`  生死之戰：每輪 ${(lethal.length / runs).toFixed(2)} 場・勝 ${dpct(lethal.filter((d) => d.won).length, lethal.length)}・突圍 ${dpct(lethal.filter((d) => d.over === 'yield').length, lethal.length)}・死於生死之戰的人生 ${pct(duelDeaths)}`);
 const byLevel = [...tally((d) => d.playerLevel)].sort((a, b) => Number(a[0]) - Number(b[0]));
 line('  玩家主修境界：' + byLevel.map(([k, x]) => `${k} 級 ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));
 line('  等級差（玩家 − 對手）：' + byDiff.map(([k, x]) => `${Number(k) > 0 ? '+' : ''}${k} ${dpct(x.w, x.n)}（${x.n} 場）`).join('、'));

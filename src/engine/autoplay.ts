@@ -6,12 +6,12 @@ import {
 } from './game';
 import { CONTENT } from '../content';
 import { pickCard, removeBlocked, removeCard, upgradableIndexes, upgradeCard } from './deck';
-import { baseCardId, cardSkill, getCard, mainSkill } from './duel';
-import { buy, marketOffers } from './market';
+import { baseCardId, cardSkill, getCard, mainSkill, yieldDuel } from './duel';
+import { DOJO_REMOVE, buy, buyDojo, dojoOffers, marketOffers, removePrice } from './market';
 import { Rng } from './rng';
 import type { GameState } from './types';
 
-const MAX_STEPS = 1000;
+const MAX_STEPS = 3000;
 
 export interface AutoplayResult {
   state: GameState;
@@ -22,7 +22,7 @@ export interface AutoplayResult {
   focusPicks: number;
   persona: Persona;
   /** 這一生打過的過招。 */
-  duels: { opponent: string; level: number; playerLevel: number; won: boolean; rounds: number }[];
+  duels: { opponent: string; level: number; playerLevel: number; won: boolean; rounds: number; tier?: string; lethal: boolean; over: string }[];
 }
 
 export interface AutoplayOptions {
@@ -103,7 +103,8 @@ export function autoDeckTask(s: GameState): GameState {
   }
   if (task.kind === 'remove') {
     const at = ['punch', 'parry'].map((id) => deck.indexOf(id)).find((i) => i >= 0);
-    return removeCard(s, at !== undefined && !removeBlocked(s) && s.player.health > 50 ? at : null);
+    const affordable = task.cost?.health ? s.player.health > 50 : true;
+    return removeCard(s, at !== undefined && !removeBlocked(s) && affordable ? at : null);
   }
   const idx = upgradableIndexes(s).sort((a, b) => cardScore(s, deck[b]) - cardScore(s, deck[a]) || getCard(deck[b]).cost - getCard(deck[a]).cost);
   return upgradeCard(s, idx.length > 0 ? idx[0] : null);
@@ -130,15 +131,34 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       events.push(s.current!.eventId);
       texts.push(s.current!.text);
       const enabled = choiceViews(s).filter((c) => c.enabled);
+      const node = CONTENT.events.find((e) => e.id === s.current!.eventId)?.node;
+      if (node) {
+        // 關卡：身子撐得住就打，撐不住就繞開；生死之戰要更有把握
+        const need = enabled.find((c) => c.duel)?.lethal ? 70 : node.tier === 'minor' ? 50 : 65;
+        const fight = enabled.find((c) => c.duel);
+        s = chooseOption(s, fight && (options.preferDuel || s.player.health >= need) ? fight.id : enabled.find((c) => !c.duel)!.id);
+        continue;
+      }
       const duel = options.preferDuel ? enabled.find((c) => c.duel) : undefined;
       s = chooseOption(s, duel ? duel.id : pickChoice(s, enabled.map((c) => c.id), persona, policy));
     } else if (s.phase === 'duel') {
       // 過招用「直覺」策略打完，再收招
       const rng = new Rng(s.rng);
       let d = s.duel!;
-      for (let i = 0; i < 60 && !d.over; i++) d = playSimpleRound(d, rng);
+      for (let i = 0; i < 60 && !d.over; i++) {
+        // 生死之戰打不過就突圍
+        if (d.lethal && d.me.hp < d.me.max * 0.3 && d.foe.hp > d.foe.max * 0.35) {
+          d = yieldDuel(d);
+          break;
+        }
+        d = playSimpleRound(d, rng);
+      }
       if (!d.over) d = { ...d, over: 'lose' };
-      duels.push({ opponent: d.opponent, level: d.level, playerLevel: mainSkill(s).level, won: d.over === 'win', rounds: d.round });
+      const tier = CONTENT.events.find((e) => e.id === s.current?.eventId)?.node?.tier;
+      duels.push({
+        opponent: d.opponent, level: d.level, playerLevel: mainSkill(s).level, won: d.over === 'win', rounds: d.round,
+        tier, lethal: d.lethal, over: d.over ?? "lose",
+      });
       s = finishDuel({ ...s, duel: d, rng: rng.state });
     } else if (s.phase === 'result') {
       for (let i = 0; i < 10 && s.deckTasks?.length; i++) s = autoDeckTask(s);
@@ -147,6 +167,14 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       const saver = s.player.ambition === 'wealth';
       const wanted = saver ? offers.filter((o) => o.id === 'land' || o.id === 'shop') : offers;
       if (wanted.length > 0 && (saver || policy.chance(0.5))) s = buy(s, policy.pick(wanted).id);
+      // 武館：錢夠就學一招本門的牌，有出拳就花錢改掉
+      const dojo = dojoOffers(s).filter((o) => o.enabled && s.player.money >= o.price + 30);
+      const learn = dojo.filter((o) => o.id !== DOJO_REMOVE).sort((a, b) => cardScore(s, b.id.slice(5)) - cardScore(s, a.id.slice(5)))[0];
+      if (learn && cardScore(s, learn.id.slice(5)) >= 2) s = buyDojo(s, learn.id);
+      if (dojo.some((o) => o.id === DOJO_REMOVE) && s.player.deck?.includes('punch') && s.player.money >= removePrice(s) + 30) {
+        s = buyDojo(s, DOJO_REMOVE);
+      }
+      for (let i = 0; i < 10 && s.deckTasks?.length; i++) s = autoDeckTask(s);
       s = nextTurn(s);
     } else {
       throw new Error(`autoplay 無法處理階段：${s.phase}`);

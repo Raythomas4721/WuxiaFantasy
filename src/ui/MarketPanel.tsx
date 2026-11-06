@@ -1,5 +1,5 @@
 import { MARKET } from '../content/market';
-import { boughtThisTurn, buy, marketOffers, marketOpen } from '../engine/market';
+import { boughtThisTurn, buy, buyDojo, dojoOffers, marketOffers, marketOpen } from '../engine/market';
 import type { GameState } from '../engine/types';
 
 interface Props {
@@ -11,10 +11,34 @@ interface Props {
 export function MarketPanel({ state, act }: Props) {
   if (!marketOpen(state)) return null;
   const offers = marketOffers(state);
-  if (offers.length === 0) return null;
+  const dojo = dojoOffers(state);
+  if (offers.length === 0 && dojo.length === 0) return null;
   const left = MARKET.perTurn - boughtThisTurn(state);
 
   return (
+    <>
+    {dojo.length > 0 && (
+      <details className="market dojo" open>
+        <summary>
+          ⚖ 武館
+          <span className="muted small">　身上 {state.player.money} 文・每段日子只能學一招</span>
+        </summary>
+        <ul className="market-list">
+          {dojo.map((o) => (
+            <li key={o.id} className="market-item">
+              <div className="market-info">
+                <span className="market-name">{o.name}</span>
+                <span className="market-desc">{o.desc}</span>
+              </div>
+              <button className="btn btn-small" disabled={!o.enabled} title={o.reason} onClick={() => act(() => buyDojo(state, o.id), false)}>
+                {o.enabled ? `${o.price} 文` : o.reason}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </details>
+    )}
+    {offers.length > 0 && (
     <details className="market">
       <summary>
         逛市集
@@ -41,5 +65,7 @@ export function MarketPanel({ state, act }: Props) {
         ))}
       </ul>
     </details>
+    )}
+    </>
   );
 }
