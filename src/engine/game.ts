@@ -16,9 +16,11 @@ import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
 import { adjacent, destinations, rollWorld } from './world';
+import { encounterFoes, encounterOpenings, encounterPlaces } from '../content/encounters';
 import { STAT_MAX, STAT_POINTS_PER_CHAPTER, perk } from './talents';
 import type {
   Check,
+  Condition,
   ChoiceView,
   DuelState,
   FocusContext,
@@ -419,8 +421,35 @@ function varPool(s: GameState, spec: VarSpec): string[] {
   return spec.flatMap((v) => (typeof v === 'string' ? [v] : checkCondition(s, v.if) ? v.values : []));
 }
 
+/** 過招對手：寫成 {foe} 的，從這次事件抽到的素材裡拿。 */
+export function opponentOf(s: GameState, duel: { opponent: string }): string {
+  const m = /^\{(\w+)\}$/.exec(duel.opponent);
+  return m ? s.current?.vars?.[m[1]] ?? duel.opponent : duel.opponent;
+}
+
+/** 組合式小戰：地點 × 對手 × 開場狀況。 */
+function rollEncounter(s: GameState, rng: Rng): Record<string, string> {
+  const ok = <T extends { conditions?: Condition }>(xs: T[]) => xs.filter((x) => checkCondition(s, x.conditions));
+  const place = rng.pick(ok(encounterPlaces));
+  const foe = rng.pick(ok(encounterFoes));
+  const opening = rng.weighted(encounterOpenings.map((o) => ({ item: o, weight: o.weight })))!;
+  const text = opening.text.replaceAll('{who}', foe.who).replaceAll('{demand}', foe.demand);
+  return {
+    scene: place.scene,
+    opening: text,
+    foe: foe.opponent,
+    openingId: opening.id,
+    fight: opening.fight,
+    avoid: opening.avoid ?? foe.avoid,
+    avoided: opening.avoided ?? foe.avoided,
+    win: foe.win,
+    lose: foe.lose,
+  };
+}
+
 /** 組合式事件：每個變數從符合條件的素材池裡抽一個。 */
 function rollVars(s: GameState, e: GameEvent, rng: Rng): Record<string, string> | undefined {
+  if (e.encounter) return { ...rollEncounter(s, rng), ...(e.vars ? rollVars(s, { ...e, encounter: false }, rng) : {}) };
   if (!e.vars) return undefined;
   const out: Record<string, string> = {};
   for (const [key, spec] of Object.entries(e.vars)) {
@@ -608,9 +637,9 @@ export function choiceViews(s: GameState): ChoiceView[] {
       text: fill(c.text, s, s.current.vars),
       enabled,
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
-      odds: enabled && c.check ? oddsLabel(choiceChance(s, c.check)) : enabled && c.duel ? duelOdds(s, c.duel.opponent) : undefined,
+      odds: enabled && c.check ? oddsLabel(choiceChance(s, c.check)) : enabled && c.duel ? duelOdds(s, opponentOf(s, c.duel)) : undefined,
       duel: Boolean(c.duel),
-      lethal: c.duel ? Boolean(CONTENT.opponents[c.duel.opponent]?.lethal) : undefined,
+      lethal: c.duel ? Boolean(CONTENT.opponents[opponentOf(s, c.duel)]?.lethal) : undefined,
     });
   }
   return views;
@@ -633,7 +662,7 @@ export function chooseOption(state: GameState, choiceId: string): GameState {
   const s = clone(state);
   const rng = new Rng(s.rng);
   if (choice.duel) {
-    s.duel = createDuel(fighterFor(s), choice.duel.opponent, choice.id, rng, s);
+    s.duel = createDuel(fighterFor(s), opponentOf(s, choice.duel), choice.id, rng, s);
     s.phase = 'duel';
     s.rng = rng.state;
     return s;

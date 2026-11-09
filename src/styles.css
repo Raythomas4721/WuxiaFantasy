@@ -2127,3 +2127,126 @@ small {
     display: none;
   }
 }
+
+/* ---------- 戰鬥手感：意圖印章、內力珠、出牌飛出、戰況收合 ---------- */
+
+.duel-intent {
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.intent-seal {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  color: var(--accent);
+  font-size: 1.35rem;
+  font-weight: 800;
+  transform: rotate(-4deg);
+  background: var(--card);
+}
+
+.intent-num {
+  flex: none;
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.intent-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.intent-name {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+}
+
+.intent-guard .intent-seal,
+.intent-guard .intent-num,
+.intent-guard .intent-name,
+.intent-charge .intent-seal,
+.intent-charge .intent-num,
+.intent-charge .intent-name,
+.intent-heal .intent-seal,
+.intent-heal .intent-num,
+.intent-heal .intent-name,
+.intent-unknown .intent-seal,
+.intent-unknown .intent-name {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.intent-unknown {
+  background: var(--paper-2);
+}
+
+.intent-detail {
+  font-size: 0.85rem;
+}
+
+.duel-energy {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.orb {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 50%;
+  border: 1.5px solid var(--gold);
+  background: transparent;
+  transform: scale(0.8);
+  opacity: 0.45;
+  transition: transform 0.25s ease, opacity 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.orb.on {
+  background: radial-gradient(circle at 35% 35%, #fff6d8, var(--gold) 60%);
+  box-shadow: 0 0 6px var(--gold);
+  transform: scale(1);
+  opacity: 1;
+}
+
+.card-fly {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  pointer-events: none;
+  animation: card-fly 0.45s ease-in forwards;
+}
+
+@keyframes card-fly {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  40% { transform: translate(calc(var(--dx, 0px) * 0.4), calc(var(--dy, -120px) * 0.4 - 20px)) scale(0.85) rotate(-6deg); opacity: 1; }
+  100% { transform: translate(var(--dx, 0px), var(--dy, -200px)) scale(0.3) rotate(10deg); opacity: 0; }
+}
+
+.duel-log-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.log-toggle {
+  border: none;
+  background: none;
+  padding: 0 0.25rem;
+  font: inherit;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  cursor: pointer;
+  text-decoration: underline dotted;
+}

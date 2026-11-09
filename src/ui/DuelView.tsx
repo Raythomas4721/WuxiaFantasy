@@ -1,9 +1,10 @@
+import { useEffect, useRef, useState } from 'react';
 import { CONTENT } from '../content';
 import { LEVEL_NAMES } from '../engine/describe';
 import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, resolvedEffect } from '../engine/duel';
 import { DuelStage, type Weapon } from './DuelStage';
 import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
-import type { CardDef, CardKind, DuelState, GameState } from '../engine/types';
+import type { CardDef, CardKind, DuelState, GameState, IntentKind } from '../engine/types';
 
 /** 小人手上拿什麼：看主修的武學。 */
 const WEAPON: Record<string, Weapon> = {
@@ -48,28 +49,21 @@ export function DuelView({ state, act }: Props) {
             })}
           </ul>
         )}
-        {!d.over && (
-          <div className={`duel-intent intent-${d.foe.intent.kind}`}>
-            <span className="intent-label">{intent.label}</span>
-            <span className="intent-detail">{intent.detail}</span>
-          </div>
-        )}
+        {!d.over && <IntentBadge d={d} detail={intent.detail} />}
       </section>
 
       <DuelStage d={d} weapon={WEAPON[mainSkill(state).skill ?? ''] ?? 'fist'} />
 
-      <ol className="duel-log" aria-live="polite">
-        {d.log.map((l, i) => (
-          <li key={i} className={`log-${l.who}`}>{l.text}</li>
-        ))}
-      </ol>
+      <DuelLog d={d} />
 
       <section className="duel-side me">
         <div className="duel-name">
           <strong>你</strong>
           <span className="duel-energy" aria-label={`內力 ${d.me.energy}`}>
-            內力 {'●'.repeat(Math.max(0, d.me.energy))}
-            {'○'.repeat(Math.max(0, (d.me.energyMax ?? DUEL.energy) - d.me.energy))}
+            內力
+            {Array.from({ length: Math.max(d.me.energy, d.me.energyMax ?? DUEL.energy) }, (_, i) => (
+              <i key={i} className={`orb ${i < d.me.energy ? 'on' : ''}`} />
+            ))}
           </span>
         </div>
         <HpBar side={d.me} />
@@ -95,7 +89,7 @@ export function DuelView({ state, act }: Props) {
         <DuelOver d={d} onFinish={() => act(() => finishDuel(state))} />
       ) : (
         <>
-          <div className="duel-hand">
+          <div className="duel-hand" onClickCapture={(ev) => flyCard(ev.target as HTMLElement)}>
             {d.me.hand.map((id, i) => (
               <HandCard key={`${id}-${i}`} d={d} card={getCard(id)} playable={canPlay(d, i)} onPlay={() => act(() => duelPlay(state, i))} />
             ))}
@@ -119,6 +113,85 @@ export function DuelView({ state, act }: Props) {
       )}
     </article>
   );
+}
+
+/** 對手的意圖：印章字 + 大數字，一眼看懂。 */
+const SEAL: Record<IntentKind, string> = {
+  attack: '攻', combo: '連', feint: '虛', guard: '守', charge: '蓄', drain: '穴', enrage: '狠', heal: '氣', curse: '毒',
+};
+const INTENT_NAME: Record<IntentKind, string> = {
+  attack: '出手', combo: '連擊', feint: '虛招', guard: '守勢', charge: '蓄勢', drain: '點穴', enrage: '發狠', heal: '回氣', curse: '下毒',
+};
+
+function IntentBadge({ d, detail }: { d: DuelState; detail: string }) {
+  const it = d.foe.intent;
+  if (!d.clear) {
+    return (
+      <div className="duel-intent intent-unknown">
+        <span className="intent-seal">？</span>
+        <span className="intent-body">
+          <span className="intent-name">看不透</span>
+          <span className="intent-detail">{detail}</span>
+        </span>
+      </div>
+    );
+  }
+  const strike = ['attack', 'combo', 'feint', 'drain', 'curse'].includes(it.kind);
+  const per = it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) : 0);
+  const big = strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
+  return (
+    <div className={`duel-intent intent-${it.kind}`}>
+      <span className="intent-seal">{SEAL[it.kind]}</span>
+      <span className="intent-num">{big}</span>
+      <span className="intent-body">
+        <span className="intent-name">{INTENT_NAME[it.kind]}</span>
+        <span className="intent-detail">{detail}</span>
+      </span>
+    </div>
+  );
+}
+
+/** 戰況：預設只看最近三行。 */
+const LOG_SHOWN = 3;
+
+function DuelLog({ d }: { d: DuelState }) {
+  const [all, setAll] = useState(false);
+  const lines = all ? d.log : d.log.slice(-LOG_SHOWN);
+  const hidden = d.log.length - lines.length;
+  return (
+    <div className="duel-log-wrap">
+      <ol className="duel-log" aria-live="polite">
+        {lines.map((l, i) => (
+          <li key={d.log.length - lines.length + i} className={`log-${l.who}`}>{l.text}</li>
+        ))}
+      </ol>
+      {(hidden > 0 || all) && d.log.length > LOG_SHOWN && (
+        <button className="log-toggle" onClick={() => setAll(!all)}>
+          {all ? '收起' : `看前面 ${hidden} 行`}
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** 出牌：把點下去的牌複製一張，飛向舞台中央再消失。 */
+function flyCard(target: HTMLElement): void {
+  const card = target.closest('button.duel-card') as HTMLButtonElement | null;
+  if (!card || card.disabled) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  const from = card.getBoundingClientRect();
+  const stage = document.querySelector('.duel-stage')?.getBoundingClientRect();
+  const clone = card.cloneNode(true) as HTMLElement;
+  clone.classList.add('card-fly');
+  Object.assign(clone.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+  if (stage) {
+    clone.style.setProperty('--dx', `${stage.left + stage.width / 2 - (from.left + from.width / 2)}px`);
+    clone.style.setProperty('--dy', `${stage.top + stage.height / 2 - (from.top + from.height / 2)}px`);
+  }
+  document.body.appendChild(clone);
+  const remove = () => clone.remove();
+  clone.addEventListener('animationend', remove);
+  setTimeout(remove, 800);
 }
 
 function HpBar({ side }: { side: { hp: number; max: number } }) {
@@ -195,7 +268,17 @@ function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; 
   return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} />;
 }
 
+/** 一般過招打完，看一眼結局就自動收招；生死之戰要自己按。 */
+const AUTO_FINISH_MS = 1500;
+
 function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {
+  const finish = useRef(onFinish);
+  finish.current = onFinish;
+  useEffect(() => {
+    if (d.lethal) return;
+    const t = setTimeout(() => finish.current(), AUTO_FINISH_MS);
+    return () => clearTimeout(t);
+  }, [d.lethal]);
   const text = {
     win: `你勝過了${d.name}。`,
     lose: d.lethal ? `你倒在了${d.name}的面前。` : `你敗給了${d.name}。`,

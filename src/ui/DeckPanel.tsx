@@ -1,6 +1,8 @@
 import { CONTENT } from '../content';
 import { canUpgrade, pickCard, pickTalent, removeBlocked, removeCard, upgradeCard } from '../engine/deck';
 import { getTalent } from '../engine/talents';
+import { nextTurn } from '../engine/game';
+import { dojoOpen } from '../engine/market';
 import { cardSkill, cardText, getCard } from '../engine/duel';
 import type { GameState } from '../engine/types';
 import { CardFace } from './DuelView';
@@ -27,6 +29,12 @@ export function DeckTaskPanel({ state, act }: Props) {
   if (!task || !state.player.alive) return null;
   const deck = state.player.deck ?? [];
   const left = state.deckTasks!.length - 1;
+  // 同一段日子中間的小戰：選完牌就直接上路，不用再按一次「繼續上路」
+  const pickAndGo = (fn: () => GameState) => {
+    const next = fn();
+    const go = !next.deckTasks && next.followUp && next.phase === 'result' && next.player.alive && !dojoOpen(next);
+    act(() => (go ? nextTurn(next) : next), Boolean(go));
+  };
 
   return (
     <section className={`deck-task deck-task-${task.kind}`} aria-live="polite">
@@ -41,11 +49,11 @@ export function DeckTaskPanel({ state, act }: Props) {
         <>
           <div className="duel-hand deck-options">
             {task.options.map((id) => (
-              <CardFace key={id} card={getCard(id)} onClick={() => act(() => pickCard(state, id), false)} />
+              <CardFace key={id} card={getCard(id)} onClick={() => pickAndGo(() => pickCard(state, id))} />
             ))}
           </div>
           <div className="actions">
-            <button className="btn btn-ghost btn-small" onClick={() => act(() => pickCard(state, null), false)}>
+            <button className="btn btn-ghost btn-small" onClick={() => pickAndGo(() => pickCard(state, null))}>
               {task.skipMoney ? `不要了（+${task.skipMoney} 文）` : '不挑了'}
             </button>
           </div>

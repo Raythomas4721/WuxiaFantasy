@@ -163,6 +163,8 @@ export interface GameEvent {
   tags?: string[];
   rare?: boolean;
   vars?: Record<string, VarSpec>;
+  /** 組合式小戰：觸發時抽地點、對手、開場狀況（content/encounters.ts），放進 vars。 */
+  encounter?: boolean;
   enterEffects?: GameEffect[];
   choices: GameChoice[];
 }

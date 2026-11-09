@@ -8,6 +8,7 @@ import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, skillLevel } from './conditions';
 import type { Rng } from './rng';
 import { growthPassive, talentHp } from './talents';
+import { encounterOpenings } from '../content/encounters';
 import { fill } from './text';
 import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
@@ -372,6 +373,11 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   d.me.energy += passive.firstRoundEnergy ?? 0;
   d.me.block += passive.blockPerRound ?? 0;
   if (passive.openExpose) d.foe.exposed = passive.openExpose;
+  // 組合式小戰的開場狀況：被埋伏、搶到先機
+  const opening = encounterOpenings.find((o) => o.id === s?.current?.vars?.openingId);
+  if (opening?.id === 'ambush') d.me.energy = Math.max(0, d.me.energy - 1);
+  if (opening?.id === 'spotted') d.foe.exposed = Math.max(d.foe.exposed, 2);
+  if (opening?.duelNote) d.log.push({ who: 'sys', text: opening.duelNote });
   if (passive.bleedStart) d.foe.bleed += passive.bleedStart;
   drawCards(d, DUEL.startHand + (passive.firstRoundDraw ?? 0), rng);
   return d;

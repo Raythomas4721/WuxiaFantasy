@@ -8,6 +8,30 @@ const AVOID = '繞開，不惹這個麻煩';
 
 export const nodeEvents: GameEvent[] = [
   // ---------- 小戰 ----------
+  // 組合式：地點 × 對手 × 開場狀況（content/encounters.ts），比固定的小戰常出現
+  {
+    id: 'n_road',
+    kind: 'node',
+    node: { tier: 'minor' },
+    title: '途中',
+    repeatable: true,
+    encounter: true,
+    weightMods: [{ if: { minAge: 13 }, mult: 4 }],
+    conditions: { minAge: 13 },
+    text: '{scene}{opening}',
+    choices: [
+      {
+        id: 'fight',
+        text: '{fight}',
+        duel: {
+          opponent: '{foe}',
+          success: { text: '{win}', effects: [money(8)] },
+          failure: { text: '{lose}', effects: [money(-5)] },
+        },
+      },
+      { id: 'avoid', text: '{avoid}', outcome: { text: '{avoided}', effects: [] } },
+    ],
+  },
   {
     id: 'n_kid_scuffle',
     kind: 'node',

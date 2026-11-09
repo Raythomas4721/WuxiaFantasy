@@ -90,7 +90,9 @@ export function validateContent(content: Content): ValidationReport {
         if (o.recap) strings.push(o.recap.text);
       }
     }
-    const allowed = new Set([...TEMPLATE_KEYS, ...Object.keys(e.vars ?? {})]);
+    // 組合式小戰的素材（content/encounters.ts）由引擎放進 vars
+    const encounterKeys = e.encounter ? ['scene', 'opening', 'foe', 'openingId', 'fight', 'avoid', 'avoided', 'win', 'lose'] : [];
+    const allowed = new Set([...TEMPLATE_KEYS, ...Object.keys(e.vars ?? {}), ...encounterKeys]);
     for (const key of unknownPlaceholders(strings, allowed)) errors.push(`${w}：文字引用了未定義的變數 {${key}}`);
 
     if (e.choices.length < 2) errors.push(`${w}：選項少於 2 個`);
@@ -102,7 +104,7 @@ export function validateContent(content: Content): ValidationReport {
       choiceIds.add(ch.id);
       if (ch.requires) conditions.push({ where: cw, c: ch.requires });
       if (!ch.check && !ch.outcome && !ch.duel) errors.push(`${cw}：沒有結果`);
-      if (ch.duel && !content.opponents[ch.duel.opponent]) errors.push(`${cw}：未知過招對手 ${ch.duel.opponent}`);
+      if (ch.duel && !ch.duel.opponent.startsWith('{') && !content.opponents[ch.duel.opponent]) errors.push(`${cw}：未知過招對手 ${ch.duel.opponent}`);
       const outs = [...outcomesOf(ch.outcome), ...outcomesOf(ch.check?.success), ...outcomesOf(ch.check?.failure), ...outcomesOf(ch.duel?.success), ...outcomesOf(ch.duel?.failure)];
       for (const o of outs) {
         // 關卡事件的勝負與避戰本身就改變了氣血（健康），不算假選項
