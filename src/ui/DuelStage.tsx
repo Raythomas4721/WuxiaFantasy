@@ -32,7 +32,28 @@ interface Fx {
   foe?: 'lunge' | 'hit';
   floats: Float[];
   strikes: Strike[];
+  /** 高光時刻：舞台閃一下、震一下，跳出大字。 */
+  highlight?: { text: string; tone: 'red' | 'gold' };
 }
+
+/** 這一回合到目前為止打了多少、高光喊過了沒（一氣呵成每回合最多一次）。 */
+interface RoundTally {
+  round: number;
+  dmg: number;
+  combo: boolean;
+}
+
+/** 高光的大字在打中之後才跳出來。 */
+const HIGHLIGHT_DELAY = 220;
+
+/** 一招打掉這麼多（或對手氣血的這個比例）以上，算重擊。 */
+const BIG_HIT = 15;
+const BIG_HIT_RATIO = 0.25;
+/** 一回合三招以上、累積這麼多（或這個比例）以上，算一氣呵成。 */
+const COMBO_DMG = 22;
+const COMBO_RATIO = 0.3;
+/** 打倒對手時剩這個比例以下的氣血，算險勝。 */
+const CLOSE_CALL = 0.2;
 
 const SLASH: Record<Weapon, StrikeKind> = { sword: 'arc', saber: 'arc', spear: 'thrust', fist: 'burst', needle: 'needle' };
 /** 連擊時每一下的間隔。 */
@@ -53,7 +74,7 @@ const POSE: Partial<Record<IntentKind, string>> = {
 let floatId = 0;
 
 /** 比較出招前後的差異，決定這一下要播什麼動作。 */
-function diff(prev: DuelState, d: DuelState, weapon: Weapon): Fx | undefined {
+function diff(prev: DuelState, d: DuelState, weapon: Weapon, tally: RoundTally): Fx | undefined {
   const foeLoss = prev.foe.hp - d.foe.hp;
   const meLoss = prev.me.hp - d.me.hp;
   const meGain = d.me.hp - prev.me.hp;
@@ -89,6 +110,10 @@ function diff(prev: DuelState, d: DuelState, weapon: Weapon): Fx | undefined {
       fx.foe = fx.foe ?? 'hit';
       float('foe', `−${foeLoss}`, 'dmg', meLoss > 0 ? 450 : 0);
     }
+    // 高光：耗死對手、伏招閃掉、全部擋下
+    if (d.over === 'win' && !prev.over) fx.highlight = { text: '內傷發作', tone: 'red' };
+    else if (!d.over && dodged) fx.highlight = { text: '閃得漂亮', tone: 'gold' };
+    else if (!d.over && blows.length > 0 && meLoss === 0) fx.highlight = { text: '滴水不漏', tone: 'gold' };
   } else {
     if (foeLoss > 0 || foeBlockLost > 0) {
       // 你出招：多段的牌砍好幾下；砍在護體上的爆火花
@@ -111,19 +136,36 @@ function diff(prev: DuelState, d: DuelState, weapon: Weapon): Fx | undefined {
     }
     if (meGain > 0) float('me', `+${meGain}`, 'heal');
     if (blockGain > 0) float('me', `護 ${blockGain}`, 'block');
+
+    // 高光：最後一擊、一招重擊、一回合連出好幾招
+    if (foeLoss > 0) tally.dmg += foeLoss;
+    const last = d.me.played[d.me.played.length - 1];
+    const hits = (last && getCard(last).hits) || 1;
+    const attacks = d.me.played.filter((id) => getCard(id).kind === 'attack').length;
+    if (d.over === 'win' && !prev.over) {
+      fx.highlight = d.me.hp <= d.me.max * CLOSE_CALL ? { text: '險勝', tone: 'gold' } : { text: '致命一擊', tone: 'red' };
+    } else if (foeLoss >= Math.max(BIG_HIT, d.foe.max * BIG_HIT_RATIO)) {
+      fx.highlight = { text: hits > 1 ? '連環' : '重擊', tone: 'red' };
+    } else if (!tally.combo && attacks >= 3 && foeLoss > 0 && tally.dmg >= Math.max(COMBO_DMG, d.foe.max * COMBO_RATIO)) {
+      tally.combo = true;
+      fx.highlight = { text: '一氣呵成', tone: 'gold' };
+    }
   }
-  return fx.me || fx.foe || fx.floats.length > 0 ? fx : undefined;
+  return fx.me || fx.foe || fx.floats.length > 0 || fx.highlight ? fx : undefined;
 }
 
 export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
   const prev = useRef(d);
+  const tally = useRef<RoundTally>({ round: d.round, dmg: 0, combo: false });
   const [fx, setFx] = useState<Fx | undefined>();
 
   useEffect(() => {
     const p = prev.current;
     prev.current = d;
     if (p === d) return;
-    const next = diff(p, d, weapon);
+    // 新的一回合：重新累計
+    if (tally.current.round !== d.round) tally.current = { round: d.round, dmg: 0, combo: false };
+    const next = diff(p, d, weapon, tally.current);
     if (next) {
       setFx(next);
       playSounds(next);
@@ -136,8 +178,15 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
   const pose = d.over || !d.clear ? '' : POSE[d.foe.intent.kind] ?? '';
 
   return (
-    <div className="duel-stage" aria-hidden="true">
+    // 有高光時換 key 重掛舞台，讓震動與閃光重播
+    <div key={fx?.highlight ? fx.id : 'stage'} className={`duel-stage ${fx?.highlight ? 'stage-hl' : ''}`} aria-hidden="true">
       <div className="stage-ground" />
+      {fx?.highlight && (
+        <>
+          <div className="stage-flash" />
+          <div className={`stage-highlight tone-${fx.highlight.tone}`}>{fx.highlight.text}</div>
+        </>
+      )}
       <Figure
         side="me"
         weapon={weapon}
@@ -186,6 +235,7 @@ function playSounds(fx: Fx): void {
   if (!struck && fx.floats.some((f) => f.kind === 'dmg')) later(fx.floats.find((f) => f.kind === 'dmg')!.delay, sfx.hit);
   if (fx.floats.some((f) => f.kind === 'heal')) sfx.heal();
   if (fx.floats.some((f) => f.kind === 'block' && f.text.startsWith('護'))) sfx.guard();
+  if (fx.highlight) later(HIGHLIGHT_DELAY, sfx.highlight);
 }
 
 /** 火花往八個方向飛。 */

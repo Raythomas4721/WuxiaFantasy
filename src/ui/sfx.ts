@@ -134,6 +134,12 @@ export const sfx = {
     tone(660, 0.18, { gain: 0.2 });
     tone(990, 0.24, { gain: 0.16, at: 0.09 });
   },
+  /** 高光時刻：一記太鼓，加一點鈸的餘音。 */
+  highlight(): void {
+    tone(75, 0.5, { to: 42, gain: 0.95 });
+    noise(0.25, { type: 'lowpass', freq: 260, gain: 0.6 });
+    noise(0.7, { type: 'highpass', freq: 6500, gain: 0.12, at: 0.05 });
+  },
   /** 贏了：一記銅鑼。 */
   win(): void {
     tone(196, 1.6, { gain: 0.4 });
