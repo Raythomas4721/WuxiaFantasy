@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CONTENT } from '../content';
 import { currentYear } from '../engine/conditions';
-import { FATIGUE_STREAK, chooseOption, choiceViews, describeOrigin, nextTurn, requestFocusChange, startLife } from '../engine/game';
+import { FATIGUE_STREAK, chooseOption, choiceViews, describeOrigin, nextTurn, requestFocusChange, startLife, timeStep } from '../engine/game';
 import { chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber, eraName } from '../engine/text';
 import type { GameState } from '../engine/types';
@@ -155,20 +155,9 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
           {/* 牌庫的事要先處理完，才能往下走 */}
           {!(state.player.alive && state.deckTasks?.length) && (
             <div className="actions">
-              <button className="btn btn-primary" onClick={() => act(() => nextTurn(state))}>
-                {!state.player.alive ? '……' : state.chain || state.followUp ? '接著……' : '歲月流轉'}
-              </button>
+              <NextButton state={state} act={act} />
               <ChangeFocusButton state={state} act={act} />
             </div>
-          )}
-          {state.upcoming && state.player.alive && !state.deckTasks?.length && (
-            <p className="upcoming">
-              下一段日子：
-              <strong>
-                {NODE_INFO[state.upcoming.node].icon} {NODE_INFO[state.upcoming.node].name}
-              </strong>
-              <span className="muted small">（照「{CONTENT.focuses.find((f) => f.id === state.upcoming!.focus)?.name}」過日子；換個活法就會不一樣）</span>
-            </p>
           )}
           <MarketPanel state={state} act={act} />
         </article>
@@ -218,6 +207,33 @@ function EventView({ state, act }: { state: GameState; act: (fn: () => GameState
         ))}
       </div>
     </article>
+  );
+}
+
+/** 結果畫面的主按鈕：直接寫出按下去會發生什麼（同一段日子的下一關，或過幾年之後的第一關）。 */
+function NextButton({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
+  const p = state.player;
+  let main: string;
+  let sub: string | undefined;
+  if (!p.alive) main = '……';
+  else if (state.chain) main = '事情還沒完，接著看';
+  else if (state.followUp) {
+    const next = state.nodeQueue?.[0];
+    main = next ? `繼續上路：${NODE_INFO[next].icon} ${NODE_INFO[next].name}` : '看看這段日子還發生了什麼';
+    sub = '同一段日子';
+  } else {
+    const years = timeStep(state);
+    const age = chineseNumber(p.age + years);
+    const node = state.upcoming && NODE_INFO[state.upcoming.node];
+    main = node ? `過${chineseNumber(years)}年：${node.icon} ${node.name}` : `過${chineseNumber(years)}年`;
+    const focus = CONTENT.focuses.find((f) => f.id === state.upcoming?.focus);
+    sub = focus ? `${age}歲・照「${focus.name}」過日子` : `${age}歲`;
+  }
+  return (
+    <button className="btn btn-primary next-btn" onClick={() => act(() => nextTurn(state))}>
+      {main}
+      {sub && <small>{sub}</small>}
+    </button>
   );
 }
 

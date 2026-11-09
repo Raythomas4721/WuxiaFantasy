@@ -716,7 +716,7 @@ export function finishDuel(state: GameState): GameState {
   return s;
 }
 
-function timeStep(s: GameState): number {
+export function timeStep(s: GameState): number {
   const age = s.player.age;
   if (s.flags.retired || s.flags.returned_home) return 5;
   if (age < 6) return 3;

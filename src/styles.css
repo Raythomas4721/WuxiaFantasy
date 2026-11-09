@@ -432,7 +432,8 @@ small {
 
 /* ---------- 換個活法 ---------- */
 
-.change-focus {
+.change-focus,
+.next-btn {
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
