@@ -101,3 +101,15 @@ describe('健康就是血量', () => {
     expect(Math.abs(fled.player.health - 25)).toBeLessThanOrEqual(1);
   });
 });
+
+describe('勝算提示', () => {
+  it('算進健康：同一個對手，健康低的時候勝算比較差', () => {
+    const s = adult();
+    s.phase = 'event';
+    s.current = { eventId: 'n_tourney', text: '' };
+    const odds = () => choiceViews(s).find((c) => c.id === 'fight')?.odds;
+    expect(odds()).toBe('有幾分把握');
+    s.player.health = 20;
+    expect(odds()).toBe('九死一生');
+  });
+});

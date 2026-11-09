@@ -641,13 +641,26 @@ function applyChoiceOutcome(
 
 // ---------- 過招 ----------
 
-/** 選項上的勝算提示：看主修武學和對手的等級差。 */
-function duelOdds(s: GameState, opponentId: string): string {
+/**
+ * 選項上的勝算提示：主修武學和對手的等級差，再算進你現在的健康（開打時的氣血）
+ * 和對手的耐打程度（精英、生死之戰的對手氣血比較少）、打點過的門路。
+ */
+export function duelScore(s: GameState, opponentId: string): number {
+  const def = CONTENT.opponents[opponentId];
   const mine = mainSkill(s).level;
-  const diff = mine - opponentLevel(CONTENT.opponents[opponentId], mine);
-  if (diff >= 1) return '把握很大';
-  if (diff === 0) return '有幾分把握';
-  if (diff === -1) return '勉強一試';
+  const easier = def.easierWith && checkCondition(s, def.easierWith) ? 1 : 0;
+  let score = mine - Math.max(0, opponentLevel(def, mine) - easier);
+  const h = s.player.health;
+  score += h >= 70 ? 0 : h >= 45 ? -0.5 : h >= 25 ? -1 : -2;
+  score += (1 - (def.hpMult ?? 1)) * 2;
+  return score;
+}
+
+function duelOdds(s: GameState, opponentId: string): string {
+  const score = duelScore(s, opponentId);
+  if (score >= 1) return '把握很大';
+  if (score >= 0) return '有幾分把握';
+  if (score >= -1) return '勉強一試';
   return '九死一生';
 }
 
