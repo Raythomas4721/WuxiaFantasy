@@ -9,7 +9,7 @@ import { checkCondition, levelFromXp, skillLevel } from './conditions';
 import type { Rng } from './rng';
 import { fill } from './text';
 import type {
-  CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, TrapTrigger,
+  CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
 } from './types';
 
 /** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
@@ -56,7 +56,7 @@ export const REALM: { energy: number; hp: number; draw: number; upgrades: number
   { energy: 5, hp: 20, draw: 1, upgrades: 2 },
 ];
 
-const TEMPER: Record<OpponentDef['temper'], { weights: Record<IntentKind, number>; switch: number }> = {
+const TEMPER: Record<OpponentDef['temper'], { weights: Partial<Record<IntentKind, number>>; switch: number }> = {
   brute: { weights: { attack: 3.5, combo: 2, guard: 1.5, charge: 1.5, feint: 0.5 }, switch: 0 },
   veteran: { weights: { attack: 3, combo: 2, guard: 2, charge: 1, feint: 2 }, switch: 0.25 },
   guard: { weights: { attack: 3, combo: 1.5, guard: 3, charge: 1, feint: 1 }, switch: 0.1 },
@@ -271,7 +271,7 @@ function shuffle<T>(rng: Rng, items: T[]): T[] {
 function drawCards(d: DuelState, n: number, rng: Rng): void {
   // 傷與心魔不進手牌：當場發作，然後補抽。發作過的等這次抽完才進棄牌，免得洗牌時又被抽到。
   const burned: string[] = [];
-  for (let i = 0; i < n && d.me.hand.length < DUEL.handMax; i++) {
+  for (let i = 0; i < n && d.me.hand.length < (d.me.handMax ?? DUEL.handMax); i++) {
     if (d.me.deck.length === 0) {
       if (d.me.discard.length === 0) break;
       d.me.deck = shuffle(rng, d.me.discard);
@@ -307,13 +307,24 @@ function makeIntent(kind: IntentKind, level: number, rng: Rng): Intent {
       return { kind, value: Math.round(DUEL.foeCharge(level) * swing) };
     case 'feint':
       return { kind, value: Math.round(a * 0.5) };
+    case 'drain':
+      return { kind, value: Math.round(a * 0.6) };
+    case 'enrage':
+      return { kind, value: Math.round(2 + level * 0.6) };
+    case 'heal':
+      return { kind, value: Math.round(DUEL.foeHp(level) * 0.12 * swing) };
+    case 'curse':
+      return { kind, value: Math.round(a * 0.4) };
   }
 }
 
 function pickIntent(d: DuelState, rng: Rng, except?: IntentKind): Intent {
-  const weights = TEMPER[CONTENT.opponents[d.opponent].temper].weights;
+  const def = CONTENT.opponents[d.opponent];
+  const weights: Partial<Record<IntentKind, number>> = { ...TEMPER[d.foe.temper ?? def.temper].weights, ...(d.foe.specials ?? def.specials) };
+  // 氣血是滿的就不回氣
+  if (d.foe.hp >= d.foe.max) delete weights.heal;
   const kind = rng.weighted(
-    (Object.keys(weights) as IntentKind[]).filter((k) => k !== except).map((k) => ({ item: k, weight: weights[k] })),
+    (Object.keys(weights) as IntentKind[]).filter((k) => k !== except).map((k) => ({ item: k, weight: weights[k]! })),
   )!;
   return makeIntent(kind, d.level, rng);
 }
@@ -323,12 +334,14 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   if (!def) throw new Error(`未知對手：${opponentId}`);
   const easier = s && def.easierWith && checkCondition(s, def.easierWith) ? 1 : 0;
   const level = Math.max(0, opponentLevel(def, fighter.level) - easier);
-  const hp = Math.round(DUEL.foeHp(level) * (def.hpMult ?? 1));
+  const affix = s ? rollAffix(s, rng) : undefined;
+  const hp = Math.round(DUEL.foeHp(level) * (def.hpMult ?? 1) * (affix?.hpMult ?? 1));
+  const passive = s ? passivesFor(s, def) : { names: [] };
   const realm = REALM[Math.min(5, fighter.level)];
   const energy = fighter.energy ?? realm.energy;
   const d: DuelState = {
     opponent: opponentId,
-    name: s ? fill(def.name, s) : def.name,
+    name: `${affix ? affix.name : ''}${s ? fill(def.name, s) : def.name}`,
     level,
     lethal: Boolean(def.lethal),
     round: 1,
@@ -337,22 +350,116 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
     me: {
       hp: Math.min(fighter.hp, fighter.startHp ?? fighter.hp), max: fighter.hp, block: 0, exposed: 0, bleed: 0,
       energy, energyMax: energy, energyNext: 0,
-      drawPer: DUEL.drawPer + (fighter.wuxing >= DUEL.drawBonusWuxing ? 1 : 0) + (fighter.extraDraw ?? realm.draw),
+      drawPer: DUEL.drawPer + (fighter.wuxing >= DUEL.drawBonusWuxing ? 1 : 0) + (fighter.extraDraw ?? realm.draw) + (passive.drawPer ?? 0),
+      handMax: DUEL.handMax + (passive.handMax ?? 0),
+      passive,
       deck: shuffle(rng, fighter.deck), hand: [], discard: [], traps: [], played: [],
       money: fighter.money ?? 0, spent: 0, used: [],
     },
     foe: {
-      hp, max: hp, block: 0, exposed: 0, bleed: 0, charge: 0,
+      hp, max: hp, block: 0, exposed: 0, bleed: 0, charge: 0, rage: affix?.rage ? affix.rage + level : 0,
       intent: { kind: 'attack', value: 0 },
-      traps: (def.traps ?? []).map((id) => ({ id, used: false })),
+      traps: [...(def.traps ?? []), ...(affix?.trap ? [affix.trap] : [])].map((id) => ({ id, used: false })),
     },
     log: [],
     choiceId,
   };
   d.log.push({ who: 'sys', text: d.lethal ? `你和${d.name}之間，今天只有一個人能站著離開。` : `你和${d.name}拉開了架勢。` });
+  if (affix) d.log.push({ who: 'sys', text: affix.text.replaceAll('{foe}', d.name) });
+  if (passive.names.length > 0) d.log.push({ who: 'sys', text: `你運起${passive.names.map((n) => `【${n.split('：')[0]}】`).join('')}。` });
   d.foe.intent = pickIntent(d, rng);
-  drawCards(d, DUEL.startHand, rng);
+  d.me.energy += passive.firstRoundEnergy ?? 0;
+  d.me.block += passive.blockPerRound ?? 0;
+  drawCards(d, DUEL.startHand + (passive.firstRoundDraw ?? 0), rng);
   return d;
+}
+
+// ---------- 詞條、心法與信物（v0.5 §4、§6） ----------
+
+/** 小戰一半的機會、精英一定會帶一個詞條，讓同一種對手打起來不一樣。 */
+const AFFIXES: { name: string; text: string; hpMult?: number; rage?: number; trap?: string }[] = [
+  { name: '狂暴的', text: '{foe}的眼睛都紅了，一出手就是拚命的打法。（每一擊傷害更重）', rage: 2 },
+  { name: '耐打的', text: '{foe}的身板很硬，看起來不好打發。（氣血更多）', hpMult: 1.3 },
+  { name: '狡詐的', text: '{foe}的眼神閃爍，像是藏著什麼後手。（多一張暗招）', trap: 'fanshou' },
+  { name: '帶傷的', text: '{foe}的身上帶著傷，腳步有點虛。（氣血較少）', hpMult: 0.75 },
+];
+
+function rollAffix(s: GameState, rng: Rng): (typeof AFFIXES)[number] | undefined {
+  const tier = s.current ? CONTENT.events.find((e) => e.id === s.current!.eventId)?.node?.tier : undefined;
+  if (tier !== 'minor' && tier !== 'elite') return undefined;
+  if (tier === 'minor' && !rng.chance(0.5)) return undefined;
+  return rng.pick(AFFIXES);
+}
+
+const MONGOLS = ['mongol_scout', 'mongol_centurion', 'mongol_chiliarch', 'bater'];
+const SCARS = ['scar_young', 'scar_old', 'scar_boss'];
+
+/** 心法看門派（同時只能運一門）；信物只要帶在身上就有效。 */
+export function passivesFor(s: GameState, def: OpponentDef): Passive {
+  const p: Passive = { names: [] };
+  switch (s.player.sect) {
+    case 'changfeng':
+      p.names.push('長風訣：每回合多抽一張，手牌上限 +1');
+      p.drawPer = 1;
+      p.handMax = 1;
+      break;
+    case 'yaogu':
+      p.names.push('濟世心經：打完回復 10 點健康');
+      p.healAfter = 10;
+      break;
+    case 'yijun':
+      p.names.push('鐵脊樁功：每回合開始護體 3');
+      p.blockPerRound = 3;
+      break;
+    case 'qinghen':
+      p.names.push('青衡心訣：每回合第一張〈劍〉傷害 +3');
+      p.firstTag = { tag: '劍', dmg: 3 };
+      break;
+    case 'baina':
+      p.names.push('百衲心法：每回合第一張〈拳〉傷害 +3');
+      p.firstTag = { tag: '拳', dmg: 3 };
+      break;
+    case 'xueyi':
+      p.names.push('夜行心法：第一回合多抽兩張；內傷 +1');
+      p.firstRoundDraw = 2;
+      p.bleedBonus = 1;
+      break;
+  }
+  const items = s.player.items ?? [];
+  if (items.includes('bailing') && MONGOLS.includes(def.id)) {
+    p.names.push('白翎箭：對蒙古人，第一回合內力 +1');
+    p.firstRoundEnergy = 1;
+  }
+  if (items.includes('father_relic') && SCARS.includes(def.id)) {
+    p.names.push('父親的遺物：對疤臉，每張攻擊牌傷害 +3');
+    p.attackBonus = 3;
+  }
+  if (items.includes('lunwu_token') && s.current?.eventId.startsWith('lunwu')) {
+    p.names.push('青冥台木牌：論武時每回合多抽一張');
+    p.drawPer = (p.drawPer ?? 0) + 1;
+  }
+  if (items.includes('yaowang_notes')) {
+    p.names.push('藥王手札：回復氣血的牌多回 4');
+    p.healBonus = 4;
+  }
+  if (items.includes('xueyi_ling')) {
+    p.names.push('血衣令：內傷 +1');
+    p.bleedBonus = (p.bleedBonus ?? 0) + 1;
+  }
+  return p;
+}
+
+/** 首領氣血過半：換一套打法，說一句台詞。 */
+function checkPhase(d: DuelState): void {
+  const def = CONTENT.opponents[d.opponent];
+  if (!def.phase2 || d.foe.phase2 || d.foe.hp <= 0 || d.foe.hp > d.foe.max / 2) return;
+  const p = def.phase2;
+  d.foe.phase2 = true;
+  if (p.temper) d.foe.temper = p.temper;
+  if (p.specials) d.foe.specials = { ...def.specials, ...p.specials };
+  if (p.traps) d.foe.traps.push(...p.traps.map((id) => ({ id, used: false })));
+  if (p.rage) d.foe.rage = (d.foe.rage ?? 0) + p.rage;
+  say(d, 'foe', `「${p.line}」${d.name}的打法變了。`);
 }
 
 const say = (d: DuelState, who: 'me' | 'foe' | 'sys', text: string) => d.log.push({ who, text: text.replaceAll('{foe}', d.name) });
@@ -387,8 +494,12 @@ export function resolvedEffect(d: DuelState, c: CardDef): CardEffect {
       else (e as Record<string, unknown>)[k] = v;
     }
   }
+  if (c.dmgFromBlock) e.dmg = (e.dmg ?? 0) + d.me.block * c.dmgFromBlock;
+  const pas = d.me.passive;
   if (e.dmg !== undefined) {
     let dmg = e.dmg;
+    if (pas?.attackBonus && c.kind === 'attack') dmg += pas.attackBonus;
+    if (pas?.firstTag && c.tag === pas.firstTag.tag && !d.me.played.some((id) => getCard(id).tag === pas.firstTag!.tag)) dmg += pas.firstTag.dmg;
     if (c.chain) dmg += c.chain.dmg * d.me.played.filter((id) => !c.chain!.tags || c.chain!.tags.includes(getCard(id).tag!)).length;
     if (c.vsIntent && c.vsIntent.kinds.includes(d.foe.intent.kind)) dmg += c.vsIntent.dmg;
     if (c.desperate && d.me.hp < d.me.max / 2) dmg += c.desperate;
@@ -436,11 +547,12 @@ function applyCardEffect(d: DuelState, c: CardDef, e: CardEffect): void {
     }
   }
   if (e.block) d.me.block += e.block;
-  if (e.heal) d.me.hp = Math.min(d.me.max, d.me.hp + e.heal);
+  if (e.heal) d.me.hp = Math.min(d.me.max, d.me.hp + e.heal + (d.me.passive?.healBonus ?? 0));
+  if (e.fortify) d.me.fortify = true;
   if (e.energy) d.me.energy += e.energy;
   if (e.energyNext) d.me.energyNext += e.energyNext;
   if (e.expose) d.foe.exposed = 2;
-  if (e.bleed) d.foe.bleed += e.bleed;
+  if (e.bleed) d.foe.bleed += e.bleed + (d.me.passive?.bleedBonus ?? 0);
   if (e.bleedMult) d.foe.bleed *= e.bleedMult;
   if (e.breakTrap) {
     const t = d.foe.traps.find((x) => !x.used);
@@ -511,7 +623,7 @@ function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
   const verb = intent.kind === 'feint' ? '虛晃一招，趁你分神時出手' : intent.kind === 'combo' ? '連續出手' : '出手';
   for (let i = 0; i < (intent.hits ?? 1); i++) {
     if (d.foe.hp <= 0) return;
-    let dmg = intent.value + d.foe.charge;
+    let dmg = intent.value + d.foe.charge + (d.foe.rage ?? 0);
     if (trap?.dodge) {
       if (i === 0) say(d, 'foe', `${d.name}${verb}，卻撲了個空。`);
       continue;
@@ -553,10 +665,30 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
       say(d, 'foe', `${d.name}凝神蓄勢，下一擊會更重（+${intent.value}）。`);
       springTrap(d, 'foeCharge', rng);
       break;
+    case 'drain':
+      foeStrike(d, intent, rng);
+      d.me.energyNext -= 1;
+      say(d, 'foe', `${d.name}那一下拍在你的穴道上，你的內息一滯（下回合內力 −1）。`);
+      break;
+    case 'enrage':
+      d.foe.rage = (d.foe.rage ?? 0) + intent.value;
+      say(d, 'foe', `${d.name}怒吼一聲，出手越來越狠（往後每一擊 +${intent.value}）。`);
+      break;
+    case 'heal':
+      d.foe.hp = Math.min(d.foe.max, d.foe.hp + intent.value);
+      say(d, 'foe', `${d.name}退開幾步，調勻了氣息（回復 ${intent.value} 氣血）。`);
+      break;
+    case 'curse':
+      foeStrike(d, intent, rng);
+      d.me.discard.push('wound');
+      say(d, 'foe', `${d.name}的兵刃上淬了東西，傷口火辣辣地疼（你的牌堆裡多了一張「傷」）。`);
+      break;
   }
 
   checkLowHp(d);
-  d.me.block = 0;
+  checkPhase(d);
+  if (d.me.fortify) d.me.fortify = undefined;
+  else d.me.block = 0;
   d.me.exposed = Math.max(0, d.me.exposed - 1);
   d.foe.exposed = Math.max(0, d.foe.exposed - 1);
   checkOver(d);
@@ -574,12 +706,15 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   if (d.foe.bleed > 0) {
     d.foe.hp -= d.foe.bleed;
     say(d, 'sys', `${d.name}的內傷發作，失去 ${d.foe.bleed} 氣血。`);
+    checkPhase(d);
     checkOver(d);
     if (d.over) return d;
   }
   d.me.energy = (d.me.energyMax ?? DUEL.energy) + d.me.energyNext;
   d.me.energyNext = 0;
+  d.me.energy = Math.max(0, d.me.energy);
   d.me.played = [];
+  d.me.block += d.me.passive?.blockPerRound ?? 0;
   drawCards(d, d.me.drawPer, rng);
   d.foe.intent = pickIntent(d, rng);
   return d;
@@ -597,7 +732,9 @@ export function intentText(d: DuelState): { label: string; detail: string } {
   const it = d.foe.intent;
   const def = CONTENT.opponents[d.opponent];
   const charge = d.foe.charge;
-  const labels: Record<IntentKind, string> = { attack: '出手', combo: '連擊', guard: '守勢', charge: '蓄勢', feint: '虛招' };
+  const labels: Record<IntentKind, string> = {
+    attack: '出手', combo: '連擊', guard: '守勢', charge: '蓄勢', feint: '虛招', drain: '點穴', enrage: '發狠', heal: '回氣', curse: '下毒',
+  };
   if (!d.clear) return { label: '？', detail: def.tells[it.kind] };
   const value =
     it.kind === 'guard' || it.kind === 'charge' ? `${it.value}` : `${it.value + charge}${it.hits ? ` × ${it.hits}` : ''}`;

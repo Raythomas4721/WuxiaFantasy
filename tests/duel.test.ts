@@ -168,3 +168,36 @@ describe('事件裡的過招', () => {
     expect(s.player.health).toBe(50 + NODE.winHeal); // 剩一半氣血，打贏再喘口氣
   });
 });
+
+describe('C3、C4：牌的新效果、心法、敵人的招式', () => {
+  it('反擊：傷害加上目前的護體；鎮守的護體留到下一回合', () => {
+    let d = rigged('tourney', ['zhenshou', 'fanji'], { kind: 'guard', value: 1 });
+    d = playCard(d, 0, new Rng(1));
+    expect(resolvedEffect(d, getCard('fanji')).dmg).toBe(2 + 5);
+    d = endRound(d, new Rng(1));
+    expect(d.me.block).toBe(5);
+  });
+
+  it('首領氣血過半，換一套打法', () => {
+    const d = createDuel(fighter(['punch', 'punch', 'punch', 'punch', 'punch']), 'scar_boss', 'x', new Rng(1));
+    d.foe.hp = Math.floor(d.foe.max / 2) - 1;
+    d.foe.intent = { kind: 'guard', value: 1 };
+    const after = endRound(d, new Rng(1));
+    expect(after.foe.phase2).toBe(true);
+    expect(after.foe.rage).toBeGreaterThan(0);
+  });
+
+  it('對手發狠：往後每一擊都更重', () => {
+    let d = rigged('tourney', [], { kind: 'enrage', value: 3 });
+    d = endRound(d, new Rng(1));
+    expect(d.foe.rage).toBe(3);
+  });
+
+  it('青衡心訣：每回合第一張〈劍〉傷害 +3', () => {
+    const s = person({ qinghen: 5 });
+    s.player.sect = 'qinghen';
+    const d = createDuel({ ...fighter(['qhqi', 'qhqi', 'qhqi', 'qhqi', 'qhqi']) }, 'tourney', 'x', new Rng(1), s);
+    expect(resolvedEffect(d, getCard('qhqi')).dmg).toBe(6 + 3);
+    expect(d.me.passive?.names[0]).toContain('青衡心訣');
+  });
+});

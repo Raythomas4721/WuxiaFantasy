@@ -8,14 +8,14 @@ import type { CardDef, DuelState } from './types';
 /** 這回合對手預計打過來的總傷害（看不到數字時也照實估，模擬器不作弊太多也無妨）。 */
 export function incoming(d: DuelState): number {
   const it = d.foe.intent;
-  if (it.kind === 'guard' || it.kind === 'charge') return 0;
+  if (it.kind === 'guard' || it.kind === 'charge' || it.kind === 'enrage' || it.kind === 'heal') return 0;
   const mult = d.me.exposed > 0 ? 1.5 : 1;
-  return (it.value + d.foe.charge) * (it.hits ?? 1) * mult;
+  return (it.value + d.foe.charge + (d.foe.rage ?? 0)) * (it.hits ?? 1) * mult;
 }
 
 function trapMatches(d: DuelState, c: CardDef): boolean {
   const k = d.foe.intent.kind;
-  if (c.trigger === 'foeAttack') return k === 'attack' || k === 'combo' || k === 'feint';
+  if (c.trigger === 'foeAttack') return k === 'attack' || k === 'combo' || k === 'feint' || k === 'drain' || k === 'curse';
   if (c.trigger === 'foeFeint') return k === 'feint';
   if (c.trigger === 'foeGuard') return k === 'guard';
   if (c.trigger === 'foeCharge') return k === 'charge';
@@ -42,6 +42,7 @@ function value(d: DuelState, idx: number): number {
   if (e.bleed) v += e.bleed * 2;
   if (e.bleedMult) v += d.foe.bleed * (e.bleedMult - 1) * 2;
   if (e.boostNext) v += 5;
+  if (e.fortify) v += Math.min(e.block ?? 0, 8) * 0.5;
   if (e.selfHp) v -= e.selfHp * (d.me.hp < d.me.max / 2 ? 1.5 : 0.8);
   if (e.breakTrap && hasTrap) v += 6;
   // 墊招：手上有「承」這個路數的牌，先出它

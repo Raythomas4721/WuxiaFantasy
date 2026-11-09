@@ -318,14 +318,22 @@ export interface CardEffect {
   selfHp?: number;
   /** 自己氣血不到一半時，傷害再加。 */
   desperate?: number;
+  /** 傷害再加上「目前護體 × 這個數」（守城十八槍：守住了才打）。 */
+  dmgFromBlock?: number;
+  /** 這回合的護體留到下一回合。 */
+  fortify?: boolean;
   /** 伏招用：這一擊傷害減半／完全閃過。 */
   halve?: boolean;
   dodge?: boolean;
 }
 
+export type Rarity = 'common' | 'uncommon' | 'rare';
+
 export interface CardDef extends CardEffect {
   id: string;
   name: string;
+  /** 凡、良、絕（v0.5 §5）；省略是凡。 */
+  rarity?: Rarity;
   kind: CardKind;
   tag?: CardTag;
   cost: number;
@@ -345,7 +353,8 @@ export interface CardDef extends CardEffect {
   flavor: string;
 }
 
-export type IntentKind = 'attack' | 'combo' | 'guard' | 'charge' | 'feint';
+/** 前五種人人都會；後四種是對手的特殊招式（v0.5 §6）：吸走內力、越打越狠、回氣、下毒。 */
+export type IntentKind = 'attack' | 'combo' | 'guard' | 'charge' | 'feint' | 'drain' | 'enrage' | 'heal' | 'curse';
 
 export interface Intent {
   kind: IntentKind;
@@ -381,8 +390,12 @@ export interface OpponentDef {
   temper: 'brute' | 'veteran' | 'guard';
   /** 生死之戰：沒有回合上限。 */
   lethal?: boolean;
-  /** 氣血倍數（章末首領比同級的人耐打）。 */
+  /** 氣血倍數（精英、生死之戰的對手）。 */
   hpMult?: number;
+  /** 特殊招式與權重。 */
+  specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>;
+  /** 首領的第二階段：氣血過半時換一套打法，說一句台詞。 */
+  phase2?: { line: string; temper?: 'brute' | 'veteran' | 'guard'; traps?: string[]; specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>; rage?: number };
   /** 符合條件時，對手降一級（打點、信物）。 */
   easierWith?: Condition;
   traps?: string[];
@@ -417,8 +430,8 @@ export interface MarketItemDef {
 
 export interface Content {
   cards: Record<string, CardDef>;
-  /** 每門武學的 A、B、C 三招。 */
-  skillCards: Record<string, [string, string, string]>;
+  /** 每門武學的招式；前三張是入門時挑選的範圍。 */
+  skillCards: Record<string, string[]>;
   /** 獎勵池裡不分門派的奇招。 */
   commonCards: string[];
   /** v0.4 奇遇給的特殊牌，只用來換算舊存檔。 */
@@ -466,6 +479,23 @@ export interface DuelLogLine {
   text: string;
 }
 
+/** 心法與信物在過招裡的被動效果（v0.5 §4）。 */
+export interface Passive {
+  /** 顯示用：效果的來源與說明。 */
+  names: string[];
+  drawPer?: number;
+  handMax?: number;
+  blockPerRound?: number;
+  firstTag?: { tag: CardTag; dmg: number };
+  attackBonus?: number;
+  firstRoundEnergy?: number;
+  firstRoundDraw?: number;
+  bleedBonus?: number;
+  healBonus?: number;
+  /** 打完回復的健康（濟世心經）。 */
+  healAfter?: number;
+}
+
 /** 進行中的過招。存在 GameState 裡，重新整理也能接著打。 */
 export interface DuelState {
   opponent: string;
@@ -496,9 +526,22 @@ export interface DuelState {
     spent?: number;
     /** 這場打出過哪些武學的牌，收招時各加一點經驗。 */
     used?: string[];
+    /** 手牌上限（長風訣 +1）。 */
+    handMax?: number;
+    /** 心法與信物帶來的被動效果。 */
+    passive?: Passive;
+    /** 護體留到下一回合。 */
+    fortify?: boolean;
   };
   foe: DuelSide & {
     charge: number;
+    /** 越打越狠：每一擊多出的傷害。 */
+    rage?: number;
+    /** 第二階段已經開始。 */
+    phase2?: boolean;
+    /** 第二階段換過的打法。 */
+    temper?: 'brute' | 'veteran' | 'guard';
+    specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>;
     intent: Intent;
     traps: { id: string; used: boolean }[];
   };

@@ -28,7 +28,7 @@ export function DuelView({ state, act }: Props) {
           <span className="muted small">{LEVEL_NAMES[d.level]}</span>
         </div>
         <HpBar side={d.foe} />
-        <Statuses block={d.foe.block} exposed={d.foe.exposed} bleed={d.foe.bleed} charge={d.foe.charge} />
+        <Statuses block={d.foe.block} exposed={d.foe.exposed} bleed={d.foe.bleed} charge={d.foe.charge} rage={d.foe.rage} phase2={d.foe.phase2} />
         {d.foe.traps.length > 0 && (
           <ul className="duel-traps foe-traps">
             {d.foe.traps.map((t, i) => {
@@ -66,6 +66,13 @@ export function DuelView({ state, act }: Props) {
         </div>
         <HpBar side={d.me} />
         <Statuses block={d.me.block} exposed={d.me.exposed} boost={d.me.boost} />
+        {d.me.passive && d.me.passive.names.length > 0 && (
+          <ul className="duel-passives">
+            {d.me.passive.names.map((n) => (
+              <li key={n}>{n}</li>
+            ))}
+          </ul>
+        )}
         {d.me.traps.length > 0 && (
           <ul className="duel-traps my-traps">
             {d.me.traps.map((id, i) => {
@@ -87,7 +94,7 @@ export function DuelView({ state, act }: Props) {
           </div>
           <div className="duel-actions">
             <span className="muted small">
-              牌庫 {d.me.deck.length}・棄牌 {d.me.discard.length}・手牌 {d.me.hand.length}／{DUEL.handMax}
+              牌庫 {d.me.deck.length}・棄牌 {d.me.discard.length}・手牌 {d.me.hand.length}／{d.me.handMax ?? DUEL.handMax}
             </span>
             <button
               className="btn btn-ghost btn-small"
@@ -120,8 +127,12 @@ function HpBar({ side }: { side: { hp: number; max: number } }) {
   );
 }
 
-function Statuses(p: { block: number; exposed: number; bleed?: number; charge?: number; boost?: DuelState['me']['boost'] }) {
+function Statuses(p: {
+  block: number; exposed: number; bleed?: number; charge?: number; rage?: number; phase2?: boolean; boost?: DuelState['me']['boost'];
+}) {
   const tags: string[] = [];
+  if (p.phase2) tags.push('換了打法');
+  if (p.rage) tags.push(`狠勁 +${p.rage}`);
   if (p.block > 0) tags.push(`護體 ${p.block}`);
   if (p.exposed > 0) tags.push('破綻');
   if (p.bleed) tags.push(`內傷 ${p.bleed}`);
@@ -147,7 +158,7 @@ export function CardFace({ card, disabled, onClick, note, className = '' }: {
 }) {
   const skill = cardSkill(card.id);
   return (
-    <button className={`duel-card kind-${card.kind} ${className}`} disabled={disabled} onClick={onClick}>
+    <button className={`duel-card kind-${card.kind} rarity-${card.rarity ?? 'common'} ${className}`} disabled={disabled} onClick={onClick}>
       <span className="card-top">
         <span className="card-cost">{card.cost}</span>
         <span className="card-name">{card.name}</span>
@@ -157,7 +168,12 @@ export function CardFace({ card, disabled, onClick, note, className = '' }: {
         </span>
       </span>
       <span className="card-text">{cardText(card)}</span>
-      {skill && <span className="card-skill">{CONTENT.skills[skill].name}</span>}
+      {(skill || card.rarity) && (
+        <span className="card-skill">
+          {skill && CONTENT.skills[skill].name}
+          {card.rarity && <span className={`card-rarity ${card.rarity}`}>{card.rarity === 'rare' ? '絕' : '良'}</span>}
+        </span>
+      )}
       {note && <span className="card-boost">{note}</span>}
     </button>
   );

@@ -60,9 +60,9 @@ describe('入門選招', () => {
     let s = person();
     applyEffects(s, [{ type: 'skill', skill: 'shoucheng', xp: 2 }], new Rng(1));
     const task = s.deckTasks![0];
-    expect(task).toMatchObject({ kind: 'pick', picks: 2, options: CONTENT.skillCards.shoucheng });
+    expect(task).toMatchObject({ kind: 'pick', picks: 2, options: CONTENT.skillCards.shoucheng.slice(0, 3) });
     s = pickCard(s, 'juma');
-    expect(s.deckTasks![0]).toMatchObject({ picks: 1, options: ['huima', 'qiangzhen'] });
+    expect(s.deckTasks![0]).toMatchObject({ picks: 1, options: ['huima', 'tuqiang'] });
     s = pickCard(s, 'huima');
     expect(s.deckTasks).toBeUndefined();
     expect(s.player.deck).toEqual(expect.arrayContaining(['juma', 'huima']));

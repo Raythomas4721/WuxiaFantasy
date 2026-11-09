@@ -699,6 +699,8 @@ export function finishDuel(state: GameState): GameState {
   const health = healthAfter(d) + (won && healthAfter(d) > 0 ? NODE.winHeal : 0);
   s.player.health = Math.min(100, health);
   if (health <= 0) killPlayer(s, 'duel');
+  // 濟世心經：打完回一點健康
+  if (s.player.alive && d.me.passive?.healAfter) s.player.health = Math.min(100, s.player.health + d.me.passive.healAfter);
   if (d.me.spent) s.player.money = Math.max(0, s.player.money - d.me.spent);
   // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
   applyEffects(s, (d.me.used ?? []).map((skill) => ({ type: 'skill' as const, skill, xp: DECK.duelXp })), rng);

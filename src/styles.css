@@ -1634,3 +1634,33 @@ small {
 .market.dojo {
   border-top-color: var(--gold);
 }
+
+/* ---------- 稀有度、心法（v0.5 C3） ---------- */
+
+.card-rarity {
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  border: 1px solid currentColor;
+}
+
+.card-rarity.uncommon {
+  color: var(--good);
+}
+
+.card-rarity.rare {
+  color: var(--gold);
+}
+
+.duel-card.rarity-rare {
+  box-shadow: 0 0 0 1px var(--gold), var(--shadow);
+}
+
+.duel-passives {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}

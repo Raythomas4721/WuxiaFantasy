@@ -24,6 +24,12 @@ export const DECK = {
   meditateHealth: 15,
   /** 牌庫最少留幾張。 */
   minDeck: 8,
+  /** 稀有度的權重（v0.5 §5）：小戰多半是凡，精英多半是良，首領多半是良與絕。 */
+  rarity: {
+    minor: { common: 6, uncommon: 3, rare: 1 },
+    elite: { common: 2, uncommon: 5, rare: 2 },
+    boss: { common: 1, uncommon: 4, rare: 4 },
+  },
   /** 精英、首領的獎勵裡，武學的牌權重再乘上這個數。 */
   eliteSkillBoost: 2,
   bossSkillBoost: 3,
@@ -72,7 +78,7 @@ export function noteSkillGain(s: GameState, skill: string, beforeXp: number): vo
     kind: 'pick',
     title: `${name}入門`,
     text: `你在${name}上總算摸到了門徑。挑兩招記在心裡，往後就靠它們了。`,
-    options: [...cards],
+    options: cards.slice(0, 3),
     picks: DECK.entryPicks,
   });
 }
@@ -98,8 +104,13 @@ export function rewardPool(s: GameState): { id: string; weight: number }[] {
 }
 
 /** 不重複地抽 n 張；skillBoost 讓武學的牌更容易出現（精英、首領）。 */
-export function rewardOptions(s: GameState, rng: Rng, n = DECK.rewardOptions, skillBoost = 1): string[] {
-  const pool = rewardPool(s).map((x) => ({ ...x, weight: x.weight * (cardSkill(x.id) ? skillBoost : 1) }));
+export function rewardOptions(
+  s: GameState, rng: Rng, n = DECK.rewardOptions, skillBoost = 1, tier: 'minor' | 'elite' | 'boss' = 'minor',
+): string[] {
+  const rarity = DECK.rarity[tier];
+  const pool = rewardPool(s)
+    .map((x) => ({ ...x, weight: x.weight * (cardSkill(x.id) ? skillBoost : 1) * rarity[getCard(x.id).rarity ?? 'common'] }))
+    .filter((x) => x.weight > 0);
   const out: string[] = [];
   while (out.length < n && pool.length > 0) {
     const id = rng.weighted(pool.map((x) => ({ item: x.id, weight: x.weight })))!;
@@ -112,7 +123,7 @@ export function rewardOptions(s: GameState, rng: Rng, n = DECK.rewardOptions, sk
 /** 戰後選牌：精英的獎勵多半是武學的牌；首領給的牌已經升級過一次。就地修改。 */
 export function pushDuelReward(s: GameState, rng: Rng, foeName: string, tier?: 'minor' | 'elite' | 'boss'): void {
   const boost = tier === 'boss' ? DECK.bossSkillBoost : tier === 'elite' ? DECK.eliteSkillBoost : 1;
-  let options = rewardOptions(s, rng, DECK.rewardOptions, boost);
+  let options = rewardOptions(s, rng, DECK.rewardOptions, boost, tier ?? 'minor');
   if (tier === 'boss') options = options.map((id) => `${id}+`);
   if (options.length === 0) return;
   pushTask(s, {

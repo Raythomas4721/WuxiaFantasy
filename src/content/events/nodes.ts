@@ -446,6 +446,38 @@ export const nodeEvents: GameEvent[] = [
     ],
   },
   {
+    id: 'b_xueyi_doom',
+    kind: 'node',
+    node: { tier: 'boss', stage: 4 },
+    title: '血衣樓之禍',
+    priority: 15,
+    conditions: { any: [{ flags: ['joined_xueyi'] }, { flags: ['exposed_xueyi'] }, { flags: ['silenced_witness'] }, { items: ['xueyi_ling'] }] },
+    text: '那天夜裡，你家的燈全熄了。院子中央站著一個人，臉上是一張沒有五官的白面具。血衣樓的事，從來沒有了結的時候——今天，他是來收帳的。',
+    choices: [
+      {
+        id: 'fight',
+        text: '拔出兵器，迎上去',
+        duel: {
+          opponent: 'wumian',
+          success: {
+            text: '白面具裂成了兩半，面具後面是一張你從沒見過的、普通得不能再普通的臉。血衣樓從此再也沒有派人來過。',
+            effects: [flag('wumian_defeated'), fame(6), flag('xueyi_free')],
+            recap: { weight: 5, text: '壯年時，你在自家院子裡打敗了血衣樓的無面客。' },
+          },
+          failure: { text: '你倒在院子裡。白面具俯下身看了你很久，最後轉身走了。', effects: [] },
+        },
+      },
+      {
+        id: 'avoid',
+        text: '從後門逃走，從此隱姓埋名',
+        outcome: {
+          text: '你翻過後牆，一路往南逃。從那以後，你再也不敢用自己的名字。',
+          effects: [fame(-5), flag('fled_xueyi'), { type: 'region', region: 'shu' }],
+        },
+      },
+    ],
+  },
+  {
     id: 'b_famous_blade',
     kind: 'node',
     node: { tier: 'boss', stage: 4 },
