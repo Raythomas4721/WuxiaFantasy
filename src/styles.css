@@ -1774,3 +1774,225 @@ small {
 .talent-list b {
   color: var(--gold);
 }
+
+/* ---------- 過招舞台：水墨小人 ---------- */
+
+.duel-stage {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 180px;
+  margin: 0.5rem 0;
+  padding: 0 10%;
+  border-radius: var(--radius);
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 100%, var(--accent-soft), transparent 70%),
+    linear-gradient(to bottom, transparent 60%, color-mix(in srgb, var(--line) 35%, transparent));
+  overflow: hidden;
+}
+
+.stage-ground {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 12px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.12;
+  filter: blur(2px);
+}
+
+.fig-slot {
+  position: relative;
+  width: 112px;
+  height: 162px;
+  color: var(--ink);
+}
+
+.fig-slot.foe .fig-flip {
+  transform: scaleX(-1);
+}
+
+.fig-slot.foe.big {
+  transform: scale(1.15);
+  transform-origin: bottom center;
+}
+
+.fig-anim {
+  position: absolute;
+  bottom: 6px;
+  left: 0;
+}
+
+.ink-fig {
+  display: block;
+  overflow: visible;
+}
+
+.sash-me {
+  fill: var(--accent);
+}
+
+.sash-foe {
+  fill: var(--ink-3);
+}
+
+.tassel {
+  fill: var(--accent);
+}
+
+/* 對手的架勢：預告下一招 */
+.ink-fig .arm {
+  transform-box: view-box;
+  transform-origin: 46px 37px;
+  transition: transform 0.35s ease;
+}
+
+.ink-fig.pose-raise .arm {
+  transform: rotate(-35deg);
+}
+
+.ink-fig.pose-guard .arm {
+  transform: rotate(40deg);
+}
+
+.ink-fig.pose-charge {
+  filter: drop-shadow(0 0 6px var(--accent));
+  animation: stage-breathe 1.6s ease-in-out infinite;
+}
+
+.ink-fig.pose-rest {
+  filter: drop-shadow(0 0 6px var(--good));
+}
+
+/* 氣罩：有護體時 */
+.fig-aura {
+  position: absolute;
+  inset: 8px -10px 0 -10px;
+  border: 2px solid var(--gold);
+  border-radius: 50% 50% 40% 40%;
+  opacity: 0.55;
+  box-shadow: 0 0 10px var(--gold), inset 0 0 10px var(--gold);
+}
+
+/* 出招與受擊 */
+.fig-slot.me .fig-anim.lunge {
+  animation: stage-lunge-right 0.42s ease-out;
+}
+
+.fig-slot.foe .fig-anim.lunge {
+  animation: stage-lunge-left 0.42s ease-out;
+}
+
+.fig-slot.me .fig-anim.hit {
+  animation: stage-hit-me 0.45s ease-out 0.15s both;
+}
+
+.fig-slot.foe .fig-anim.hit {
+  animation: stage-hit-foe 0.45s ease-out 0.15s both;
+}
+
+.fig-anim.down {
+  transform: rotate(-80deg) translate(-30px, 10px);
+  transform-origin: bottom center;
+  opacity: 0.55;
+  transition: transform 0.6s ease-in, opacity 0.6s;
+}
+
+.fig-slot.foe .fig-anim.down {
+  transform: rotate(80deg) translate(30px, 10px);
+}
+
+/* 飄字 */
+.stage-float {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  font-weight: 800;
+  font-size: 1.35rem;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 0 var(--card), 0 0 6px var(--card);
+  animation: stage-float 1s ease-out both;
+}
+
+.float-dmg {
+  color: var(--bad);
+}
+
+.float-heal {
+  color: var(--good);
+}
+
+.float-block {
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+@keyframes stage-lunge-right {
+  0% { transform: translateX(0); }
+  35% { transform: translateX(min(22vw, 150px)) rotate(4deg); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes stage-lunge-left {
+  0% { transform: translateX(0); }
+  35% { transform: translateX(max(-22vw, -150px)) rotate(-4deg); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes stage-hit-me {
+  0% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(-14px); filter: drop-shadow(0 0 8px var(--bad)) brightness(1.4); color: var(--bad); }
+  45% { transform: translateX(6px); }
+  70% { transform: translateX(-3px); }
+  100% { transform: translateX(0); filter: none; }
+}
+
+@keyframes stage-hit-foe {
+  0% { transform: translateX(0); filter: none; }
+  20% { transform: translateX(14px); filter: drop-shadow(0 0 8px var(--bad)) brightness(1.4); color: var(--bad); }
+  45% { transform: translateX(-6px); }
+  70% { transform: translateX(3px); }
+  100% { transform: translateX(0); filter: none; }
+}
+
+@keyframes stage-float {
+  0% { transform: translate(-50%, 20px) scale(0.7); opacity: 0; }
+  15% { transform: translate(-50%, 0) scale(1.15); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: translate(-50%, -26px) scale(1); opacity: 0; }
+}
+
+@keyframes stage-breathe {
+  50% { transform: translateY(-2px) scale(1.03); }
+}
+
+@media (max-width: 520px) {
+  .duel-stage {
+    height: 150px;
+    padding: 0 4%;
+  }
+  .fig-slot {
+    transform: scale(0.8);
+    transform-origin: bottom center;
+  }
+  .fig-slot.foe.big {
+    transform: scale(0.9);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fig-anim.lunge,
+  .fig-anim.hit,
+  .ink-fig.pose-charge {
+    animation: none !important;
+  }
+  .stage-float {
+    animation-duration: 0.01s;
+    animation-fill-mode: forwards;
+  }
+}

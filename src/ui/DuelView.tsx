@@ -1,8 +1,14 @@
 import { CONTENT } from '../content';
 import { LEVEL_NAMES } from '../engine/describe';
-import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, resolvedEffect } from '../engine/duel';
+import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, resolvedEffect } from '../engine/duel';
+import { DuelStage, type Weapon } from './DuelStage';
 import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
 import type { CardDef, CardKind, DuelState, GameState } from '../engine/types';
+
+/** 小人手上拿什麼：看主修的武學。 */
+const WEAPON: Record<string, Weapon> = {
+  hanjiang: 'sword', shibi: 'sword', qinghen: 'sword', shoucheng: 'spear', yeyu: 'needle',
+};
 
 const KIND_LABEL: Record<CardKind, string> = { attack: '攻', guard: '守', skill: '技', trap: '伏', curse: '傷' };
 
@@ -49,6 +55,8 @@ export function DuelView({ state, act }: Props) {
           </div>
         )}
       </section>
+
+      <DuelStage d={d} weapon={WEAPON[mainSkill(state).skill ?? ''] ?? 'fist'} />
 
       <ol className="duel-log" aria-live="polite">
         {d.log.map((l, i) => (
