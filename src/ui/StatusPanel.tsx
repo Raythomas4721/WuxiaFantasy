@@ -6,6 +6,7 @@ import {
 import { DUEL, REALM, mainSkill } from '../engine/duel';
 import { activeThreads, ambitionView } from '../engine/threads';
 import { DeckList } from './DeckPanel';
+import { getTalent, talentHp } from '../engine/talents';
 import type { GameState } from '../engine/types';
 import { ThreadList } from './FocusView';
 
@@ -135,9 +136,21 @@ export function StatusPanel({ state }: { state: GameState }) {
           </ul>
         )}
         <p className="muted small realm">
-          過招時：內力 {realm.energy}・氣血 {DUEL.playerHp(p.stats.gengu, main.level)}
+          過招時：內力 {realm.energy}・氣血 {DUEL.playerHp(p.stats.gengu, main.level) + talentHp(state)}
           {realm.draw > 0 && `・每回合多抽 ${realm.draw} 張`}
         </p>
+        {(p.talents?.length ?? 0) > 0 && (
+          <ul className="talent-list">
+            {p.talents!.map((id) => {
+              const t = getTalent(id);
+              return (
+                <li key={id} title={t.text}>
+                  <b>{t.name}</b> <span className="muted small">{t.text}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         {p.deck && <DeckList deck={p.deck} />}
       </section>
 

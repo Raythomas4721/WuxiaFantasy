@@ -2,14 +2,23 @@
 
 import { playSimpleRound } from './duelAI';
 import {
+  allocateStat,
   chooseFocus, chooseOption, choiceViews, finishDuel, focusOptions, newGame, nextTurn, rollTraitOptions, startLife,
 } from './game';
 import { CONTENT } from '../content';
-import { pickCard, removeBlocked, removeCard, upgradableIndexes, upgradeCard } from './deck';
+import { pickCard, pickTalent, removeBlocked, removeCard, upgradableIndexes, upgradeCard } from './deck';
+import { STAT_MAX, STAT_PERK_AT } from './talents';
 import { baseCardId, cardSkill, getCard, mainSkill, yieldDuel } from './duel';
 import { DOJO_REMOVE, buy, buyDojo, dojoOffers, marketOffers, removePrice } from './market';
 import { Rng } from './rng';
-import type { GameState } from './types';
+import type { GameState, StatName } from './types';
+
+/** 模擬玩家分配屬性點：先把根骨、膽識、心性補到有效果，再補根骨。 */
+const STAT_PREF: StatName[] = ['gengu', 'danshi', 'xinxing', 'wuxing', 'fuyuan', 'meili'];
+function autoStat(s: GameState): StatName | undefined {
+  const st = s.player.stats;
+  return STAT_PREF.find((k) => st[k] < STAT_PERK_AT) ?? STAT_PREF.find((k) => st[k] < STAT_MAX);
+}
 
 const MAX_STEPS = 3000;
 
@@ -101,6 +110,7 @@ export function autoDeckTask(s: GameState): GameState {
     // 牌庫夠大了，又沒有本門的牌，就不拿
     return pickCard(s, deck.length >= 24 && cardScore(s, best) < 2 ? null : best);
   }
+  if (task.kind === 'talent') return pickTalent(s, task.options[0]);
   if (task.kind === 'remove') {
     const at = ['punch', 'parry'].map((id) => deck.indexOf(id)).find((i) => i >= 0);
     const affordable = task.cost?.health ? s.player.health > 50 : true;
@@ -119,6 +129,11 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
   let focusPicks = 0;
   const duels: AutoplayResult['duels'] = [];
   for (let step = 0; step < MAX_STEPS && s.phase !== 'ended'; step++) {
+    if (s.phase === 'focus' && s.statPoints) {
+      const k = autoStat(s);
+      s = k ? allocateStat(s, k) : { ...s, statPoints: undefined };
+      continue;
+    }
     if (s.phase === 'focus') {
       const focuses = focusOptions(s);
       // 有志向的人，一半的時候會照志向過日子

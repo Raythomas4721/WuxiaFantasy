@@ -6,6 +6,8 @@ import { CONTENT } from '../content';
 import { levelFromXp, skillLevel } from './conditions';
 import { REALM, baseCardId, cardSkill, getCard, legacyDeck, mainSkill, upgradeCount } from './duel';
 import type { Rng } from './rng';
+import { getTalent, perk, talentChoices } from './talents';
+import { LEVEL_NAMES } from './describe';
 import type { DeckTask, GameState } from './types';
 
 /** 平衡數值集中在這裡。 */
@@ -72,7 +74,8 @@ export function addToDeck(s: GameState, add: string, remove?: string): void {
 /** 武學第一次入門：從該門的招式裡挑兩張。就地修改。 */
 export function noteSkillGain(s: GameState, skill: string, beforeXp: number): void {
   const cards = CONTENT.skillCards[skill];
-  if (!cards || levelFromXp(beforeXp) > 0 || skillLevel(s, skill) === 0) return;
+  // 入門選招排在前面，心得排在後面
+  if (!cards || levelFromXp(beforeXp) > 0 || skillLevel(s, skill) === 0) return noteTalents(s, skill, levelFromXp(beforeXp));
   const name = CONTENT.skills[skill]?.name ?? skill;
   pushTask(s, {
     kind: 'pick',
@@ -81,6 +84,34 @@ export function noteSkillGain(s: GameState, skill: string, beforeXp: number): vo
     options: cards.slice(0, 3),
     picks: DECK.entryPicks,
   });
+  noteTalents(s, skill, levelFromXp(beforeXp));
+}
+
+/** 境界突破：每跨過一個有心得的境界，就排一件二選一。 */
+function noteTalents(s: GameState, skill: string, before: number): void {
+  const now = skillLevel(s, skill);
+  const name = CONTENT.skills[skill]?.name ?? skill;
+  for (let lv = before + 1; lv <= now; lv++) {
+    const options = talentChoices(skill, lv).map((t) => t.id);
+    if (options.length === 0) continue;
+    pushTask(s, {
+      kind: 'talent',
+      title: `${name}・${LEVEL_NAMES[lv]}`,
+      text: `你的${name}到了「${LEVEL_NAMES[lv]}」的境界。往後要往哪個方向練？選了就不能改。`,
+      options,
+    });
+  }
+}
+
+/** 選一個心得。 */
+export function pickTalent(state: GameState, id: string): GameState {
+  const { s, task } = startTask(state, 'talent');
+  if (task.kind !== 'talent' || !task.options.includes(id)) throw new Error(`不能選這個心得：${id}`);
+  const t = getTalent(id);
+  s.player.talents = [...(s.player.talents ?? []), id];
+  noteGain(s, `心得【${t.name}】：${t.text}`);
+  doneTask(s);
+  return s;
 }
 
 export function pushTask(s: GameState, task: DeckTask): void {
@@ -107,7 +138,10 @@ export function rewardPool(s: GameState): { id: string; weight: number }[] {
 export function rewardOptions(
   s: GameState, rng: Rng, n = DECK.rewardOptions, skillBoost = 1, tier: 'minor' | 'elite' | 'boss' = 'minor',
 ): string[] {
-  const rarity = DECK.rarity[tier];
+  // 福緣過人：良、絕的權重 ×1.5
+  const lucky = perk(s, 'fuyuan') ? 1.5 : 1;
+  const base = DECK.rarity[tier];
+  const rarity = { common: base.common, uncommon: base.uncommon * lucky, rare: base.rare * lucky };
   const pool = rewardPool(s)
     .map((x) => ({ ...x, weight: x.weight * (cardSkill(x.id) ? skillBoost : 1) * rarity[getCard(x.id).rarity ?? 'common'] }))
     .filter((x) => x.weight > 0);

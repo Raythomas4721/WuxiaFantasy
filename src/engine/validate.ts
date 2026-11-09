@@ -130,6 +130,7 @@ export function validateContent(content: Content): ValidationReport {
     ...content.endings.flatMap((en) => textStrings(en.text)),
     ...Object.values(content.ambitions).flatMap((a) => [a.fulfilledText, a.unfulfilledText, a.goal]),
     ...content.eraLines.map((l) => l.text),
+    ...content.talents.flatMap((t) => [t.name, t.text]),
     ...content.rumors.map((r) => r.text),
   ];
   for (const key of unknownPlaceholders(otherTexts, builtIns)) errors.push(`結局／志向／傳聞：文字引用了未定義的變數 {${key}}`);
@@ -165,6 +166,17 @@ export function validateContent(content: Content): ValidationReport {
   for (const s of Object.values(content.skills)) {
     if (s.kind === 'martial' && !content.skillCards[s.id]) errors.push(`武學 ${s.id}：沒有 A、B、C 三張招式牌`);
   }
+  // 武學心得：id 不重複；每門武學每個境界剛好兩個
+  const talentIds = new Set<string>();
+  const talentSlots = new Map<string, number>();
+  for (const t of content.talents) {
+    if (talentIds.has(t.id)) errors.push(`心得 ${t.id}：id 重複`);
+    talentIds.add(t.id);
+    if (!content.skills[t.skill]) errors.push(`心得 ${t.id}：未知武學 ${t.skill}`);
+    const key = `${t.skill}・${t.level}`;
+    talentSlots.set(key, (talentSlots.get(key) ?? 0) + 1);
+  }
+  for (const [key, n] of talentSlots) if (n !== 2) errors.push(`心得 ${key}：應該剛好兩個，現在 ${n} 個`);
   content.specialCards.forEach((sp, i) => {
     conditions.push({ where: `特殊牌 ${i}`, c: sp.if });
     if (!cardExists(sp.card)) errors.push(`特殊牌：未知招式牌 ${sp.card}`);

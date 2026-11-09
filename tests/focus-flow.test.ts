@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
-import { FATIGUE_STREAK, chooseFocus, chooseOption, choiceViews, newGame, nextTurn, requestFocusChange, startLife } from '../src/engine/game';
+import { FATIGUE_STREAK, allocateStat, chooseFocus, chooseOption, choiceViews, newGame, nextTurn, requestFocusChange, startLife } from '../src/engine/game';
+import { STAT_POINTS_PER_CHAPTER } from '../src/engine/talents';
 import { stageIndex } from '../src/engine/stages';
 import { activeThreads, threadFocuses } from '../src/engine/threads';
 import type { GameState } from '../src/engine/types';
@@ -20,6 +21,7 @@ function living(age: number, focus: string, streak = 1): GameState {
   s.prevYear = s.player.birthYear + age - 1;
   s.focus = focus;
   s.focusStreak = { id: focus, count: streak };
+  s.pointStage = stageIndex(age);
   s.focusContext = { stage: stageIndex(age), sect: s.player.sect, region: s.player.region, ambition: s.player.ambition, masters: s.player.masters.length };
   return s;
 }
@@ -90,5 +92,22 @@ describe('心事', () => {
 describe('內容', () => {
   it('通過內容檢查', () => {
     expect(validateContent(CONTENT).errors).toEqual([]);
+  });
+});
+
+describe('屬性點', () => {
+  it('進入新的一章給屬性點，分完才能選方針；同一章不重複給', () => {
+    const before = living(18, 'study');
+    before.pointStage = stageIndex(18);
+    let s = nextTurn(before);
+    expect(s.phase).toBe('focus');
+    expect(s.statPoints).toBe(STAT_POINTS_PER_CHAPTER);
+    expect(() => chooseFocus(s, 'study')).toThrow();
+    const gengu = s.player.stats.gengu;
+    for (let i = 0; i < STAT_POINTS_PER_CHAPTER; i++) s = allocateStat(s, 'gengu');
+    expect(s.player.stats.gengu).toBe(gengu + STAT_POINTS_PER_CHAPTER);
+    expect(s.statPoints).toBeUndefined();
+    s = chooseFocus(s, 'study');
+    expect(s.pointStage).toBe(stageIndex(s.player.age));
   });
 });

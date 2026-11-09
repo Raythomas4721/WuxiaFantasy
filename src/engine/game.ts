@@ -16,6 +16,7 @@ import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
 import { adjacent, destinations, rollWorld } from './world';
+import { STAT_MAX, STAT_POINTS_PER_CHAPTER, perk } from './talents';
 import type {
   Check,
   ChoiceView,
@@ -379,6 +380,10 @@ function applyQuietNode(s: GameState, node: NodeKind, focusId: string): void {
   } else if (node === 'insight' && upgradableIndexes(s).length > 0) {
     notes.push('☯ 你閉關了一陣子，把一招翻來覆去地練。');
     pushTask(s, { kind: 'upgrade', title: '閉關有得', text: '練到某一天，忽然有了新的體會。升級一張牌。' });
+    // 悟性過人：一通百通
+    if (perk(s, 'wuxing') && upgradableIndexes(s).length > 1) {
+      pushTask(s, { kind: 'upgrade', title: '一通百通', text: '你悟性過人，一招想通了，另一招也跟著通了。再升級一張牌。' });
+    }
   } else if (node === 'market') {
     s.dojo = { turn: s.turn };
     notes.push('⚖ 你路過一家武館，館主說，花點錢可以教你一招，也可以幫你把練歪的招式改掉。');
@@ -436,6 +441,12 @@ function beginTurn(s: GameState, rng: Rng): void {
   if (s.player.age < 7) {
     presentEvent(s, rng);
     return;
+  }
+  // 每章開場（少年起）給屬性點，在選方針的畫面上分配
+  const stage = stageIndex(s.player.age);
+  if (stage >= 2 && stage > (s.pointStage ?? 1) && Object.values(s.player.stats).some((v) => v < STAT_MAX)) {
+    s.statPoints = (s.statPoints ?? 0) + STAT_POINTS_PER_CHAPTER;
+    s.pointStage = stage;
   }
   s.focusPrompt = focusPrompt(s);
   s.wantsFocusChange = undefined;
@@ -506,6 +517,7 @@ export function streakIfChosen(s: GameState, focusId: string): number {
 
 export function chooseFocus(state: GameState, focusId: string, dest?: string): GameState {
   if (state.phase !== 'focus') throw new Error('現在不是選擇方針的時候');
+  if (state.statPoints) throw new Error('先把屬性點分配完');
   if (!focusOptions(state).some((f) => f.id === focusId)) throw new Error(`無法選擇方針：${focusId}`);
   if (dest && (focusId !== 'travel' || !destinations(state).some((d) => d.id === dest))) throw new Error(`去不了：${dest}`);
   const s = clone(state);
@@ -523,6 +535,17 @@ export function chooseFocus(state: GameState, focusId: string, dest?: string): G
   }
   runFocus(s, rng, focusId, far);
   s.rng = rng.state;
+  return s;
+}
+
+/** 選方針之前，分配一點屬性點。 */
+export function allocateStat(state: GameState, stat: StatName): GameState {
+  if (state.phase !== 'focus' || !state.statPoints) throw new Error('現在沒有屬性點可以分配');
+  if (state.player.stats[stat] >= STAT_MAX) throw new Error('這個屬性已經到頂了');
+  const s = clone(state);
+  s.player.stats[stat] += 1;
+  s.statPoints = (s.statPoints ?? 1) - 1;
+  if (s.statPoints <= 0) s.statPoints = undefined;
   return s;
 }
 

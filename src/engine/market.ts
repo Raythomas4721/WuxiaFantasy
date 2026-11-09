@@ -8,6 +8,7 @@ import { cardText, getCard } from './duel';
 import { applyEffects } from './effects';
 import { NODE } from './game';
 import { Rng } from './rng';
+import { perk } from './talents';
 import type { GameEffect, GameState } from './types';
 
 export interface Offer {
@@ -96,15 +97,16 @@ export function dojoOffers(s: GameState): Offer[] {
   const p = s.player;
   const bought = Boolean(s.dojo?.bought);
   const cards = rewardOptions(s, new Rng((s.seed * 7919 + s.turn * 104729) >>> 0), DECK.rewardOptions, DECK.eliteSkillBoost);
+  const cardPrice = dojoPrice(s, NODE.cardPrice);
   const offers: Offer[] = cards.map((id) => {
     const c = getCard(id);
     return {
       id: `${CARD}${id}`,
       name: `學「${c.name}」`,
-      price: NODE.cardPrice,
+      price: cardPrice,
       desc: `${c.cost} 內力・${cardText(c)}`,
-      enabled: !bought && p.money >= NODE.cardPrice,
-      reason: bought ? '這回合已經學過一招' : p.money < NODE.cardPrice ? '錢不夠' : undefined,
+      enabled: !bought && p.money >= cardPrice,
+      reason: bought ? '這回合已經學過一招' : p.money < cardPrice ? '錢不夠' : undefined,
     };
   });
   const price = removePrice(s);
@@ -122,7 +124,12 @@ export function dojoOffers(s: GameState): Offer[] {
 }
 
 export function removePrice(s: GameState): number {
-  return NODE.removePrice + NODE.removeStep * (s.dojoRemovals ?? 0);
+  return dojoPrice(s, NODE.removePrice + NODE.removeStep * (s.dojoRemovals ?? 0));
+}
+
+/** 魅力過人：武館便宜兩成。 */
+function dojoPrice(s: GameState, price: number): number {
+  return perk(s, 'meili') ? Math.round(price * 0.8) : price;
 }
 
 export function buyDojo(state: GameState, offerId: string): GameState {

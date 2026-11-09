@@ -1,5 +1,6 @@
 import { CONTENT } from '../content';
-import { canUpgrade, pickCard, removeBlocked, removeCard, upgradeCard } from '../engine/deck';
+import { canUpgrade, pickCard, pickTalent, removeBlocked, removeCard, upgradeCard } from '../engine/deck';
+import { getTalent } from '../engine/talents';
 import { cardSkill, cardText, getCard } from '../engine/duel';
 import type { GameState } from '../engine/types';
 import { CardFace } from './DuelView';
@@ -49,6 +50,20 @@ export function DeckTaskPanel({ state, act }: Props) {
             </button>
           </div>
         </>
+      )}
+
+      {task.kind === 'talent' && (
+        <div className="talent-options">
+          {task.options.map((id) => {
+            const t = getTalent(id);
+            return (
+              <button key={id} className="talent-card" onClick={() => act(() => pickTalent(state, id), false)}>
+                <span className="talent-name">{t.name}</span>
+                <span className="talent-text">{t.text}</span>
+              </button>
+            );
+          })}
+        </div>
       )}
 
       {task.kind === 'remove' && <RemoveList state={state} deck={deck} act={act} />}

@@ -432,6 +432,8 @@ export interface Content {
   cards: Record<string, CardDef>;
   /** 每門武學的招式；前三張是入門時挑選的範圍。 */
   skillCards: Record<string, string[]>;
+  /** 武學心得：境界突破時二選一。 */
+  talents: TalentDef[];
   /** 獎勵池裡不分門派的奇招。 */
   commonCards: string[];
   /** v0.4 奇遇給的特殊牌，只用來換算舊存檔。 */
@@ -494,6 +496,34 @@ export interface Passive {
   healBonus?: number;
   /** 打完回復的健康（濟世心經）。 */
   healAfter?: number;
+  /** 這個路數的牌，每一擊傷害 +N。 */
+  tagDmg?: Partial<Record<CardTag, number>>;
+  /** 守招（guard）的護體 +N。 */
+  guardBonus?: number;
+  /** 自己的伏招發動時：多抽 N 張、對手失 N 氣血。 */
+  trapDraw?: number;
+  trapDmg?: number;
+  /** 回合結束時保留的護體比例。 */
+  retainBlock?: number;
+  /** 開場時對手的破綻回合數、內傷。 */
+  openExpose?: number;
+  bleedStart?: number;
+  /** 氣血上限 +N。 */
+  maxHp?: number;
+  /** 氣血低於一半時，攻擊牌傷害 +N。 */
+  desperateBonus?: number;
+  /** 前 N 次點穴、下毒無效（心性）。 */
+  resist?: number;
+}
+
+/** 武學心得（v0.5 培育）：某門武學到了某個境界，二選一。 */
+export interface TalentDef {
+  id: string;
+  skill: string;
+  level: number;
+  name: string;
+  text: string;
+  effect: Omit<Passive, 'names'>;
 }
 
 /** 進行中的過招。存在 GameState 裡，重新整理也能接著打。 */
@@ -575,6 +605,8 @@ export interface Player {
   alive: boolean;
   /** 跟著你一輩子的牌庫（設計文件 v0.5 §2）。舊存檔沒有，讀檔時從武學等級換算。 */
   deck?: string[];
+  /** 選過的武學心得。 */
+  talents?: string[];
   /** 行囊裡的信物 id。舊存檔沒有這個欄位。 */
   items?: string[];
   /** 產業：種類與所在地區。 */
@@ -667,6 +699,10 @@ export interface GameState {
   wantsFocusChange?: boolean;
   /** 遊歷指定的目的地：這段日子該地區的事件與名俠更容易遇到。 */
   travelDest?: string;
+  /** 還沒分配的屬性點（每章開場給）。 */
+  statPoints?: number;
+  /** 已經給過屬性點的最後一章（LIFE_STAGES 的索引）。 */
+  pointStage?: number;
   current?: { eventId: string; text: string; vars?: Record<string, string> };
   duel?: DuelState;
   /** 結果畫面之後，同一年接著發生的事件。 */
@@ -703,7 +739,9 @@ export type DeckTask =
   /** 刪一張牌，代價是健康或錢。 */
   | { kind: 'remove'; title: string; text: string; cost?: { health?: number; money?: number } }
   /** 升級一張牌。 */
-  | { kind: 'upgrade'; title: string; text: string };
+  | { kind: 'upgrade'; title: string; text: string }
+  /** 武學心得二選一。 */
+  | { kind: 'talent'; title: string; text: string; options: string[] };
 
 /** 方針擲出的關卡（設計文件 v0.5 §1.2）：小戰、精英、劇情、武館、休養、閉關。 */
 export type NodeKind = 'fight' | 'elite' | 'story' | 'market' | 'rest' | 'insight';

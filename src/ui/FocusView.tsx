@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import { CONTENT } from '../content';
 import { destinations } from '../engine/world';
-import { FATIGUE_STREAK, chooseFocus, focusOptions, streakIfChosen } from '../engine/game';
+import { FATIGUE_STREAK, allocateStat, chooseFocus, focusOptions, streakIfChosen } from '../engine/game';
 import { LIFE_STAGES, chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber } from '../engine/text';
 import { activeThreads, ambitionView, type ThreadView } from '../engine/threads';
-import { STAT_NAMES } from '../engine/describe';
+import { STAT_NAMES, STAT_ORDER } from '../engine/describe';
+import { STAT_MAX, STAT_PERKS, STAT_PERK_AT } from '../engine/talents';
 import type { FocusDef, GameState, NodeKind } from '../engine/types';
 
 const MAX_THREADS = 4;
 
 const TRAIN_NAMES = { martial: '武學', medicine: '醫術', sect: '門派武學' } as const;
-const CHANCE = (c: number) => (c >= 0.5 ? '一半機會' : c >= 0.4 ? '四成機會' : '三成機會');
+const CN_DIGIT = ['', '一', '兩', '三', '四', '五', '六', '七', '八', '九'];
+const CHANCE = (c: number) => (c === 0.5 ? '一半機會' : c < 0.1 ? '偶爾' : `${CN_DIGIT[Math.round(c * 10)] ?? ''}成機會`);
 
 /** 方針的收穫：從 growth 直接算出來，改了內容這裡會跟著變。 */
 export function focusGains(f: FocusDef): string {
@@ -78,7 +80,9 @@ export function FocusView({ state, act }: Props) {
 
       <ThreadList state={state} threads={threads.slice(0, MAX_THREADS)} />
 
-      {travelling ? (
+      {state.statPoints ? (
+        <StatAllocator state={state} act={act} />
+      ) : travelling ? (
         <TravelPicker state={state} act={act} back={() => setTravelling(false)} />
       ) : (
       <>
@@ -124,6 +128,31 @@ export function FocusView({ state, act }: Props) {
       </>
       )}
     </article>
+  );
+}
+
+/** 每章開場分配屬性點：分完才能選方針。 */
+function StatAllocator({ state, act }: Props) {
+  const st = state.player.stats;
+  return (
+    <section className="stat-alloc">
+      <h3 className="focus-heading">
+        這幾年的歷練，讓你有所長進。還有 <strong>{state.statPoints}</strong> 點可以分配
+      </h3>
+      <ul className="stat-alloc-list">
+        {STAT_ORDER.map((k) => (
+          <li key={k} className={st[k] >= STAT_PERK_AT ? 'on' : ''}>
+            <span className="stat-alloc-name">
+              {STAT_NAMES[k]} <b>{st[k]}</b>
+            </span>
+            <span className="stat-alloc-perk">{STAT_PERKS[k]}</span>
+            <button className="btn btn-small" disabled={st[k] >= STAT_MAX} onClick={() => act(() => allocateStat(state, k))}>
+              +1
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

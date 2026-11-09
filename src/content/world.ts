@@ -286,7 +286,7 @@ export const focuses: FocusDef[] = [
     name: '讀書',
     desc: '悟性增長，可能遇到書院與科舉的機會。',
     tags: ['study'],
-    growth: [{ effect: wuxing(1), chance: 0.5 }],
+    growth: [{ effect: wuxing(1), chance: 0.4 }],
     summary: [
       '這段日子你埋首書卷。窗外的世道越來越亂，書裡的道理卻越讀越明白。',
       '你抄完了一整部書，手腕痠得抬不起來。',
@@ -299,7 +299,7 @@ export const focuses: FocusDef[] = [
     name: '習武',
     desc: '武學與根骨增長，容易遇到切磋與比武。',
     tags: ['martial', 'sparring'],
-    growth: [{ effect: train('martial', 2) }, { effect: gengu(1), chance: 0.3 }],
+    growth: [{ effect: train('martial', 2) }, { effect: gengu(1), chance: 0.15 }],
     summary: [
       '你每天聞雞起舞，一套功夫翻來覆去練了上千遍。',
       '冬練三九，夏練三伏。你的手上、腳上，全是厚厚的繭。',
@@ -312,7 +312,7 @@ export const focuses: FocusDef[] = [
     name: '謀生',
     desc: '賺取錢財，磨練心性。',
     tags: ['work', 'village'],
-    growth: [{ effect: money(25) }, { effect: xinxing(1), chance: 0.3 }],
+    growth: [{ effect: money(25) }, { effect: xinxing(1), chance: 0.15 }],
     summary: [
       '這段日子你踏踏實實地做活，攢下了一點積蓄。',
       '你在碼頭扛了一陣子貨，肩膀上磨出了一層厚皮。',
@@ -326,7 +326,7 @@ export const focuses: FocusDef[] = [
     desc: '走南闖北做買賣，有賺有賠。',
     conditions: { any: [{ backgrounds: ['merchant'] }, { minAge: 18 }] },
     tags: ['trade', 'travel'],
-    growth: [{ effect: money(35) }, { effect: meili(1), chance: 0.3 }],
+    growth: [{ effect: money(35) }, { effect: meili(1), chance: 0.15 }],
     summary: [
       '你跟著貨船走了幾趟，見識了不少地方，也學會了怎麼跟人討價還價。',
       '這一趟生意不賺不賠，倒是結識了幾個客商。',
@@ -339,7 +339,7 @@ export const focuses: FocusDef[] = [
     desc: '行走四方，可以自己挑去哪裡，也可能遇見奇人奇事。',
     conditions: { minAge: 15 },
     tags: ['travel', 'tavern', 'chance'],
-    growth: [{ effect: fuyuan(1), chance: 0.3 }, { effect: money(-5) }],
+    growth: [{ effect: fuyuan(1), chance: 0.15 }, { effect: money(-5) }],
     summary: [
       '你背著包袱走了很遠的路。山川、渡口、客棧，一處一處都記在了心裡。',
       '你在一座不知名的小鎮住了一個月，走的時候，客棧老闆娘還塞給你兩個饅頭。',
@@ -352,7 +352,7 @@ export const focuses: FocusDef[] = [
     name: '結交',
     desc: '結識朋友，經營人情。',
     tags: ['social', 'tavern'],
-    growth: [{ effect: meili(1), chance: 0.5 }, { effect: fame(1) }],
+    growth: [{ effect: meili(1), chance: 0.3 }, { effect: fame(1) }],
     summary: [
       '這段日子你結識了不少朋友，酒喝了不少，人情也欠了不少。',
       '你在茶樓裡認識了幾個說得上話的人，三天兩頭聚在一起。',
@@ -390,7 +390,7 @@ export const focuses: FocusDef[] = [
     name: '休養',
     desc: '調養身體，遠離是非。',
     tags: ['rest'],
-    growth: [{ effect: health(25) }, { effect: xinxing(1), chance: 0.3 }],
+    growth: [{ effect: health(25) }, { effect: xinxing(1), chance: 0.15 }],
     summary: [
       '你閉門休養了一段日子。身子好了些，心也靜了些。',
       '你在院子裡種了幾盆花，每天看它們長一點點。',

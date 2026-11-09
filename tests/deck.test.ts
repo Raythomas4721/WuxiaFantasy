@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
 import { playLife } from '../src/engine/autoplay';
 import {
-  DECK, canUpgrade, ensureDeck, pickCard, removeBlocked, removeCard, rewardPool, startingDeck, upgradeCard,
+  DECK, canUpgrade, ensureDeck, pickCard, pickTalent, removeBlocked, removeCard, rewardPool, startingDeck, upgradeCard,
 } from '../src/engine/deck';
 import { DUEL, REALM, canPlay, createDuel, fighterFor, getCard, legacyDeck, playCard } from '../src/engine/duel';
 import { chooseFocus, chooseOption, finishDuel, newGame } from '../src/engine/game';
@@ -67,7 +67,13 @@ describe('入門選招', () => {
     expect(s.deckTasks).toBeUndefined();
     expect(s.player.deck).toEqual(expect.arrayContaining(['juma', 'huima']));
     // 已經入門的武學再加經驗，不會再選一次
-    applyEffects(s, [{ type: 'skill', skill: 'shoucheng', xp: 5 }], new Rng(1));
+    applyEffects(s, [{ type: 'skill', skill: 'shoucheng', xp: 1 }], new Rng(1));
+    expect(s.deckTasks).toBeUndefined();
+    // 到了登堂入室：心得二選一
+    applyEffects(s, [{ type: 'skill', skill: 'shoucheng', xp: 3 }], new Rng(1));
+    expect(s.deckTasks![0]).toMatchObject({ kind: 'talent', options: ['sc_shi', 'sc_lei'] });
+    s = pickTalent(s, 'sc_lei');
+    expect(s.player.talents).toEqual(['sc_lei']);
     expect(s.deckTasks).toBeUndefined();
   });
 });

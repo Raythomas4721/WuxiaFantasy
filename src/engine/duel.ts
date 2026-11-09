@@ -7,13 +7,14 @@
 import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, skillLevel } from './conditions';
 import type { Rng } from './rng';
+import { growthPassive, talentHp } from './talents';
 import { fill } from './text';
 import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
 } from './types';
 
 /** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
-export const FOE_REALM = [1, 1.15, 1.3, 1.3, 1.5, 1.7];
+export const FOE_REALM = [1, 1.25, 1.55, 1.65, 1.9, 2.15];
 
 /** 平衡數值集中在這裡。 */
 export const DUEL = {
@@ -240,7 +241,7 @@ export function demonCount(s: GameState): number {
 
 export function fighterFor(s: GameState): Fighter {
   const { level } = mainSkill(s);
-  const hp = DUEL.playerHp(s.player.stats.gengu, level);
+  const hp = DUEL.playerHp(s.player.stats.gengu, level) + talentHp(s);
   return {
     hp,
     wuxing: s.player.stats.wuxing,
@@ -370,6 +371,8 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   d.foe.intent = pickIntent(d, rng);
   d.me.energy += passive.firstRoundEnergy ?? 0;
   d.me.block += passive.blockPerRound ?? 0;
+  if (passive.openExpose) d.foe.exposed = passive.openExpose;
+  if (passive.bleedStart) d.foe.bleed += passive.bleedStart;
   drawCards(d, DUEL.startHand + (passive.firstRoundDraw ?? 0), rng);
   return d;
 }
@@ -446,6 +449,7 @@ export function passivesFor(s: GameState, def: OpponentDef): Passive {
     p.names.push('血衣令：內傷 +1');
     p.bleedBonus = (p.bleedBonus ?? 0) + 1;
   }
+  growthPassive(s, p);
   return p;
 }
 
@@ -496,9 +500,12 @@ export function resolvedEffect(d: DuelState, c: CardDef): CardEffect {
   }
   if (c.dmgFromBlock) e.dmg = (e.dmg ?? 0) + d.me.block * c.dmgFromBlock;
   const pas = d.me.passive;
+  if (pas?.guardBonus && c.kind === 'guard' && e.block) e.block += pas.guardBonus;
   if (e.dmg !== undefined) {
     let dmg = e.dmg;
     if (pas?.attackBonus && c.kind === 'attack') dmg += pas.attackBonus;
+    if (c.tag && pas?.tagDmg?.[c.tag]) dmg += pas.tagDmg[c.tag]!;
+    if (pas?.desperateBonus && c.kind === 'attack' && d.me.hp < d.me.max / 2) dmg += pas.desperateBonus;
     if (pas?.firstTag && c.tag === pas.firstTag.tag && !d.me.played.some((id) => getCard(id).tag === pas.firstTag!.tag)) dmg += pas.firstTag.dmg;
     if (c.chain) dmg += c.chain.dmg * d.me.played.filter((id) => !c.chain!.tags || c.chain!.tags.includes(getCard(id).tag!)).length;
     if (c.vsIntent && c.vsIntent.kinds.includes(d.foe.intent.kind)) dmg += c.vsIntent.dmg;
@@ -613,7 +620,12 @@ function springTrap(d: DuelState, trigger: TrapTrigger, rng: Rng): CardDef | und
   const e = resolvedEffect({ ...d, me: { ...d.me, played: [] } }, c);
   say(d, 'me', `【伏・${c.name}】${c.flavor}`);
   applyCardEffect(d, c, { ...e, dodge: undefined, halve: undefined });
-  if (e.draw) drawCards(d, e.draw, rng);
+  const pas = d.me.passive;
+  if (e.draw || pas?.trapDraw) drawCards(d, (e.draw ?? 0) + (pas?.trapDraw ?? 0), rng);
+  if (pas?.trapDmg) {
+    d.foe.hp -= pas.trapDmg;
+    say(d, 'me', `伏招得手，${d.name}又失了 ${pas.trapDmg} 氣血。`);
+  }
   d.me.discard.push(id);
   return c;
 }
@@ -634,6 +646,15 @@ function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
   }
   d.foe.charge = 0;
   if (intent.kind === 'feint') d.me.exposed = 2;
+}
+
+/** 心性過人：點穴、下毒無效（次數用完為止）。 */
+function resisted(d: DuelState): boolean {
+  const p = d.me.passive;
+  if (!p?.resist) return false;
+  p.resist -= 1;
+  say(d, 'me', '你心神一定，沒讓那一下得逞。');
+  return true;
 }
 
 /** 結束回合：對手出手，結算，然後抽牌進入下一回合。 */
@@ -667,6 +688,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
       break;
     case 'drain':
       foeStrike(d, intent, rng);
+      if (resisted(d)) break;
       d.me.energyNext -= 1;
       say(d, 'foe', `${d.name}那一下拍在你的穴道上，你的內息一滯（下回合內力 −1）。`);
       break;
@@ -680,6 +702,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
       break;
     case 'curse':
       foeStrike(d, intent, rng);
+      if (resisted(d)) break;
       d.me.discard.push('wound');
       say(d, 'foe', `${d.name}的兵刃上淬了東西，傷口火辣辣地疼（你的牌堆裡多了一張「傷」）。`);
       break;
@@ -688,7 +711,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   checkLowHp(d);
   checkPhase(d);
   if (d.me.fortify) d.me.fortify = undefined;
-  else d.me.block = 0;
+  else d.me.block = Math.floor(d.me.block * (d.me.passive?.retainBlock ?? 0));
   d.me.exposed = Math.max(0, d.me.exposed - 1);
   d.foe.exposed = Math.max(0, d.foe.exposed - 1);
   checkOver(d);

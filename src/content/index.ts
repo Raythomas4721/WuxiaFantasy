@@ -14,12 +14,14 @@ import { nodeEvents } from './events/nodes';
 import { nodeWeights } from './nodes';
 import { youthEvents } from './events/youth';
 import { names } from './names';
+import { talents } from './talents';
 import { threads } from './threads';
 import { backgrounds, focuses, npcs, regions, sects, skills, traits } from './world';
 
 export const CONTENT: Content = {
   cards,
   skillCards,
+  talents,
   commonCards,
   specialCards,
   opponents,
