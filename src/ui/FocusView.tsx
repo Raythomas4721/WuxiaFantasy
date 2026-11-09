@@ -3,9 +3,49 @@ import { FATIGUE_STREAK, chooseFocus, focusOptions, streakIfChosen } from '../en
 import { LIFE_STAGES, chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber } from '../engine/text';
 import { activeThreads, ambitionView, type ThreadView } from '../engine/threads';
-import type { GameState } from '../engine/types';
+import { STAT_NAMES } from '../engine/describe';
+import type { FocusDef, GameState, NodeKind } from '../engine/types';
 
 const MAX_THREADS = 4;
+
+const TRAIN_NAMES = { martial: '武學', medicine: '醫術', sect: '門派武學' } as const;
+const CHANCE = (c: number) => (c >= 0.5 ? '一半機會' : c >= 0.4 ? '四成機會' : '三成機會');
+
+/** 方針的收穫：從 growth 直接算出來，改了內容這裡會跟著變。 */
+export function focusGains(f: FocusDef): string {
+  return f.growth
+    .map(({ effect: e, chance }) => {
+      let t = '';
+      if (e.type === 'stat') t = `${STAT_NAMES[e.stat]} +${e.delta}`;
+      else if (e.type === 'train') t = `${TRAIN_NAMES[e.kind]}進境`;
+      else if (e.type === 'money') t = e.delta > 0 ? `錢 +${e.delta}` : `花費 ${-e.delta} 文`;
+      else if (e.type === 'fame') t = `名望 +${e.delta}`;
+      else if (e.type === 'health') t = `健康 +${e.delta}`;
+      else if (e.type === 'addFlag' && e.key === 'sect_merit') t = '師門功勞';
+      else return '';
+      return chance && chance < 1 ? `${t}（${CHANCE(chance)}）` : t;
+    })
+    .filter(Boolean)
+    .join('、');
+}
+
+const NODE_HINT: Partial<Record<NodeKind, string>> = {
+  fight: '⚔ 小戰',
+  elite: '☠ 精英',
+  insight: '☯ 悟招（升級一張牌）',
+  market: '⚖ 武館（買牌、刪牌）',
+  rest: '☕ 歇息（回健康）',
+};
+
+/** 這個方針常遇到的關卡：權重 20 以上的，由多到少。 */
+export function focusEncounters(id: string): string {
+  const w = CONTENT.nodeWeights[id] ?? {};
+  const list = (Object.entries(w) as [NodeKind, number][])
+    .filter(([k, v]) => NODE_HINT[k] && v >= 20)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k]) => NODE_HINT[k]);
+  return list.length > 0 ? list.join('、') : '多半平平靜靜';
+}
 
 interface Props {
   state: GameState;
@@ -52,6 +92,14 @@ export function FocusView({ state, act }: Props) {
                 {current && <span className="focus-current">照舊</span>}
               </span>
               <span className="pick-desc">{f.desc}</span>
+              <span className="focus-line">
+                <b>收穫</b>
+                {focusGains(f)}
+              </span>
+              <span className="focus-line">
+                <b>常遇</b>
+                {focusEncounters(f.id)}
+              </span>
               {advances.length > 0 && (
                 <span className="focus-advances">可能推進：{advances.map((t) => t.title).join('、')}</span>
               )}

@@ -316,6 +316,18 @@ small {
   color: var(--gold);
 }
 
+.focus-line {
+  font-size: 0.8rem;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.focus-line b {
+  color: var(--ink);
+  font-weight: 600;
+  margin-right: 0.4em;
+}
+
 /* ---------- 章節開場 ---------- */
 
 .chapter-head {
