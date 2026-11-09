@@ -2,6 +2,7 @@
 // 對手擺出的架勢預告下一招。全部由前後兩個 DuelState 的差異推算，不改引擎。
 
 import { useEffect, useRef, useState } from 'react';
+import { getCard } from '../engine/duel';
 import type { DuelState, IntentKind } from '../engine/types';
 
 export type Weapon = 'fist' | 'sword' | 'spear' | 'needle' | 'saber';
@@ -14,12 +15,27 @@ interface Float {
   delay: number;
 }
 
+type StrikeKind = 'arc' | 'thrust' | 'burst' | 'needle' | 'spark';
+
+/** 打在某一方身上的特效：揮砍的軌跡，或擋格的火花。 */
+interface Strike {
+  id: number;
+  side: 'me' | 'foe';
+  kind: StrikeKind;
+  delay: number;
+}
+
 interface Fx {
   id: number;
   me?: 'lunge' | 'hit';
   foe?: 'lunge' | 'hit';
   floats: Float[];
+  strikes: Strike[];
 }
+
+const SLASH: Record<Weapon, StrikeKind> = { sword: 'arc', saber: 'arc', spear: 'thrust', fist: 'burst', needle: 'needle' };
+/** 連擊時每一下的間隔。 */
+const HIT_GAP = 170;
 
 const POSE: Partial<Record<IntentKind, string>> = {
   attack: 'pose-raise',
@@ -36,33 +52,57 @@ const POSE: Partial<Record<IntentKind, string>> = {
 let floatId = 0;
 
 /** 比較出招前後的差異，決定這一下要播什麼動作。 */
-function diff(prev: DuelState, d: DuelState): Fx | undefined {
+function diff(prev: DuelState, d: DuelState, weapon: Weapon): Fx | undefined {
   const foeLoss = prev.foe.hp - d.foe.hp;
   const meLoss = prev.me.hp - d.me.hp;
   const meGain = d.me.hp - prev.me.hp;
   const blockGain = d.me.block - prev.me.block;
-  const roundEnded = d.round !== prev.round || (d.over && !prev.over && meLoss > 0);
-  const fx: Fx = { id: ++floatId, floats: [] };
+  const foeBlockLost = prev.foe.block - d.foe.block;
+  // 出牌會讓「已出的牌」變多；其他的變化都是結束回合（對手出手、內傷發作）
+  const roundEnded = d.me.played.length <= prev.me.played.length;
+  const fx: Fx = { id: ++floatId, floats: [], strikes: [] };
   const float = (side: Float['side'], text: string, kind: Float['kind'], delay = 0) =>
     fx.floats.push({ id: ++floatId, side, text, kind, delay });
+  const strike = (side: Strike['side'], kind: StrikeKind, delay: number) => fx.strikes.push({ id: ++floatId, side, kind, delay });
 
   if (roundEnded) {
-    // 對手出手：他衝上來，你挨打
+    // 對手出手：一下一下砍在你身上；有護體的那幾下爆出火花
+    const blows = d.log.filter((l) => l.who === 'foe' && /你受了 \d+ 點傷/.test(l.text));
+    const dodged = d.log.some((l) => l.who === 'foe' && l.text.includes('撲了個空'));
+    let guard = prev.me.block;
+    blows.forEach((l, i) => {
+      const taken = Number(/受了 (\d+) 點/.exec(l.text)![1]);
+      const delay = 120 + i * HIT_GAP;
+      if (guard > 0) strike('me', 'spark', delay);
+      if (taken > 0) strike('me', 'arc', delay);
+      guard = taken > 0 ? 0 : guard;
+    });
+    if (blows.length > 0 || dodged) fx.foe = 'lunge';
     if (meLoss > 0) {
-      fx.foe = 'lunge';
       fx.me = 'hit';
       float('me', `−${meLoss}`, 'dmg', 180);
-    }
+    } else if (blows.length > 0) float('me', '格', 'block', 180);
+    if (dodged) float('me', '閃', 'block', 180);
     // 內傷發作、伏招反擊
     if (foeLoss > 0) {
       fx.foe = fx.foe ?? 'hit';
       float('foe', `−${foeLoss}`, 'dmg', meLoss > 0 ? 450 : 0);
     }
   } else {
-    if (foeLoss > 0) {
+    if (foeLoss > 0 || foeBlockLost > 0) {
+      // 你出招：多段的牌砍好幾下；砍在護體上的爆火花
+      const last = d.me.played[d.me.played.length - 1];
+      const hits = Math.min(5, (last && getCard(last).hits) || 1);
+      for (let i = 0; i < hits; i++) {
+        const delay = 120 + i * HIT_GAP;
+        if (foeBlockLost > 0 && (i === 0 || foeLoss === 0)) strike('foe', 'spark', delay);
+        if (foeLoss > 0) strike('foe', SLASH[weapon], delay);
+      }
       fx.me = 'lunge';
-      fx.foe = 'hit';
-      float('foe', `−${foeLoss}`, 'dmg', 150);
+      if (foeLoss > 0) {
+        fx.foe = 'hit';
+        float('foe', `−${foeLoss}`, 'dmg', 150);
+      } else float('foe', '格', 'block', 150);
     }
     if (meLoss > 0) {
       fx.me = 'hit';
@@ -82,9 +122,9 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
     const p = prev.current;
     prev.current = d;
     if (p === d) return;
-    const next = diff(p, d);
+    const next = diff(p, d, weapon);
     if (next) setFx(next);
-  }, [d]);
+  }, [d, weapon]);
 
   const meDown = d.over === 'lose' || d.over === 'yield';
   const foeDown = d.over === 'win';
@@ -102,6 +142,7 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
         down={meDown}
         block={d.me.block > 0}
         floats={fx?.floats.filter((f) => f.side === 'me') ?? []}
+        strikes={fx?.strikes.filter((x) => x.side === 'me') ?? []}
       />
       <Figure
         side="foe"
@@ -113,8 +154,51 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
         block={d.foe.block > 0}
         big={d.lethal}
         floats={fx?.floats.filter((f) => f.side === 'foe') ?? []}
+        strikes={fx?.strikes.filter((x) => x.side === 'foe') ?? []}
       />
     </div>
+  );
+}
+
+/** 火花往八個方向飛。 */
+const SPARK_ANGLES = [-160, -125, -95, -60, 150, 120, 175, -175];
+
+function StrikeFx({ s }: { s: Strike }) {
+  const style = { '--d': `${s.delay}ms` } as React.CSSProperties;
+  if (s.kind === 'spark') {
+    return (
+      <span className="spark" style={style}>
+        {SPARK_ANGLES.map((a, i) => (
+          <i key={i} style={{ '--a': `${a}deg`, '--len': `${18 + (i % 3) * 8}px` } as React.CSSProperties} />
+        ))}
+      </span>
+    );
+  }
+  return (
+    <svg className={`strike strike-${s.kind}`} style={style} viewBox="0 0 120 120">
+      {s.kind === 'arc' && (
+        <>
+          <path d="M12 104 Q22 30 108 12" pathLength={1} />
+          <path className="strike-core" d="M12 104 Q22 30 108 12" pathLength={1} />
+        </>
+      )}
+      {s.kind === 'thrust' && (
+        <>
+          <path d="M-20 60 L118 54" pathLength={1} />
+          <path className="strike-core" d="M-20 60 L118 54" pathLength={1} />
+        </>
+      )}
+      {s.kind === 'burst' && (
+        <>
+          <circle cx="58" cy="56" r="20" pathLength={1} />
+          {[0, 60, 120, 180, 240, 300].map((a) => (
+            <path key={a} d="M58 30 L58 18" pathLength={1} transform={`rotate(${a} 58 56)`} />
+          ))}
+        </>
+      )}
+      {s.kind === 'needle' &&
+        [40, 56, 72].map((y, i) => <path key={y} d={`M-10 ${y - i * 4} L100 ${y}`} pathLength={1} className="strike-core" />)}
+    </svg>
   );
 }
 
@@ -128,9 +212,17 @@ function Figure(p: {
   block: boolean;
   big?: boolean;
   floats: Float[];
+  strikes: Strike[];
 }) {
   return (
     <div className={`fig-slot ${p.side} ${p.big ? 'big' : ''}`}>
+      {p.strikes.length > 0 && (
+        <div className="fx-layer">
+          {p.strikes.map((s) => (
+            <StrikeFx key={s.id} s={s} />
+          ))}
+        </div>
+      )}
       {p.floats.map((f) => (
         <span key={f.id} className={`stage-float float-${f.kind}`} style={{ animationDelay: `${f.delay}ms` }}>
           {f.text}
