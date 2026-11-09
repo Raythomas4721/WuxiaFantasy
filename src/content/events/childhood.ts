@@ -525,7 +525,11 @@ export const childhoodEvents: GameEvent[] = [
     priority: 8,
     conditions: { minYear: 1237, maxYear: 1240, regions: ['shu'], minAge: 4 },
     tags: ['medicine', 'war'],
-    text: '戰亂過後，川蜀爆發了一場大瘟疫。濟世藥谷的谷主林鶴年下令開谷，弟子們在山下搭起一排排草棚，日夜熬藥。你家附近也有人病倒了。',
+    text: [
+      { if: { flags: ['world_plague_dire'] }, text: '戰亂過後，川蜀爆發了一場百年不遇的大瘟疫。村子一個接一個空了，路邊的屍首來不及埋。濟世藥谷的谷主林鶴年下令開谷，弟子們在山下搭起草棚，日夜熬藥。你家隔壁的一家五口，已經病倒了三個。' },
+      { if: { flags: ['world_plague_light'] }, text: '戰亂過後，川蜀鬧起了瘟疫。幸好濟世藥谷的谷主林鶴年早有準備，下令開谷，弟子們在山下搭起草棚熬藥，疫情還沒傳開就被壓住了大半。你家附近也有人病倒了。' },
+      { text: '戰亂過後，川蜀爆發了一場大瘟疫。濟世藥谷的谷主林鶴年下令開谷，弟子們在山下搭起一排排草棚，日夜熬藥。你家附近也有人病倒了。' },
+    ],
     choices: [
       {
         id: 'help',

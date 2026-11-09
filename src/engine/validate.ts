@@ -2,6 +2,7 @@
 
 import { TEMPLATE_KEYS } from './text';
 import type { Condition, Content, GameEffect, Outcome, OutcomeSpec, TextSpec, VarSpec } from './types';
+import { WORLD_FLAGS } from './world';
 
 /** 引擎自己設定的旗標。 */
 const ENGINE_FLAGS = ['hidden_illness', 'weak_body', 'omen', 'fortune_decline', 'fortune_rise', 'father_dead', 'mother_dead', 'dead', 'died_young'];
@@ -207,7 +208,7 @@ export function validateContent(content: Content): ValidationReport {
   // ---- 引用檢查 ----
   const has = (rec: Record<string, unknown>, id: string) => Object.prototype.hasOwnProperty.call(rec, id);
   const focusIds = new Set(content.focuses.map((f) => f.id));
-  const setFlags = new Set<string>(ENGINE_FLAGS);
+  const setFlags = new Set<string>([...ENGINE_FLAGS, ...WORLD_FLAGS]);
   const readFlags = new Map<string, string>();
   const gainedItems = new Set<string>();
 

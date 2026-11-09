@@ -210,6 +210,7 @@ export const lunwuEvents: GameEvent[] = [
     kind: 'normal',
     title: '劍府考核',
     weight: 30,
+    weightMods: [{ if: { flags: ['world_jianfu_rise'] }, mult: 1.5 }, { if: { flags: ['world_jianfu_fall'] }, mult: 0.5 }],
     repeatable: true,
     cooldown: 3,
     maxTimes: 2,
@@ -219,6 +220,8 @@ export const lunwuEvents: GameEvent[] = [
     },
     tags: ['martial', 'sect'],
     text: [
+      { if: { regions: ['qingming'], flags: ['world_jianfu_fall'] }, text: '青衡劍府的山門冷冷清清。聽說劍府內鬥，走了不少人，這回開山門，考官的臉色也不太好看。考的只有一件事：和考官過幾招。' },
+      { if: { regions: ['qingming'], flags: ['world_jianfu_rise'] }, text: '青衡劍府的山門前人山人海。這幾年劍府名聲正盛，各地的少年都想進來。考的只有一件事：和考官過幾招。' },
       { if: { regions: ['qingming'] }, text: '青衡劍府的山門前排著長隊。劍府三年開一次山門，考的只有一件事：和考官過幾招。' },
       { text: '你一直忘不了青冥台上的那些劍。聽說青衡劍府又開山門收人了，你收拾行囊，上了青冥山。山門前排著長隊，考的只有一件事：和考官過幾招。' },
     ],

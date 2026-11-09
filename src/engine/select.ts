@@ -1,13 +1,16 @@
 import { CONTENT } from '../content';
 import { checkCondition, currentYear } from './conditions';
 import type { Rng } from './rng';
-import type { GameEvent, GameState } from './types';
+import type { Condition, GameEvent, GameState } from './types';
 
 /** 平淡歲月的權重：成年後偶爾不發生事件，只以摘要帶過。 */
 const QUIET_WEIGHT = 4;
 const DEFAULT_WEIGHT = 10;
 const FOCUS_MULT = 3;
 const RECENT_TAG_MULT = 0.5;
+/** 遊歷指定了目的地：當地的事件 ×3，名俠相遇 ×2。 */
+const DEST_MULT = 3;
+const DEST_NPC_MULT = 2;
 
 const EVENTS_BY_ID = new Map(CONTENT.events.map((e) => [e.id, e]));
 
@@ -36,7 +39,16 @@ function eventWeight(s: GameState, e: GameEvent): number {
   if (focus && tags.some((t) => focus.tags.includes(t))) w *= FOCUS_MULT;
   const recent = s.recentTags.flat();
   if (tags.some((t) => recent.includes(t))) w *= RECENT_TAG_MULT;
+  if (s.travelDest) {
+    if (mentionsRegion(e.conditions, s.travelDest)) w *= DEST_MULT;
+    if (e.conditions?.npcPresent) w *= DEST_NPC_MULT;
+  }
   return w;
+}
+
+function mentionsRegion(c: Condition | undefined, region: string): boolean {
+  if (!c) return false;
+  return !!c.regions?.includes(region) || !!c.any?.some((x) => mentionsRegion(x, region));
 }
 
 /** 這回合必定發生的強制事件（史實大事、立志、論武）。 */

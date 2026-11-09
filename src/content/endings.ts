@@ -274,6 +274,8 @@ export const eraLines: { if?: import('../engine/types').Condition; text: string 
   { if: { flags: ['stayed_linan'] }, text: '臨安陷落那年，你守著家人，看著城頭換了旗子。' },
   { if: { flags: ['hid_mountain'] }, text: '釣魚城下大汗殞命時，你正帶著家人躲在深山裡。' },
   { if: { flags: ['died_young'] }, text: '你沒能看到這場亂世的結局。' },
+  { if: { flags: ['world_plague_dire', 'plague_helper'] }, text: '那一年川蜀的瘟疫，是百年來最慘的一次。你在藥谷的草棚裡，送走了很多人。' },
+  { if: { flags: ['world_xueyi_rampant', 'wumian_defeated'] }, text: '那是血衣樓最猖狂的年頭，掌門一個接一個遇刺——而你，打碎了無面客的面具。' },
   { text: '你這一生，走過了宋蒙交戰的半個世紀，見過太多人來了又走。' },
 ];
 
@@ -299,6 +301,12 @@ export const rumors: RumorDef[] = [
   { id: 'r_escort', conditions: { minYear: 1240, maxYear: 1265 }, text: '長風鏢局又接了一趟去川蜀的鏢。鏢頭說，這年頭路上的潰兵比山賊還多。' },
   { id: 'r_shen', conditions: { minYear: 1241, maxYear: 1262 }, text: '江湖上傳說，有個醉醺醺的劍客一劍斬斷了十八個水寇的船槳。' },
   { id: 'r_qingming', conditions: { minYear: 1242, maxYear: 1248 }, text: '青冥山上，各派的年輕人又在比武了。聽說青衡劍府的大弟子奪了魁。' },
+  { id: 'r_xueyi_rampant', conditions: { minYear: 1255, maxYear: 1268, flags: ['world_xueyi_rampant'] }, weight: 2, text: '又一位掌門死在了自己的床上，房裡只留下一件染血的衣裳。這已經是今年的第四位了。' },
+  { id: 'r_xueyi_quiet', conditions: { minYear: 1255, maxYear: 1268, flags: ['world_xueyi_quiet'] }, text: '血衣樓這幾年沒什麼動靜。有人說樓主死了，也有人說，他們只是在等。' },
+  { id: 'r_plague_dire', conditions: { minYear: 1239, maxYear: 1243, flags: ['world_plague_dire'] }, weight: 2, text: '川蜀的瘟疫還沒過去。逃出來的人說，有的縣城整條街都空了。' },
+  { id: 'r_plague_light', conditions: { minYear: 1239, maxYear: 1243, flags: ['world_plague_light'] }, text: '川蜀的瘟疫退了。都說是濟世藥谷的功勞，谷主林鶴年的名字一下子傳遍了江湖。' },
+  { id: 'r_jianfu_rise', conditions: { minYear: 1245, maxYear: 1270, flags: ['world_jianfu_rise'] }, text: '青衡劍府這幾年人才輩出，連北邊的世家子弟都千里迢迢來拜師。' },
+  { id: 'r_jianfu_fall', conditions: { minYear: 1245, maxYear: 1270, flags: ['world_jianfu_fall'] }, weight: 2, text: '聽說青衡劍府出了內鬥，兩位長老在山上拔劍相向，好幾個弟子連夜下了山。' },
   { id: 'r_xueyi', conditions: { minYear: 1251, maxYear: 1254 }, text: '一夜之間，三位掌門遇刺身亡。江湖上的人都在悄悄說三個字：血衣樓。' },
   { id: 'r_han', conditions: { minYear: 1252, maxYear: 1262, not: { regions: ['xiangyang'] } }, text: '襄陽城門口豎起了一面「義」字旗。聽說是個使鐵槍的漢子在招人。' },
   { id: 'r_diaoyu', conditions: { minYear: 1259, maxYear: 1261, not: { regions: ['shu'] } }, text: '蒙古大汗死在了釣魚城下！北邊的大軍都撤了。' },

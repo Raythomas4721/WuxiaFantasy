@@ -25,11 +25,22 @@ function endDuel(s: GameState, over: 'win' | 'lose' | 'yield', hpRatio: number):
   return finishDuel({ ...s, duel: { ...d, over, me: { ...d.me, hp: Math.round(d.me.max * hpRatio) } } });
 }
 
+/** 暫時把習武的關卡權重固定，讓第二個關卡不受亂數影響。 */
+function withWeights<T>(w: Record<string, number>, fn: () => T): T {
+  const old = CONTENT.nodeWeights.martial;
+  CONTENT.nodeWeights.martial = w;
+  try {
+    return fn();
+  } finally {
+    CONTENT.nodeWeights.martial = old;
+  }
+}
+
 describe('關卡', () => {
   it('擲到小戰：先打一場，打完同一段日子再接劇情，時間不往前走', () => {
     let s = adult();
     s.upcoming = { focus: 'martial', node: 'fight' };
-    s = chooseFocus(s, 'martial');
+    s = withWeights({ story: 100 }, () => chooseFocus(s, 'martial'));
     expect(CONTENT.events.find((e) => e.id === s.current!.eventId)?.node?.tier).toBe('minor');
     expect(s.followUp).toBe(true);
     s = chooseOption(s, 'fight');
@@ -46,7 +57,7 @@ describe('關卡', () => {
   it('結果畫面會預告下一段日子的關卡', () => {
     let s = adult();
     s.upcoming = { focus: 'martial', node: 'insight' };
-    s = chooseFocus(s, 'martial');
+    s = withWeights({ insight: 100 }, () => chooseFocus(s, 'martial'));
     while (s.phase === 'event') s = chooseOption(s, choiceViews(s).find((c) => c.enabled && !c.duel)!.id);
     expect(s.upcoming?.focus).toBe('martial');
   });
@@ -111,5 +122,28 @@ describe('勝算提示', () => {
     expect(odds()).toBe('有幾分把握');
     s.player.health = 20;
     expect(odds()).toBe('九死一生');
+  });
+});
+
+describe('遊歷目的地與世界線', () => {
+  it('指定目的地：直接到那裡；路遠多一場小戰', () => {
+    const near = chooseFocus(adult(), 'travel', 'xiangyang');
+    expect(near.player.region).toBe('xiangyang');
+    expect(near.travelDest).toBe('xiangyang');
+    const far = chooseFocus(adult(), 'travel', 'shu');
+    expect(far.player.region).toBe('shu');
+    // 第一個關卡一定是路上的小戰
+    expect(CONTENT.events.find((e) => e.id === far.current!.eventId)?.node?.tier).toBe('minor');
+    expect(() => chooseFocus(adult(), 'martial', 'shu')).toThrow();
+  });
+
+  it('開局擲出的世界線旗標只會是兩端的值', () => {
+    const seen = new Set<string>();
+    for (let seed = 1; seed <= 40; seed++) {
+      const s = newGame({ name: '測試', trait: 'guomu', seed, background: 'farmer', region: 'jiangnan' });
+      for (const k of Object.keys(s.flags)) if (k.startsWith('world_')) seen.add(k);
+    }
+    expect([...seen].every((k) => /^world_(xueyi_(rampant|quiet)|plague_(light|dire)|jianfu_(rise|fall))$/.test(k))).toBe(true);
+    expect(seen.size).toBeGreaterThan(3);
   });
 });

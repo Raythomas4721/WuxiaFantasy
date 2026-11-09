@@ -209,6 +209,7 @@ export const nodeEvents: GameEvent[] = [
     kind: 'node',
     node: { tier: 'elite' },
     title: '夜行人',
+    weightMods: [{ if: { flags: ['world_xueyi_rampant'] }, mult: 2 }, { if: { flags: ['world_xueyi_quiet'] }, mult: 0.4 }],
     repeatable: true,
     maxTimes: 2,
     conditions: { minAge: 18 },

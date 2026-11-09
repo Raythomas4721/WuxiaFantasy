@@ -15,6 +15,7 @@ import { Rng } from './rng';
 import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
+import { adjacent, destinations, rollWorld } from './world';
 import type {
   Check,
   ChoiceView,
@@ -143,6 +144,7 @@ export function newGame(setup: NewGameSetup): GameState {
 
   applyEffects(s, bg.effects, rng);
   applyEffects(s, CONTENT.traits[setup.trait]?.effects, rng);
+  rollWorld(s, rng);
   s.rng = rng.state;
   return s;
 }
@@ -314,12 +316,14 @@ export function dueBoss(s: GameState): GameEvent | undefined {
 }
 
 function pickEncounter(s: GameState, tier: 'minor' | 'elite', rng: Rng): GameEvent | undefined {
-  const pool = CONTENT.events.filter((e) => e.kind === 'node' && e.node?.tier === tier && eventAllowed(s, e));
-  return pool.length > 0 ? rng.pick(pool) : undefined;
+  const pool = CONTENT.events
+    .filter((e) => e.kind === 'node' && e.node?.tier === tier && eventAllowed(s, e))
+    .map((e) => ({ item: e, weight: (e.weightMods ?? []).reduce((w, m) => (checkCondition(s, m.if) ? w * m.mult : w), 1) }));
+  return rng.weighted(pool) ?? undefined;
 }
 
 /** 照方針擲出的關卡：小戰、精英先打，打完同一段日子再接劇情；歇、悟、武館直接生效。 */
-function runNode(s: GameState, rng: Rng, focusId: string): void {
+function runNode(s: GameState, rng: Rng, focusId: string, far = false): void {
   // 立志、史實大事、論武這些強制事件優先，這段日子不擲關卡
   if (forcedEvent(s)) {
     s.upcoming = undefined;
@@ -331,6 +335,8 @@ function runNode(s: GameState, rng: Rng, focusId: string): void {
   s.upcoming = undefined;
   const boss = dueBoss(s);
   s.nodeQueue = boss ? [first] : [first, ...Array.from({ length: NODE.perPeriod - 1 }, () => rollNode(focusId, rng))];
+  // 遠路：路上多一場小戰
+  if (far) s.nodeQueue.unshift('fight');
   if (boss) {
     s.followUp = true;
     presentEvent(s, rng, boss);
@@ -498,14 +504,24 @@ export function streakIfChosen(s: GameState, focusId: string): number {
   return s.focusStreak?.id === focusId ? s.focusStreak.count + 1 : 1;
 }
 
-export function chooseFocus(state: GameState, focusId: string): GameState {
+export function chooseFocus(state: GameState, focusId: string, dest?: string): GameState {
   if (state.phase !== 'focus') throw new Error('現在不是選擇方針的時候');
   if (!focusOptions(state).some((f) => f.id === focusId)) throw new Error(`無法選擇方針：${focusId}`);
+  if (dest && (focusId !== 'travel' || !destinations(state).some((d) => d.id === dest))) throw new Error(`去不了：${dest}`);
   const s = clone(state);
   const rng = new Rng(s.rng);
   s.focusContext = focusContext(s);
   s.focusPrompt = undefined;
-  runFocus(s, rng, focusId);
+  let far = false;
+  if (dest) {
+    far = !adjacent(s.player.region, dest);
+    s.player.region = dest;
+    s.travelDest = dest;
+    s.focusContext = focusContext(s);
+    const name = CONTENT.regions[dest].name;
+    s.notices = [...(s.notices ?? []), far ? `你往${name}去。路很遠，一路上不太平。` : `你收拾行囊，往${name}去。`];
+  }
+  runFocus(s, rng, focusId, far);
   s.rng = rng.state;
   return s;
 }
@@ -517,7 +533,7 @@ export function requestFocusChange(state: GameState): GameState {
 }
 
 /** 照方針過一段日子：成長（連續太久會遞減），然後抽事件。 */
-function runFocus(s: GameState, rng: Rng, focusId: string): void {
+function runFocus(s: GameState, rng: Rng, focusId: string, far = false): void {
   const focus = CONTENT.focuses.find((f) => f.id === focusId);
   if (!focus) throw new Error(`未知方針：${focusId}`);
   const streak = streakIfChosen(s, focusId);
@@ -532,7 +548,7 @@ function runFocus(s: GameState, rng: Rng, focusId: string): void {
   }
   s.focus = focusId;
   s.focusStreak = { id: focusId, count: streak };
-  runNode(s, rng, focusId);
+  runNode(s, rng, focusId, far);
 }
 
 /** 檢定的勝算；打點過門路的人，拜師入門的檢定 +20%。 */
@@ -766,6 +782,7 @@ export function nextTurn(state: GameState): GameState {
   }
 
   s.notices = undefined;
+  s.travelDest = undefined;
   // 沒處理的牌庫變化就算放下了（畫面上會先要玩家處理完）
   s.deckTasks = undefined;
   if (p.alive) {

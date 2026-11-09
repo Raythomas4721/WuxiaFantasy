@@ -665,6 +665,8 @@ export interface GameState {
   focusPrompt?: { reason: FocusReason; text: string };
   /** 玩家在結果畫面要求下回合重新打算。 */
   wantsFocusChange?: boolean;
+  /** 遊歷指定的目的地：這段日子該地區的事件與名俠更容易遇到。 */
+  travelDest?: string;
   current?: { eventId: string; text: string; vars?: Record<string, string> };
   duel?: DuelState;
   /** 結果畫面之後，同一年接著發生的事件。 */

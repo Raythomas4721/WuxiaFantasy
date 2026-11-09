@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { CONTENT } from '../content';
+import { destinations } from '../engine/world';
 import { FATIGUE_STREAK, chooseFocus, focusOptions, streakIfChosen } from '../engine/game';
 import { LIFE_STAGES, chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber } from '../engine/text';
@@ -59,6 +61,7 @@ export function FocusView({ state, act }: Props) {
   const isChapter = !prompt || prompt.reason === 'stage';
   const threads = activeThreads(state);
   const options = focusOptions(state);
+  const [travelling, setTravelling] = useState(false);
 
   return (
     <article className="panel">
@@ -75,6 +78,10 @@ export function FocusView({ state, act }: Props) {
 
       <ThreadList state={state} threads={threads.slice(0, MAX_THREADS)} />
 
+      {travelling ? (
+        <TravelPicker state={state} act={act} back={() => setTravelling(false)} />
+      ) : (
+      <>
       <h3 className="focus-heading">{p.age < 13 ? '這幾年，你多半在……' : '接下來這段日子，你打算……'}</h3>
       <div className="focus-grid">
         {options.map((f) => {
@@ -85,7 +92,7 @@ export function FocusView({ state, act }: Props) {
             <button
               key={f.id}
               className={`focus-card ${current ? 'current' : ''}`}
-              onClick={() => act(() => chooseFocus(state, f.id))}
+              onClick={() => (f.id === 'travel' ? setTravelling(true) : act(() => chooseFocus(state, f.id)))}
             >
               <span className="pick-title">
                 {f.name}
@@ -114,7 +121,37 @@ export function FocusView({ state, act }: Props) {
           );
         })}
       </div>
+      </>
+      )}
     </article>
+  );
+}
+
+/** 遊歷：挑一個地方去，或隨處走走。 */
+function TravelPicker({ state, act, back }: Props & { back: () => void }) {
+  const here = CONTENT.regions[state.player.region].name;
+  return (
+    <>
+      <h3 className="focus-heading">你在{here}。這回要往哪裡去？</h3>
+      <div className="focus-grid">
+        {destinations(state).map((d) => (
+          <button key={d.id} className="focus-card" onClick={() => act(() => chooseFocus(state, 'travel', d.id))}>
+            <span className="pick-title">
+              {d.name}
+              {d.far && <span className="focus-note">路遠・多一場小戰</span>}
+            </span>
+            <span className="pick-desc">最近聽說：{d.hint}</span>
+          </button>
+        ))}
+        <button className="focus-card" onClick={() => act(() => chooseFocus(state, 'travel'))}>
+          <span className="pick-title">隨處走走</span>
+          <span className="pick-desc">不定方向，走到哪裡算哪裡。</span>
+        </button>
+      </div>
+      <button className="btn btn-ghost" onClick={back}>
+        ← 再想想
+      </button>
+    </>
   );
 }
 

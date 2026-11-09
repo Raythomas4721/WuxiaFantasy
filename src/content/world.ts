@@ -336,7 +336,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'travel',
     name: '遊歷',
-    desc: '行走四方，可能遇見奇人奇事，也可以換個地方生活。',
+    desc: '行走四方，可以自己挑去哪裡，也可能遇見奇人奇事。',
     conditions: { minAge: 15 },
     tags: ['travel', 'tavern', 'chance'],
     growth: [{ effect: fuyuan(1), chance: 0.3 }, { effect: money(-5) }],

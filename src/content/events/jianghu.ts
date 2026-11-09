@@ -12,6 +12,7 @@ export const jianghuEvents: GameEvent[] = [
     kind: 'normal',
     title: '無面客',
     weight: 30,
+    weightMods: [{ if: { flags: ['world_xueyi_rampant'] }, mult: 2 }, { if: { flags: ['world_xueyi_quiet'] }, mult: 0.4 }],
     conditions: {
       minAge: 18,
       maxAge: 50,
@@ -82,6 +83,7 @@ export const jianghuEvents: GameEvent[] = [
     kind: 'normal',
     title: '血衣令',
     weight: 18,
+    weightMods: [{ if: { flags: ['world_xueyi_rampant'] }, mult: 2 }, { if: { flags: ['world_xueyi_quiet'] }, mult: 0.4 }],
     repeatable: true,
     cooldown: 2,
     maxTimes: 3,
