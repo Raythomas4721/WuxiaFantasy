@@ -237,7 +237,7 @@ function NextButton({ state, act }: { state: GameState; act: (fn: () => GameStat
   );
 }
 
-/** 結果畫面的次要按鈕：下一回合重新選方針。 */
+/** 結果畫面的次要按鈕：「接下來改做別的事」，下一回合重新選方針。 */
 function ChangeFocusButton({ state, act }: { state: GameState; act: (fn: () => GameState) => void }) {
   const focus = CONTENT.focuses.find((f) => f.id === state.focus);
   if (!state.player.alive || state.chain || state.followUp || !focus || !state.focusStreak) return null;
@@ -247,9 +247,9 @@ function ChangeFocusButton({ state, act }: { state: GameState; act: (fn: () => G
       className={`btn btn-ghost change-focus ${weary ? 'weary' : ''}`}
       onClick={() => act(() => nextTurn(requestFocusChange(state)))}
     >
-      換個活法
+      接下來改做別的事
       <small>
-        目前：{focus.name}・第 {state.focusStreak.count} 回{weary ? '・已倦' : ''}
+        已經「{focus.name}」{chineseNumber(state.focusStreak.count)}段日子{weary ? '，有些倦了' : ''}
       </small>
     </button>
   );

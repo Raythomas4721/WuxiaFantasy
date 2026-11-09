@@ -469,7 +469,7 @@ function focusPrompt(s: GameState): GameState['focusPrompt'] {
   }
   if (s.wantsFocusChange) return { reason: 'manual', text: '你停下腳步，想了想往後的日子。' };
   if (streakIfChosen(s, s.focus) === FATIGUE_STREAK) {
-    return { reason: 'fatigue', text: `「${current.name}」的日子過了好些年，你漸漸有些倦了。也許該換個活法？` };
+    return { reason: 'fatigue', text: `「${current.name}」的日子過了好些年，你漸漸有些倦了。也許該換點別的事做？` };
   }
   return undefined;
 }
@@ -510,7 +510,7 @@ export function chooseFocus(state: GameState, focusId: string): GameState {
   return s;
 }
 
-/** 結果畫面上的「換個活法」：下一回合重新選方針。 */
+/** 結果畫面上的「接下來改做別的事」：下一回合重新選方針。 */
 export function requestFocusChange(state: GameState): GameState {
   if (state.phase !== 'result') throw new Error('現在不能改變方針');
   return { ...state, wantsFocusChange: true };
