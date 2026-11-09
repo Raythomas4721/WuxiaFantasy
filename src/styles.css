@@ -2466,3 +2466,51 @@ small {
     animation: none;
   }
 }
+
+/* ---------- 手機：手牌上方的精簡意圖列 ---------- */
+
+.intent-mini {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .intent-mini {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+  .intent-mini.intent-guard,
+  .intent-mini.intent-charge,
+  .intent-mini.intent-heal,
+  .intent-mini.intent-unknown {
+    background: var(--paper-2);
+  }
+  .intent-mini .intent-seal {
+    width: 1.8rem;
+    height: 1.8rem;
+    font-size: 1rem;
+  }
+  .intent-mini .intent-num {
+    font-size: 1.4rem;
+  }
+  .intent-mini .intent-name {
+    font-size: 0.85rem;
+  }
+  .intent-mini-foe {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--ink-2);
+    text-align: right;
+  }
+  .duel-stage {
+    height: 130px;
+  }
+  .duel-passives {
+    font-size: 0.75rem;
+  }
+}

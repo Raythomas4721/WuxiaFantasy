@@ -92,6 +92,7 @@ export function DuelView({ state, act }: Props) {
         <DuelOver d={d} onFinish={() => act(() => finishDuel(state))} />
       ) : (
         <>
+          <IntentMini d={d} />
           <Tips tips={duelTips(d)} />
           <div className="duel-hand" onClickCapture={(ev) => flyCard(ev.target as HTMLElement)}>
             {d.me.hand.map((id, i) => (
@@ -229,6 +230,25 @@ function IntentBadge({ d, detail }: { d: DuelState; detail: string }) {
       <span className="intent-body">
         <span className="intent-name">{INTENT_NAME[it.kind]}</span>
         <span className="intent-detail">{detail}</span>
+      </span>
+    </div>
+  );
+}
+
+/** 手機上手牌離對手很遠：在手牌正上方放一條精簡的意圖列（桌機用 CSS 藏起來）。 */
+function IntentMini({ d }: { d: DuelState }) {
+  const it = d.foe.intent;
+  const strike = ['attack', 'combo', 'feint', 'drain', 'curse'].includes(it.kind);
+  const per = it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) : 0);
+  const big = !d.clear ? '' : strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
+  return (
+    <div className={`intent-mini intent-${d.clear ? it.kind : 'unknown'}`} aria-hidden="true">
+      <span className="intent-seal">{d.clear ? SEAL[it.kind] : '？'}</span>
+      {big && <span className="intent-num">{big}</span>}
+      <span className="intent-name">{d.clear ? INTENT_NAME[it.kind] : '看不透'}</span>
+      <span className="intent-mini-foe">
+        {d.name}　{Math.max(0, d.foe.hp)}／{d.foe.max}
+        {d.foe.block > 0 && `・護 ${d.foe.block}`}
       </span>
     </div>
   );
