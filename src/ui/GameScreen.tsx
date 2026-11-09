@@ -11,6 +11,7 @@ import { DeckTaskPanel } from './DeckPanel';
 import { DuelView } from './DuelView';
 import { NODE_INFO } from '../content/nodes';
 import { FocusView } from './FocusView';
+import { Tips } from './Tips';
 import { MarketPanel } from './MarketPanel';
 import { StatusPanel } from './StatusPanel';
 
@@ -152,6 +153,15 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
             </aside>
           )}
           <DeckTaskPanel state={state} act={act} />
+          <Tips
+            tips={[
+              {
+                id: 'result-next',
+                when: state.player.alive && !state.deckTasks?.length,
+                text: '主按鈕寫著接下來會發生什麼。健康就是過招時的氣血：帶著傷就會帶著傷上場，過一段日子才會慢慢養回來。',
+              },
+            ]}
+          />
           {/* 牌庫的事要先處理完，才能往下走 */}
           {!(state.player.alive && state.deckTasks?.length) && (
             <div className="actions">
@@ -184,6 +194,21 @@ function EventView({ state, act }: { state: GameState; act: (fn: () => GameState
       <div className="story">
         <p>{state.current?.text}</p>
       </div>
+      <Tips
+        tips={[
+          {
+            id: 'event-minor',
+            when: e?.node?.tier === 'minor',
+            text: '⚔ 小戰：選有「過招」標記的選項就會開打，打贏可以挑一張新招。不想打也可以避開。',
+          },
+          { id: 'event-elite', when: e?.node?.tier === 'elite', text: '☠ 精英比小戰難打，但打贏給的牌比較好。' },
+          {
+            id: 'event-odds',
+            when: choiceViews(state).some((c) => c.odds),
+            text: '選項右邊的「把握很大」「九死一生」是勝算，已經算進你現在的健康。',
+          },
+        ]}
+      />
       <div className="choices">
         {choiceViews(state).map((c) => (
           <button

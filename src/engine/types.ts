@@ -571,6 +571,8 @@ export interface DuelState {
     rage?: number;
     /** 第二階段已經開始。 */
     phase2?: boolean;
+    /** 這場已經喊過的台詞種類。 */
+    said?: string[];
     /** 第二階段換過的打法。 */
     temper?: 'brute' | 'veteran' | 'guard';
     specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>;

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getCard } from '../engine/duel';
+import { sfx } from './sfx';
 import type { DuelState, IntentKind } from '../engine/types';
 
 export type Weapon = 'fist' | 'sword' | 'spear' | 'needle' | 'saber';
@@ -123,7 +124,10 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
     prev.current = d;
     if (p === d) return;
     const next = diff(p, d, weapon);
-    if (next) setFx(next);
+    if (next) {
+      setFx(next);
+      playSounds(next);
+    }
   }, [d, weapon]);
 
   const meDown = d.over === 'lose' || d.over === 'yield';
@@ -158,6 +162,30 @@ export function DuelStage({ d, weapon }: { d: DuelState; weapon: Weapon }) {
       />
     </div>
   );
+}
+
+const STRIKE_SOUND: Record<Exclude<StrikeKind, 'spark'>, () => void> = {
+  arc: sfx.slash,
+  thrust: sfx.thrust,
+  burst: sfx.punch,
+  needle: sfx.needle,
+};
+
+/** 照特效的時間點配音：兵器聲、受擊聲、擋格聲；回血、護體各一聲。 */
+function playSounds(fx: Fx): void {
+  const later = (ms: number, fn: () => void) => (ms > 0 ? setTimeout(fn, ms) : fn());
+  for (const s of fx.strikes) {
+    if (s.kind === 'spark') later(s.delay, sfx.parry);
+    else {
+      later(s.delay, STRIKE_SOUND[s.kind]);
+      later(s.delay + 50, sfx.hit);
+    }
+  }
+  const struck = fx.strikes.some((s) => s.kind !== 'spark');
+  // 內傷發作、伏招反擊這類沒有揮砍的傷害
+  if (!struck && fx.floats.some((f) => f.kind === 'dmg')) later(fx.floats.find((f) => f.kind === 'dmg')!.delay, sfx.hit);
+  if (fx.floats.some((f) => f.kind === 'heal')) sfx.heal();
+  if (fx.floats.some((f) => f.kind === 'block' && f.text.startsWith('護'))) sfx.guard();
 }
 
 /** 火花往八個方向飛。 */

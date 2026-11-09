@@ -3,6 +3,8 @@ import { CONTENT } from '../content';
 import { LEVEL_NAMES } from '../engine/describe';
 import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, resolvedEffect } from '../engine/duel';
 import { DuelStage, type Weapon } from './DuelStage';
+import { setSfxEnabled, sfx, sfxEnabled } from './sfx';
+import { Tips, type TipDef } from './Tips';
 import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
 import type { CardDef, CardKind, DuelState, GameState, IntentKind } from '../engine/types';
 
@@ -27,6 +29,7 @@ export function DuelView({ state, act }: Props) {
     <article className="panel duel">
       <header className="duel-head">
         <span className="duel-round">{d.lethal ? `生死之戰・第 ${d.round} 回合` : `第 ${d.round}／${DUEL.maxRounds} 回合`}</span>
+        <SoundToggle />
       </header>
 
       <section className="duel-side foe">
@@ -89,6 +92,7 @@ export function DuelView({ state, act }: Props) {
         <DuelOver d={d} onFinish={() => act(() => finishDuel(state))} />
       ) : (
         <>
+          <Tips tips={duelTips(d)} />
           <div className="duel-hand" onClickCapture={(ev) => flyCard(ev.target as HTMLElement)}>
             {d.me.hand.map((id, i) => (
               <HandCard key={`${id}-${i}`} d={d} card={getCard(id)} playable={canPlay(d, i)} onPlay={() => act(() => duelPlay(state, i))} />
@@ -112,6 +116,80 @@ export function DuelView({ state, act }: Props) {
         </>
       )}
     </article>
+  );
+}
+
+const STRIKES: IntentKind[] = ['attack', 'combo', 'feint', 'drain', 'curse'];
+
+/** 過招的指點：由上往下，挑第一則符合、還沒看過的。 */
+function duelTips(d: DuelState): TipDef[] {
+  const hand = d.me.hand.map((id) => getCard(id));
+  const strike = STRIKES.includes(d.foe.intent.kind);
+  const combo = hand.find((c) => c.after && hand.some((o) => o !== c && o.tag && c.after!.tags.includes(o.tag)));
+  return [
+    {
+      id: 'duel-lethal',
+      when: d.lethal,
+      text: '這是生死之戰：輸了，這一生就到這裡。真的撐不住就按「突圍」，保住性命，但傷得更重。',
+    },
+    {
+      id: 'duel-basics',
+      when: true,
+      text: '點手牌出招。牌左上角的數字是要花的內力，也就是「你」旁邊發光的珠子。內力用完就按「結束回合」，換對手出手。',
+    },
+    {
+      id: 'duel-intent',
+      when: d.clear && strike,
+      text: '對手那一格的印章是他的下一招。「攻 12」代表你按「結束回合」之後，他會打你 12 點。',
+    },
+    {
+      id: 'duel-guard',
+      when: strike && hand.some((c) => c.kind === 'guard'),
+      text: '對手要出手了——先出〈守〉牌疊護體，他的攻擊會先打在護體上。護體到回合結束就散了。',
+    },
+    {
+      id: 'duel-trap',
+      when: strike && hand.some((c) => c.kind === 'trap'),
+      text: '「伏」是伏招：先打出去埋著，等對手出手時自動發動，例如把他這一擊減半。',
+    },
+    {
+      id: 'duel-unclear',
+      when: !d.clear,
+      text: '「看不透」：你還看不清這個對手要做什麼，只能從他的動作猜。悟性越高，越看得清。',
+    },
+    {
+      id: 'duel-combo',
+      when: Boolean(combo),
+      text: combo ? `「${combo.name}」接在〈${combo.after!.tags.join('、')}〉之後出會更強：先出那一路的牌，再出它。` : '',
+    },
+    {
+      id: 'duel-foe-block',
+      when: d.foe.block > 0,
+      text: '對手有護體：你的攻擊要先打掉護體，才傷得到他。有的招式能破防，或直接無視護體。',
+    },
+    {
+      id: 'duel-yield',
+      when: !d.lethal && d.me.hp < d.me.max * 0.4,
+      text: '撐不住可以「認輸」：比試輸了只是受傷，不會死。',
+    },
+  ];
+}
+
+function SoundToggle() {
+  const [on, setOn] = useState(sfxEnabled());
+  return (
+    <button
+      className="sound-toggle"
+      aria-pressed={on}
+      title={on ? '關掉音效' : '打開音效'}
+      onClick={() => {
+        setSfxEnabled(!on);
+        setOn(!on);
+        if (!on) sfx.guard();
+      }}
+    >
+      {on ? '音效：開' : '音效：關'}
+    </button>
   );
 }
 
@@ -178,6 +256,7 @@ function DuelLog({ d }: { d: DuelState }) {
 function flyCard(target: HTMLElement): void {
   const card = target.closest('button.duel-card') as HTMLButtonElement | null;
   if (!card || card.disabled) return;
+  sfx.card();
   if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
   const from = card.getBoundingClientRect();
   const stage = document.querySelector('.duel-stage')?.getBoundingClientRect();
@@ -274,6 +353,10 @@ const AUTO_FINISH_MS = 1500;
 function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {
   const finish = useRef(onFinish);
   finish.current = onFinish;
+  useEffect(() => {
+    if (d.over === 'win') sfx.win();
+    else sfx.lose();
+  }, [d.over]);
   useEffect(() => {
     if (d.lethal) return;
     const t = setTimeout(() => finish.current(), AUTO_FINISH_MS);

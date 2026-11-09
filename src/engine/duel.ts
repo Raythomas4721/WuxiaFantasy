@@ -9,6 +9,7 @@ import { checkCondition, levelFromXp, skillLevel } from './conditions';
 import type { Rng } from './rng';
 import { growthPassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
+import { GENERIC, TAUNTS, type TauntKind } from '../content/taunts';
 import { fill } from './text';
 import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
@@ -535,6 +536,23 @@ function springFoeTrap(d: DuelState, t: { id: string; used: boolean }): void {
   if (def.drain) d.me.energy = Math.max(0, d.me.energy - def.drain);
 }
 
+/** 對手喊一句（每場每種最多一次）。不用亂數，免得影響模擬。 */
+function taunt(d: DuelState, kind: TauntKind): void {
+  const said = (d.foe.said ??= []);
+  if (said.includes(kind)) return;
+  const pool = TAUNTS[d.opponent]?.[kind] ?? GENERIC[kind];
+  if (!pool || pool.length === 0) return;
+  said.push(kind);
+  const line = pool[(d.round + said.length) % pool.length];
+  say(d, 'foe', line.startsWith('（') ? `{foe}${line}` : `{foe}：「${line}」`);
+}
+
+/** 對手挨了打之後的反應：倒下、掉到一半。有第二階段的首領半血時改說 phase2 的台詞。 */
+function foeReact(d: DuelState, hpBefore: number): void {
+  if (hpBefore > 0 && d.foe.hp <= 0) return taunt(d, 'defeat');
+  if (hpBefore >= d.foe.max / 2 && d.foe.hp < d.foe.max / 2 && !CONTENT.opponents[d.opponent].phase2) taunt(d, 'half');
+}
+
 function checkLowHp(d: DuelState): void {
   if (d.me.hp >= d.me.max / 2) return;
   const t = foeTrap(d, 'lowHp');
@@ -600,7 +618,10 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   const e = resolvedEffect(d, c);
   const nums = effectText({ dmg: e.dmg, hits: e.hits, block: e.block, heal: e.heal }).join('、');
   say(d, 'me', `【${c.name}】${c.flavor}${nums ? `（${nums}）` : ''}`);
+  const foeHp = d.foe.hp;
+  const foeBlock = d.foe.block;
   applyCardEffect(d, c, e);
+  if (c.kind === 'attack' && foeBlock > 0 && d.foe.block === 0 && d.foe.hp > 0) taunt(d, 'broken');
   if (c.selfHp) d.me.hp -= c.selfHp;
   d.me.played.push(id);
   if (!c.exhaust) d.me.discard.push(id);
@@ -612,6 +633,8 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   if (third) springFoeTrap(d, third);
   const byTag = c.tag ? foeTrap(d, 'tag', (t) => CONTENT.foeTraps[t.id].tag === c.tag) : undefined;
   if (byTag) springFoeTrap(d, byTag);
+  if (c.kind === 'attack' && attacks === 3 && d.foe.hp > 0) taunt(d, 'combo');
+  foeReact(d, foeHp);
   checkLowHp(d);
   checkOver(d);
   return d;
@@ -670,6 +693,8 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   d.log = [];
   const temper = TEMPER[CONTENT.opponents[d.opponent].temper];
 
+  const foeStart = d.foe.hp;
+  const meStart = d.me.hp;
   let intent = d.foe.intent;
   if (rng.chance(temper.switch)) {
     intent = pickIntent(d, rng, intent.kind);
@@ -714,6 +739,8 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
       break;
   }
 
+  if (meStart >= d.me.max * 0.3 && d.me.hp < d.me.max * 0.3 && d.me.hp > 0) taunt(d, 'gloat');
+  foeReact(d, foeStart);
   checkLowHp(d);
   checkPhase(d);
   if (d.me.fortify) d.me.fortify = undefined;
@@ -733,8 +760,10 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   // 下一回合
   d.round += 1;
   if (d.foe.bleed > 0) {
+    const before = d.foe.hp;
     d.foe.hp -= d.foe.bleed;
     say(d, 'sys', `${d.name}的內傷發作，失去 ${d.foe.bleed} 氣血。`);
+    foeReact(d, before);
     checkPhase(d);
     checkOver(d);
     if (d.over) return d;

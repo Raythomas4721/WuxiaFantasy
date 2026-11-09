@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Tips } from './Tips';
 import { CONTENT } from '../content';
 import { destinations } from '../engine/world';
 import { FATIGUE_STREAK, allocateStat, chooseFocus, focusOptions, streakIfChosen } from '../engine/game';
@@ -79,6 +80,20 @@ export function FocusView({ state, act }: Props) {
       )}
 
       <ThreadList state={state} threads={threads.slice(0, MAX_THREADS)} />
+      <Tips
+        tips={[
+          {
+            id: 'focus-points',
+            when: Boolean(state.statPoints),
+            text: '每進入人生的新一章，有幾點屬性可以自己分配。屬性到 7 以上，會有額外的效果。',
+          },
+          {
+            id: 'focus-intro',
+            when: !state.statPoints && p.age >= 7,
+            text: '方針決定這段日子怎麼過：每張卡寫了會有什麼收穫、比較常遇到哪種關卡。選了之後會一直照這樣過，想換的時候，在結果畫面按「接下來改做別的事」。',
+          },
+        ]}
+      />
 
       {state.statPoints ? (
         <StatAllocator state={state} act={act} />

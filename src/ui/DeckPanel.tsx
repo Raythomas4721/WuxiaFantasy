@@ -1,6 +1,7 @@
 import { CONTENT } from '../content';
 import { canUpgrade, pickCard, pickTalent, removeBlocked, removeCard, upgradeCard } from '../engine/deck';
 import { getTalent } from '../engine/talents';
+import { Tips } from './Tips';
 import { nextTurn } from '../engine/game';
 import { dojoOpen } from '../engine/market';
 import { cardSkill, cardText, getCard } from '../engine/duel';
@@ -44,6 +45,27 @@ export function DeckTaskPanel({ state, act }: Props) {
         {left > 0 && <span className="muted small">　（之後還有 {left} 件）</span>}
       </h3>
       <p className="deck-task-text">{task.text}</p>
+      <Tips
+        tips={[
+          {
+            id: 'deck-entry',
+            when: task.kind === 'pick' && task.picks > 1,
+            text: '你入門了一門武學：從它的招式裡挑兩招放進牌庫。牌庫就是你會的武功，過招時從裡面抽牌。',
+          },
+          {
+            id: 'deck-pick',
+            when: task.kind === 'pick',
+            text: '打贏了可以挑一張牌加進牌庫。好牌越多越強；但牌庫太雜，好牌就不容易抽到，不想要可以換點錢。',
+          },
+          {
+            id: 'deck-talent',
+            when: task.kind === 'talent',
+            text: '武學突破了境界：兩個心得選一個，選了就一直有效。選過的心得，在側欄的武學欄看得到。',
+          },
+          { id: 'deck-upgrade', when: task.kind === 'upgrade', text: '升級一張牌：數值變強，或者花的內力變少。' },
+          { id: 'deck-remove', when: task.kind === 'remove', text: '刪掉一張牌：牌庫越精，好牌就越常抽到。' },
+        ]}
+      />
 
       {task.kind === 'pick' && (
         <>
