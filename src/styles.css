@@ -2398,3 +2398,71 @@ small {
     transform: translate(-50%, -50%);
   }
 }
+
+/* ---------- 手牌提示 ---------- */
+
+.duel-card.hint {
+  position: relative;
+  border-width: 2px;
+}
+
+.card-hint {
+  position: absolute;
+  top: -0.7rem;
+  right: 0.5rem;
+  z-index: 1;
+  padding: 0.05rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--card);
+  background: var(--gold);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}
+
+.duel-card.hint-defend {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold), 0 0 12px color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+.duel-card.hint-combo,
+.duel-card.hint-kill,
+.duel-card.hint-break,
+.duel-card.hint-counter {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent), 0 0 12px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.hint-combo .card-hint,
+.hint-kill .card-hint,
+.hint-break .card-hint,
+.hint-counter .card-hint {
+  background: var(--accent);
+}
+
+.duel-card.hint-setup {
+  border-style: dashed;
+  border-color: var(--gold);
+}
+
+.hint-setup .card-hint {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  box-shadow: none;
+}
+
+.duel-card.hint-kill {
+  animation: hint-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes hint-pulse {
+  50% { box-shadow: 0 0 0 1px var(--accent), 0 0 20px var(--accent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duel-card.hint-kill {
+    animation: none;
+  }
+}

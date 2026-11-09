@@ -6,7 +6,7 @@ import { DuelStage, type Weapon } from './DuelStage';
 import { setSfxEnabled, sfx, sfxEnabled } from './sfx';
 import { Tips, type TipDef } from './Tips';
 import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
-import type { CardDef, CardKind, DuelState, GameState, IntentKind } from '../engine/types';
+import type { CardDef, CardKind, DuelState, GameState, IntentKind, TrapTrigger } from '../engine/types';
 
 /** 小人手上拿什麼：看主修的武學。 */
 const WEAPON: Record<string, Weapon> = {
@@ -136,6 +136,11 @@ function duelTips(d: DuelState): TipDef[] {
       id: 'duel-basics',
       when: true,
       text: '點手牌出招。牌左上角的數字是要花的內力，也就是「你」旁邊發光的珠子。內力用完就按「結束回合」，換對手出手。',
+    },
+    {
+      id: 'duel-hints',
+      when: d.me.hand.some((id, i) => canPlay(d, i) && cardHint(d, getCard(id), resolvedEffect(d, getCard(id)))),
+      text: '有些牌上方會亮起小標籤：「擋這招」「伏這招」「連招」「破防」「致勝」……代表這張牌現在出，剛好對得上局面。拿不定主意時，先出亮著的牌。',
     },
     {
       id: 'duel-intent',
@@ -309,7 +314,8 @@ function Statuses(p: {
 }
 
 /** 一張牌的牌面：過招的手牌、戰後選牌、牌庫都用它。 */
-export function CardFace({ card, disabled, onClick, note, className = '' }: {
+export function CardFace({ card, disabled, onClick, note, hint, className = '' }: {
+  hint?: Hint;
   card: CardDef;
   disabled?: boolean;
   onClick?: () => void;
@@ -318,7 +324,13 @@ export function CardFace({ card, disabled, onClick, note, className = '' }: {
 }) {
   const skill = cardSkill(card.id);
   return (
-    <button className={`duel-card kind-${card.kind} rarity-${card.rarity ?? 'common'} ${className}`} disabled={disabled} onClick={onClick}>
+    <button
+      className={`duel-card kind-${card.kind} rarity-${card.rarity ?? 'common'} ${hint ? `hint hint-${hint.kind}` : ''} ${className}`}
+      disabled={disabled}
+      onClick={onClick}
+      title={hint?.why}
+    >
+      {hint && <span className="card-hint">{hint.label}</span>}
       <span className="card-top">
         <span className="card-cost">{card.cost}</span>
         <span className="card-name">{card.name}</span>
@@ -339,12 +351,58 @@ export function CardFace({ card, disabled, onClick, note, className = '' }: {
   );
 }
 
+/** 手牌提示：這張牌現在出，剛好對得上局面。不改難度，只是讓人一眼看出該出什麼。 */
+interface Hint {
+  kind: 'kill' | 'combo' | 'break' | 'counter' | 'defend' | 'setup';
+  label: string;
+  why: string;
+}
+
+const TRAP_FITS: Record<TrapTrigger, IntentKind[]> = {
+  foeAttack: ['attack', 'combo', 'feint', 'drain', 'curse'],
+  foeFeint: ['feint'],
+  foeGuard: ['guard'],
+  foeCharge: ['charge'],
+};
+
+function cardHint(d: DuelState, card: CardDef, e: ReturnType<typeof resolvedEffect>): Hint | undefined {
+  const it = d.foe.intent;
+  const prev = d.me.played.length > 0 ? getCard(d.me.played[d.me.played.length - 1]) : undefined;
+  // 這一招就能打倒對手
+  if (card.kind === 'attack' && e.dmg) {
+    const raw = e.dmg * (e.hits ?? 1) * (d.foe.exposed > 0 ? DUEL.exposeMult : 1);
+    const dealt = e.pierce || e.breakGuard ? raw : raw - d.foe.block;
+    if (dealt >= d.foe.hp) return { kind: 'kill', label: '致勝', why: '這一招打得倒他' };
+  }
+  if (card.after && prev?.tag && card.after.tags.includes(prev.tag)) {
+    return { kind: 'combo', label: '連招', why: `接在〈${prev.tag}〉之後，這張有加成` };
+  }
+  if (d.foe.block > 0 && card.kind === 'attack' && (card.breakGuard || card.pierce)) {
+    return { kind: 'break', label: '破防', why: '對手有護體，這張可以破防或無視護體' };
+  }
+  if (!d.clear) return undefined;
+  if (card.vsIntent?.kinds.includes(it.kind)) return { kind: 'counter', label: '克制', why: '正好克制對手這一招' };
+  const strike = TRAP_FITS.foeAttack.includes(it.kind);
+  if (card.kind === 'trap' && card.trigger && TRAP_FITS[card.trigger].includes(it.kind) && d.me.traps.length < DUEL.trapSlots) {
+    return { kind: 'defend', label: '伏這招', why: '先埋下伏招，對手這一招出手時自動發動' };
+  }
+  if (strike && card.kind === 'guard' && (e.block ?? 0) > 0 && d.me.block < it.value + d.foe.charge) {
+    return { kind: 'defend', label: '擋這招', why: '對手要出手了，先疊護體' };
+  }
+  // 墊招：手上有接在這一路之後的牌，而且內力夠兩張一起出
+  const follow = card.tag
+    ? d.me.hand.map((id) => getCard(id)).find((o) => o !== card && o.after?.tags.includes(card.tag!) && card.cost + o.cost <= d.me.energy)
+    : undefined;
+  if (follow) return { kind: 'setup', label: '先出', why: `先出這張，再出「${follow.name}」有連招加成` };
+  return undefined;
+}
+
 function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; playable: boolean; onPlay: () => void }) {
   const e = resolvedEffect(d, card);
   const boosted = card.kind === 'attack' && e.dmg !== undefined && e.dmg !== card.dmg;
   const trapsFull = card.kind === 'trap' && d.me.traps.length >= DUEL.trapSlots;
   const note = boosted ? `這回合：傷害 ${e.dmg}` : trapsFull ? `伏招已滿（最多 ${DUEL.trapSlots} 張）` : undefined;
-  return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} />;
+  return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} hint={playable ? cardHint(d, card, e) : undefined} />;
 }
 
 /** 一般過招打完，看一眼結局就自動收招；生死之戰要自己按。 */
