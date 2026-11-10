@@ -100,6 +100,8 @@ function diff(prev: DuelState, d: DuelState, weapon: Weapon, tally: RoundTally):
       guard = taken > 0 ? 0 : guard;
     });
     if (blows.length > 0 || dodged) fx.foe = 'lunge';
+    // 故人援手
+    if (d.ally?.used && !prev.ally?.used) fx.highlight = { text: `援手・${d.ally.name}`, tone: 'gold' };
     // 首領絕技：招名大字
     const sigLine = d.log.find((l) => l.who === 'foe' && l.text.includes('使出【'));
     if (sigLine) fx.highlight = { text: /使出【(.+?)】/.exec(sigLine.text)![1], tone: 'red' };

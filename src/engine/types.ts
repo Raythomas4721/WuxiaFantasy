@@ -376,6 +376,15 @@ export interface Intent {
   next?: number;
 }
 
+/** 故人援手：交情夠深的人，首領戰、生死之戰裡出手幫你一次。 */
+export interface AllyDef {
+  /** 人物 id；companion 是兒時玩伴。 */
+  who: string;
+  minRelation: number;
+  kind: 'strike' | 'guard' | 'heal';
+  line: string;
+}
+
 /** 首領的招牌絕技：先蓄勢一回合（預告），下一回合打出來。 */
 export interface SignatureDef {
   name: string;
@@ -613,6 +622,8 @@ export interface DuelState {
   };
   /** 這一回合發生的事。 */
   log: DuelLogLine[];
+  /** 這場會出手幫你的故人（已經出過手就是 used）。 */
+  ally?: { who: string; name: string; kind: AllyDef['kind']; line: string; used?: boolean };
   /** 跟這個人交過手：之前打過幾次、上一次的結果。 */
   rematch?: { times: number; wins: number; last: 'win' | 'lose' | 'yield' };
   /** 對手打中你要害的次數（畫面靠它變化知道是新的一下）。 */
@@ -657,6 +668,8 @@ export interface DuelRecord {
   bestCard?: string;
   /** 打中要害的次數。 */
   crits?: number;
+  /** 危急時出手相助的故人。 */
+  ally?: string;
   /** 氣血最低時剩幾成（0–1）。 */
   low: number;
 }

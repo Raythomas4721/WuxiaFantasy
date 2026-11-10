@@ -67,6 +67,23 @@ describe('打中部位', () => {
   });
 });
 
+describe('故人援手', () => {
+  noLuck();
+  it('挨了致命一擊時替你擋下來，一場只出手一次', () => {
+    let d = rigged('tourney', [], { kind: 'attack', value: 60 });
+    d.ally = { who: 'qin_yuan', name: '秦遠', kind: 'guard', line: '秦遠擋在你前面。' };
+    d = endRound(d, new Rng(1));
+    expect(d.me.hp).toBeGreaterThan(0);
+    expect(d.over).toBeUndefined();
+    expect(d.ally!.used).toBe(true);
+    expect(d.me.block).toBeGreaterThan(0);
+    expect(d.log.some((l) => l.text.includes('【援手】'))).toBe(true);
+    d.foe.intent = { kind: 'attack', value: 200 };
+    d = endRound(d, new Rng(1));
+    expect(d.me.hp).toBeLessThanOrEqual(0);
+  });
+});
+
 describe('首領絕技', () => {
   noLuck();
   it('第二回合蓄勢預告，第三回合打出絕技', () => {

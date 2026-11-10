@@ -843,6 +843,7 @@ export function finishDuel(state: GameState): GameState {
     bestHit: d.stats?.bestHit ?? 0,
     bestCard: d.stats?.bestCard,
     crits: d.stats?.crits,
+    ally: d.ally?.used ? d.ally.name : undefined,
     low: Math.max(0, d.stats?.lowHp ?? d.me.hp) / d.me.max,
   };
   s.duel = undefined;

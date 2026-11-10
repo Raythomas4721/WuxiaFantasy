@@ -73,6 +73,12 @@ export function DuelView({ state, act }: Props) {
         </div>
         <HpBar side={d.me} />
         <Statuses block={d.me.block} exposed={d.me.exposed} boost={d.me.boost} />
+        {d.ally && (
+          <p className={`duel-ally ${d.ally.used ? 'used' : ''}`}>
+            援手・{d.ally.name}
+            <span className="muted small">{d.ally.used ? '（已出手）' : '（氣血三成以下時出手一次）'}</span>
+          </p>
+        )}
         {d.me.passive && d.me.passive.names.length > 0 && (
           <ul className="duel-passives">
             {d.me.passive.names.map((n) => (

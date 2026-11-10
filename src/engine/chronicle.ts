@@ -47,6 +47,11 @@ function plainCard(name: string): string {
 }
 
 function duelLine(r: DuelRecord): string {
+  const line = duelLineBase(r);
+  return r.ally ? `${line}危急時，${r.ally}出手相助。` : line;
+}
+
+function duelLineBase(r: DuelRecord): string {
   if (r.result === 'yield') return `生死關頭被${r.name}逼退，拚著一身傷才逃了出來。`;
   if (r.result === 'lose') return `敗在${r.name}手下。`;
   const again = (r.nth ?? 1) >= 2 ? `第${chineseNumber(r.nth!)}次和${r.name}交手，` : '';

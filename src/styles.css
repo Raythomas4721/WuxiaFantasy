@@ -3054,3 +3054,21 @@ small {
   color: var(--bad);
   font-weight: 700;
 }
+
+/* 故人援手 */
+.duel-ally {
+  margin: 0.3rem 0 0;
+  font-size: 0.85rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.duel-ally.used {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.duel-ally .muted {
+  margin-left: 0.3rem;
+  font-weight: 400;
+}

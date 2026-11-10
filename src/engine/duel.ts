@@ -5,11 +5,12 @@
 // 公開函式都回傳新的 DuelState，不修改傳入的物件。
 
 import { CONTENT } from '../content';
-import { checkCondition, levelFromXp, skillLevel } from './conditions';
+import { checkCondition, levelFromXp, npcAlive, skillLevel } from './conditions';
 import { Rng } from './rng';
 import { growthPassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
 import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
+import { allies } from '../content/allies';
 import { fill } from './text';
 import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
@@ -406,6 +407,7 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   };
   d.log.push({ who: 'sys', text: d.lethal ? `你和${d.name}之間，今天只有一個人能站著離開。` : `你和${d.name}拉開了架勢。` });
   if (affix) d.log.push({ who: 'sys', text: affix.text.replaceAll('{foe}', d.name) });
+  if (s) pickAlly(d, def, s);
   if (s && def.who) meetAgain(d, def.who, s);
   else if (s) reputation(d, s);
   if (passive.names.length > 0) d.log.push({ who: 'sys', text: `你運起${passive.names.map((n) => `【${n.split('：')[0]}】`).join('')}。` });
@@ -626,6 +628,57 @@ function foeReact(d: DuelState, hpBefore: number): void {
   if (hpBefore >= d.foe.max / 2 && d.foe.hp < d.foe.max / 2 && !CONTENT.opponents[d.opponent].phase2) taunt(d, 'half');
 }
 
+// ---------- 故人援手 ----------
+
+/** 氣血掉到這個比例以下（或挨了致命一擊），故人就出手。 */
+const ALLY_AT = 0.35;
+
+/** 首領戰、生死之戰：交情最深、夠格的那位故人會在附近。 */
+function pickAlly(d: DuelState, def: OpponentDef, s: GameState): void {
+  const tier = s.current ? CONTENT.events.find((e) => e.id === s.current!.eventId)?.node?.tier : undefined;
+  if (tier !== 'boss' && !def.lethal) return;
+  const foeWho = def.who ?? def.id;
+  const mongolFoe = MONGOLS.includes(def.id);
+  const pick = allies
+    .filter((a) => a.who !== foeWho && !(a.who === 'bater' && mongolFoe))
+    .filter((a) => (a.who === 'companion' ? true : npcAlive(s, a.who)))
+    .map((a) => {
+      const rel = s.relations[a.who] ?? 0;
+      const ok = rel >= a.minRelation || (a.who === 'companion' && Boolean(s.flags.took_blame));
+      return { a, rel, ok };
+    })
+    .filter((x) => x.ok)
+    .sort((x, y) => y.rel - x.rel)[0];
+  if (!pick) return;
+  const name = pick.a.who === 'companion' ? s.companion.name : CONTENT.npcs[pick.a.who]?.name ?? pick.a.who;
+  d.ally = { who: pick.a.who, name, kind: pick.a.kind, line: fill(pick.a.line, s) };
+  say(d, 'sys', `你知道${name}就在附近。真到了撐不住的時候，他不會袖手旁觀。`);
+}
+
+/** 危急時，故人出手一次。致命一擊也會替你擋下來。 */
+function checkAlly(d: DuelState): void {
+  const a = d.ally;
+  if (!a || a.used || d.over || d.foe.hp <= 0 || d.me.hp > d.me.max * ALLY_AT) return;
+  a.used = true;
+  if (d.me.hp <= 0) d.me.hp = 1;
+  say(d, 'sys', `【援手】${a.line.replaceAll('{foe}', d.name)}`);
+  if (a.kind === 'strike') {
+    const dmg = Math.round(d.foe.max * 0.18);
+    d.foe.hp -= dmg;
+    d.foe.exposed = Math.max(d.foe.exposed, 1);
+    say(d, 'sys', `${d.name}失了 ${dmg} 氣血，一時露出了破綻。`);
+  } else if (a.kind === 'guard') {
+    const block = Math.round(d.me.max * 0.35);
+    d.me.block += block;
+    d.me.fortify = true;
+    say(d, 'sys', `你得了 ${block} 點護體，留到下一回合。`);
+  } else {
+    const heal = Math.round(d.me.max * 0.35);
+    d.me.hp = Math.min(d.me.max, d.me.hp + heal);
+    say(d, 'sys', `你回了 ${heal} 氣血。`);
+  }
+}
+
 function checkLowHp(d: DuelState): void {
   if (d.me.hp >= d.me.max / 2) return;
   const t = foeTrap(d, 'lowHp');
@@ -718,6 +771,7 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   if (c.kind === 'attack' && attacks === 3 && d.foe.hp > 0) taunt(d, 'combo');
   foeReact(d, foeHp);
   checkLowHp(d);
+  checkAlly(d);
   trackLow(d);
   checkOver(d);
   return d;
@@ -907,6 +961,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   if (meStart >= d.me.max * 0.3 && d.me.hp < d.me.max * 0.3 && d.me.hp > 0) taunt(d, 'gloat');
   foeReact(d, foeStart);
   checkLowHp(d);
+  checkAlly(d);
   trackLow(d);
   checkPhase(d);
   if (d.me.fortify) d.me.fortify = undefined;
