@@ -19,6 +19,8 @@ export const fame = (delta: number): GameEffect => ({ type: 'fame', delta });
 export const chiv = (delta: number): GameEffect => ({ type: 'chivalry', delta });
 export const align = (delta: number): GameEffect => ({ type: 'alignment', delta });
 export const xp = (skill: string, n: number): GameEffect => ({ type: 'skill', skill, xp: n });
+/** 改以這門武學為主修。 */
+export const mainSkill = (skill: string): GameEffect => ({ type: 'mainSkill', skill });
 export const train = (kind: 'martial' | 'medicine' | 'sect', n: number): GameEffect => ({ type: 'train', kind, xp: n });
 export const join = (sect: string): GameEffect => ({ type: 'joinSect', sect });
 export const leaveSect = (): GameEffect => ({ type: 'leaveSect' });

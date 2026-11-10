@@ -3004,3 +3004,36 @@ small {
   margin: 0;
   line-height: 1.7;
 }
+
+/* 主修 */
+.main-badge {
+  margin-left: 0.4rem;
+  padding: 0 0.35rem;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.main-switch {
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border: 1px dashed var(--line);
+  border-radius: 3px;
+  background: none;
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.main-switch:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.choice-note {
+  display: block;
+  flex-basis: 100%;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}

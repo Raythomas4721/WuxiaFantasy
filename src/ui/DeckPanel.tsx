@@ -53,6 +53,11 @@ export function DeckTaskPanel({ state, act }: Props) {
             text: '你入門了一門武學：從它的招式裡挑兩招放進牌庫。牌庫就是你會的武功，過招時從裡面抽牌。',
           },
           {
+            id: 'deck-main',
+            when: task.kind === 'pick' && task.picks > 1 && Object.entries(state.player.skills).filter(([k, x]) => x > 0 && CONTENT.skills[k]?.kind === 'martial').length >= 2,
+            text: '你學會了第二門武學。想專心練它的話，到側欄「武學」按「改為主修」：往後習武就練它，第一次改還會觸類旁通，直接追到比原主修低一級。過招時小人手上的兵器、名號也會跟著變。',
+          },
+          {
             id: 'deck-pick',
             when: task.kind === 'pick',
             text: '打贏了可以挑一張牌加進牌庫。好牌越多越強；但牌庫太雜，好牌就不容易抽到，不想要可以換點錢。',

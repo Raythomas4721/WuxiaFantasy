@@ -190,6 +190,11 @@ export interface Fighter {
 
 /** 主修武學：等級最高的武學（同級比經驗）。 */
 export function mainSkill(s: GameState): { skill?: string; level: number } {
+  // 自己選的主修優先（要已經入門、而且有招式牌）
+  const chosen = s.player.mainSkill;
+  if (chosen && CONTENT.skillCards[chosen] && levelFromXp(s.player.skills[chosen] ?? 0) > 0) {
+    return { skill: chosen, level: levelFromXp(s.player.skills[chosen]) };
+  }
   let best: { skill?: string; level: number; xp: number } = { level: 0, xp: 0 };
   for (const [id, xp] of Object.entries(s.player.skills)) {
     if (CONTENT.skills[id]?.kind !== 'martial' || !CONTENT.skillCards[id]) continue;

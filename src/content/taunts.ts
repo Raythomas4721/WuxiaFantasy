@@ -148,6 +148,16 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     gloat: ['名頭是一刀一刀砍出來的，不是喊出來的。'],
     defeat: ['今日一敗……江湖上，又要多一個名字了。'],
   },
+  zhou_son: {
+    half: ['我練了十年，就是為了今天！'],
+    gloat: ['疼嗎？我爹也疼。'],
+    defeat: ['……你打吧。我爹的腿，也是這樣斷的。'],
+  },
+  manual_fiend: {
+    half: ['好……好！這本書果然沒騙我！'],
+    gloat: ['你也想練？可惜，書只有一本。'],
+    defeat: ['書上……沒寫……這一招……'],
+  },
   young_challenger: {
     half: ['不……我不會輸的！'],
     gloat: ['老了就該讓路！'],

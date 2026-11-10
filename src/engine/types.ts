@@ -79,6 +79,8 @@ export type GameEffect =
   | { type: 'relation'; npc: string; delta: number }
   | { type: 'money' | 'health' | 'fame' | 'chivalry' | 'alignment'; delta: number }
   | { type: 'skill'; skill: string; xp: number }
+  /** 改以這門武學為主修（觸類旁通：直接追到比原主修低一級）。 */
+  | { type: 'mainSkill'; skill: string }
   /** 增加某類武學中目前最熟練那一門的經驗；沒有時使用預設武學。 */
   | { type: 'train'; kind: 'martial' | 'medicine' | 'sect'; xp: number }
   | { type: 'joinSect'; sect: string }
@@ -132,7 +134,10 @@ export interface GameChoice {
   requires?: Condition;
   /** 條件不符時隱藏，而不是顯示為灰色。 */
   hidden?: boolean;
+  /** 條件不足時顯示的原因。 */
   hint?: string;
+  /** 選了會怎樣（可以選的時候也顯示），例如擇路的招式預覽、兩難的代價。 */
+  note?: string;
   check?: Check;
   /** 過招：用招式牌打一場，贏了走 success，輸了或認輸走 failure。 */
   duel?: DuelChoice;
@@ -657,6 +662,10 @@ export interface Player {
   sect?: string;
   masters: string[];
   ambition?: string;
+  /** 自己選的主修武學；習武時練它。沒選時以境界最高的那門為主修。 */
+  mainSkill?: string;
+  /** 已經觸類旁通過的武學（每門一次）。 */
+  caughtUp?: string[];
   /** 江湖名號：成名的地方固定下來；新的一章才可能改口。 */
   epithet?: { name: string; place: string; stage: number };
   alive: boolean;
@@ -834,6 +843,7 @@ export interface ChoiceView {
   text: string;
   enabled: boolean;
   hint?: string;
+  note?: string;
   odds?: string;
   /** 這個選項會開始一場過招。 */
   duel?: boolean;

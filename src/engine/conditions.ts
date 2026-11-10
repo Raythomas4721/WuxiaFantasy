@@ -14,6 +14,11 @@ export function windowStart(s: GameState): number {
 const LEVEL_XP = [1, 5, 12, 22, 36];
 
 /** 經驗值換算境界：0 不入流 … 5 返璞歸真。 */
+/** 到某個境界需要的經驗值。 */
+export function xpForLevel(level: number): number {
+  return level <= 0 ? 0 : LEVEL_XP[Math.min(level, LEVEL_XP.length) - 1];
+}
+
 export function levelFromXp(xp: number): number {
   return LEVEL_XP.filter((t) => xp >= t).length;
 }

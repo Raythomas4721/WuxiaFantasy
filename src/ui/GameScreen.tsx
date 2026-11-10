@@ -72,7 +72,7 @@ export function GameScreen({ state, unlocks, onChange, onNewLife, onCodex, onExi
         <aside className="game-side">
           <details className="side-details" open>
             <summary>{p.name} 的狀態</summary>
-            <StatusPanel state={state} />
+            <StatusPanel state={state} act={act} />
           </details>
         </aside>
 
@@ -240,6 +240,7 @@ function EventView({ state, act }: { state: GameState; act: (fn: () => GameState
             <span className="choice-text">{armed === c.id ? '輸了，這一生就到這裡。確定要打？再按一次' : c.text}</span>
             {c.lethal ? <span className="choice-lethal">生死之戰</span> : c.duel && <span className="choice-duel">過招</span>}
             {c.odds && <span className="choice-odds">{c.odds}</span>}
+            {c.note && <span className="choice-note">{c.note}</span>}
             {c.hint && <span className="choice-hint">{c.hint}</span>}
           </button>
         ))}

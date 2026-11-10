@@ -251,6 +251,9 @@ export function validateContent(content: Content): ValidationReport {
       case 'skill':
         if (!has(content.skills, e.skill)) errors.push(`${where}：未知武學 ${e.skill}`);
         break;
+      case 'mainSkill':
+        if (content.skills[e.skill]?.kind !== 'martial') errors.push(`${where}：主修必須是武學 ${e.skill}`);
+        break;
       case 'joinSect':
         if (!has(content.sects, e.sect)) errors.push(`${where}：未知門派 ${e.sect}`);
         setFlags.add(`joined_${e.sect}`);

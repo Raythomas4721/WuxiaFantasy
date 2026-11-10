@@ -7,7 +7,7 @@ import { updateEpithet } from './chronicle';
 import { CONTENT } from '../content';
 import { checkCondition, currentYear, martialLevel, npcAlive, skillLevel, unmetHints } from './conditions';
 import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
-import { applyEffects, killPlayer, withReputation } from './effects';
+import { applyEffects, killPlayer, switchMainSkill, withReputation } from './effects';
 import { MARKET } from '../content/market';
 import { createDuel, endRound, fighterFor, healthAfter, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
 import { DECK, pushDuelReward, pushTask, startingDeck, upgradableIndexes } from './deck';
@@ -604,6 +604,16 @@ export function allocateStat(state: GameState, stat: StatName): GameState {
 }
 
 /** 結果畫面上的「接下來改做別的事」：下一回合重新選方針。 */
+/** 玩家在側欄改主修：之後習武就練這一門（過招中不能改）。 */
+export function chooseMainSkill(state: GameState, skill: string): GameState {
+  if (state.phase === 'duel' || state.phase === 'ended') throw new Error('現在不能改主修');
+  if (CONTENT.skills[skill]?.kind !== 'martial' || skillLevel(state, skill) === 0) throw new Error(`還沒入門：${skill}`);
+  const s = clone(state);
+  const note = switchMainSkill(s, skill);
+  s.notices = [...(s.notices ?? []), note];
+  return s;
+}
+
 export function requestFocusChange(state: GameState): GameState {
   if (state.phase !== 'result') throw new Error('現在不能改變方針');
   return { ...state, wantsFocusChange: true };
@@ -662,6 +672,7 @@ export function choiceViews(s: GameState): ChoiceView[] {
       text: fill(c.text, s, s.current.vars),
       enabled,
       hint: enabled ? undefined : c.hint ?? (unmetHints(s, c.requires).join('、') || '條件不足'),
+      note: c.note ? fill(c.note, s, s.current.vars) : undefined,
       odds: enabled && c.check ? oddsLabel(choiceChance(s, c.check)) : enabled && c.duel ? duelOdds(s, opponentOf(s, c.duel)) : undefined,
       duel: Boolean(c.duel),
       lethal: c.duel ? Boolean(CONTENT.opponents[opponentOf(s, c.duel)]?.lethal) : undefined,

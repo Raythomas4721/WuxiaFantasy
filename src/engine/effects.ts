@@ -1,5 +1,6 @@
 import { CONTENT } from '../content';
-import { currentYear } from './conditions';
+import { currentYear, levelFromXp, xpForLevel } from './conditions';
+import { LEVEL_NAMES } from './describe';
 import { addToDeck, noteSkillGain } from './deck';
 import type { Rng } from './rng';
 import type { GameEffect, GameState } from './types';
@@ -10,7 +11,32 @@ const DEFAULT_SKILL = { martial: 'changquan', medicine: 'baicao' } as const;
 
 const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
 
+/**
+ * 改主修：之後「習武」練這一門。觸類旁通：第一次改成這門時，直接追到比原主修低一級，
+ * 換路線不必從頭來過（每門武學只有一次）。就地修改，回傳要告訴玩家的話。
+ */
+export function switchMainSkill(s: GameState, skill: string): string {
+  const p = s.player;
+  const name = CONTENT.skills[skill]?.name ?? skill;
+  const before = p.skills[skill] ?? 0;
+  if (before === 0) p.skills[skill] = 1;
+  const oldMain = bestSkillOfKind(s, 'martial');
+  const target = xpForLevel(levelFromXp(p.skills[oldMain] ?? 0) - 1);
+  let note = `你改以${name}為主修，往後習武就練它。`;
+  if (oldMain !== skill && !(p.caughtUp ?? []).includes(skill) && p.skills[skill] < target) {
+    p.skills[skill] = target;
+    p.caughtUp = [...(p.caughtUp ?? []), skill];
+    note += `你把${CONTENT.skills[oldMain]?.name ?? oldMain}的底子化進新的路數，觸類旁通，一下子到了「${LEVEL_NAMES[levelFromXp(target)]}」。`;
+  }
+  p.mainSkill = skill;
+  noteSkillGain(s, skill, before);
+  return note;
+}
+
 function bestSkillOfKind(s: GameState, kind: 'martial' | 'medicine'): string {
+  // 自己選的主修優先
+  const chosen = s.player.mainSkill;
+  if (kind === 'martial' && chosen && (s.player.skills[chosen] ?? 0) > 0) return chosen;
   let best: string = DEFAULT_SKILL[kind];
   let bestXp = -1;
   for (const [id, xp] of Object.entries(s.player.skills)) {
@@ -94,6 +120,9 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       }
       break;
     }
+    case 'mainSkill':
+      switchMainSkill(s, e.skill);
+      break;
     case 'joinSect':
       p.sect = e.sect;
       s.flags[`joined_${e.sect}`] = true;

@@ -4,6 +4,7 @@ import {
   LEVEL_NAMES, STAT_NAMES, STAT_ORDER, alignmentLabel, chivalryLabel, fameLabel, healthLabel,
 } from '../engine/describe';
 import { DUEL, REALM, mainSkill } from '../engine/duel';
+import { chooseMainSkill } from '../engine/game';
 import { activeThreads, ambitionView } from '../engine/threads';
 import { DeckList } from './DeckPanel';
 import { getTalent, talentHp } from '../engine/talents';
@@ -20,7 +21,7 @@ function relationLabel(v: number): string {
 }
 
 /** 側欄：屬性、狀態、心事、武學、人物。 */
-export function StatusPanel({ state }: { state: GameState }) {
+export function StatusPanel({ state, act }: { state: GameState; act?: (fn: () => GameState) => void }) {
   const p = state.player;
   const threads = activeThreads(state);
   const land = (p.properties ?? []).filter((x) => x.kind === 'land').length;
@@ -127,12 +128,29 @@ export function StatusPanel({ state }: { state: GameState }) {
           <p className="muted small">尚未習得任何武學</p>
         ) : (
           <ul className="plain-list">
-            {skills.map((s) => (
-              <li key={s.id} className="status-row">
-                <span>{CONTENT.skills[s.id].name}</span>
-                <span className="level">{LEVEL_NAMES[s.level]}</span>
-              </li>
-            ))}
+            {skills.map((s) => {
+              const martial = CONTENT.skills[s.id].kind === 'martial' && Boolean(CONTENT.skillCards[s.id]);
+              const isMain = martial && s.id === main.skill;
+              const canSwitch = martial && !isMain && act && state.phase !== 'duel' && state.player.alive;
+              return (
+                <li key={s.id} className="status-row">
+                  <span>
+                    {CONTENT.skills[s.id].name}
+                    {isMain && <span className="main-badge">主修</span>}
+                    {canSwitch && (
+                      <button
+                        className="main-switch"
+                        title="往後習武就練這一門。第一次改成這門時觸類旁通，直接追到比原主修低一級。"
+                        onClick={() => act!(() => chooseMainSkill(state, s.id))}
+                      >
+                        改為主修
+                      </button>
+                    )}
+                  </span>
+                  <span className="level">{LEVEL_NAMES[s.level]}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
         <p className="muted small realm">

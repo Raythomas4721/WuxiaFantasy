@@ -86,8 +86,8 @@ export const cards: Record<string, CardDef> = {
   // ---- 流雲步：身法帶起招式 ----
   shanshen: card({ id: 'shanshen', name: '閃身', kind: 'guard', tag: '步', cost: 1, block: 5, draw: 1, flavor: '你腳下一錯，閃到了{foe}的側面。' }),
   raobu: card({
-    id: 'raobu', name: '繞步', kind: 'trap', tag: '步', cost: 1, trigger: 'foeAttack', block: 7,
-    flavor: '{foe}一招遞到，你腳下一繞，只被帶到一點衣角。',
+    id: 'raobu', name: '繞步', kind: 'trap', tag: '步', cost: 1, trigger: 'foeAttack', block: 7, dmg: 4,
+    flavor: '{foe}一招遞到，你腳下一繞，只被帶到一點衣角，還順勢回了一腳。',
   }),
   tayun: card({
     id: 'tayun', name: '踏雲', rarity: 'uncommon', kind: 'skill', tag: '步', cost: 1, draw: 1, boostNext: { tags: ['劍', '拳', '槍'], dmg: 4 },
@@ -180,7 +180,7 @@ export const cards: Record<string, CardDef> = {
 
   // 流雲步：身法帶起招式（抽牌、引）
   feiyan: card({ id: 'feiyan', name: '飛燕', kind: 'guard', tag: '步', cost: 0, block: 3, flavor: '你身子一輕，像燕子一樣掠了開去。' }),
-  zhuiyun: card({ id: 'zhuiyun', name: '追雲', kind: 'attack', tag: '步', cost: 1, dmg: 5, after: { tags: ['步'], dmg: 5 }, flavor: '你借著身法的勢頭，一掌拍在{foe}的背上。' }),
+  zhuiyun: card({ id: 'zhuiyun', name: '追雲', kind: 'attack', tag: '步', cost: 1, dmg: 6, after: { tags: ['步'], dmg: 6 }, flavor: '你借著身法的勢頭，一掌拍在{foe}的背上。' }),
   yunzhong: card({ id: 'yunzhong', name: '雲中', rarity: 'uncommon', kind: 'guard', tag: '步', cost: 1, block: 5, draw: 2, flavor: '你在{foe}身邊繞來繞去，他連你的衣角都碰不到。' }),
   huanying: card({
     id: 'huanying', name: '幻影', rarity: 'uncommon', kind: 'trap', tag: '步', cost: 1, trigger: 'foeAttack', halve: true, draw: 1, energyNext: 1,
@@ -447,6 +447,14 @@ export const opponents: Record<string, OpponentDef> = {
   scar_boss: {
     id: 'scar_boss', name: '疤臉', who: 'scar', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '當年我也是這樣殺了你爹的。', temper: 'brute', rage: 4 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。', attack: '他咧開嘴，那道疤跟著扭了起來。' }),
+  },
+  zhou_son: {
+    id: 'zhou_son', name: '周家的兒子', level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'brute', specials: { enrage: 1 },
+    tells: tells({ attack: '他握棍的手指節發白，像是把這一下練了十年。', enrage: '他咬著牙，眼眶紅了。' }),
+  },
+  manual_fiend: {
+    id: 'manual_fiend', name: '練殘卷的魔頭', level: { relative: 1, min: 2, max: 5 }, wuxing: 7, temper: 'brute', specials: { drain: 1 }, hpMult: 0.9,
+    tells: tells({ attack: '他周身的氣脈逆著走，出手的路數邪得讓人頭皮發麻。', drain: '他的指尖泛著青黑色。' }),
   },
   young_challenger: {
     id: 'young_challenger', name: '上門挑戰的年輕人', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '前輩，晚輩要拚命了！', rage: 3 },
