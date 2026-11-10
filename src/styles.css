@@ -2514,3 +2514,247 @@ small {
     font-size: 0.75rem;
   }
 }
+
+/* ---------- 一生回顧 ---------- */
+
+.ending-epithet {
+  color: var(--ink-2);
+  letter-spacing: 0.15em;
+  margin: 0.2rem 0 0.6rem;
+}
+
+.epithet-seal {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.6rem;
+  border: 2px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  margin-right: -0.25em;
+  transform: rotate(-2deg);
+}
+
+.life-timeline,
+.ending-feats,
+.ending-people {
+  text-align: left;
+  margin-bottom: 1.75rem;
+}
+
+.life-timeline > h3,
+.ending-feats h3,
+.ending-people h3 {
+  font-size: 1rem;
+  color: var(--ink-3);
+  text-align: center;
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.3em;
+}
+
+.life-chapter {
+  margin-bottom: 1.1rem;
+  opacity: 0;
+  animation: life-in 0.6s ease forwards;
+}
+
+@keyframes life-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-chapter { animation: none; opacity: 1; }
+}
+
+.life-chapter h4 {
+  font-size: 0.95rem;
+  color: var(--accent);
+  letter-spacing: 0.15em;
+  margin: 0 0 0.35rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.life-ages {
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+}
+
+.life-chapter ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  margin-left: 0.4rem;
+  border-left: 2px solid var(--line);
+}
+
+.life-moment {
+  display: flex;
+  gap: 0.7rem;
+  padding: 0.35rem 0 0.35rem 0.8rem;
+  line-height: 1.8;
+  position: relative;
+}
+
+.life-moment::before {
+  content: '';
+  position: absolute;
+  box-sizing: border-box;
+  left: calc(-0.35rem - 1px);
+  top: 0.85rem;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 2px solid var(--ink-3);
+}
+
+.life-moment.is-duel::before {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.life-moment.is-death::before {
+  border-color: var(--ink);
+  background: var(--ink);
+}
+
+.life-age {
+  flex: none;
+  min-width: 2.2em;
+  color: var(--ink-3);
+  font-size: 0.85rem;
+  padding-top: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.life-age::after {
+  content: '歲';
+  font-size: 0.75em;
+  margin-left: 1px;
+}
+
+.life-mark {
+  display: inline-block;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 0.2rem 0.3rem;
+  margin-right: 0.4rem;
+  border-radius: 3px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  vertical-align: 0.15em;
+}
+
+.life-moment.is-death .life-mark {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.life-detail {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.life-detail::before {
+  content: '⚔ ';
+  color: var(--accent);
+}
+
+.ending-feats dl {
+  margin: 0;
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 0.8rem 1rem;
+}
+
+.feat {
+  display: flex;
+  gap: 0.8rem;
+  line-height: 1.7;
+}
+
+.feat dt {
+  flex: none;
+  width: 5.5em;
+  color: var(--ink-3);
+  font-size: 0.85rem;
+  padding-top: 0.1rem;
+}
+
+.feat dd {
+  margin: 0;
+  min-width: 0;
+}
+
+.ending-people ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.ending-people li {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.8rem;
+  background: var(--card);
+  font-size: 0.9rem;
+}
+
+.person-name {
+  font-weight: 700;
+  margin-right: 0.4rem;
+}
+
+.person-note {
+  color: var(--ink-3);
+  font-size: 0.82rem;
+}
+
+/* 過招戰報 */
+.duel-report {
+  list-style: none;
+  margin: -0.25rem 0 0.8rem;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  color: var(--ink-2);
+}
+
+.duel-report li.close {
+  color: var(--bad);
+}
+
+.duel-report li.record {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.record-tag {
+  margin-left: 0.4rem;
+  font-size: 0.72rem;
+  padding: 0.1rem 0.35rem;
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  animation: record-pop 0.5s ease;
+}
+
+@keyframes record-pop {
+  0% { transform: scale(1.6); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}

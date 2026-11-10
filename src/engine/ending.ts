@@ -1,4 +1,5 @@
 import { CONTENT } from '../content';
+import { epithet, lifeChapters, lifeFeats, lifePeople } from './chronicle';
 import { checkCondition, currentYear } from './conditions';
 import { chineseNumber, eraName, fill, renderText } from './text';
 import type { EndingResult, GameState } from './types';
@@ -46,5 +47,9 @@ export function computeEnding(s: GameState): EndingResult {
     deathLine: `${eraName(year)}（${year}），你${cause}，享年${chineseNumber(s.player.age)}歲。`,
     recaps,
     keepsake: keepsake ? fill(keepsake.ending, s) : undefined,
+    epithet: epithet(s),
+    chapters: lifeChapters(s),
+    feats: lifeFeats(s),
+    people: lifePeople(s),
   };
 }

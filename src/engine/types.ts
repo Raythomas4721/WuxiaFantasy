@@ -581,9 +581,33 @@ export interface DuelState {
   };
   /** 這一回合發生的事。 */
   log: DuelLogLine[];
+  /** 這場的戰報：最重的一擊、氣血最低到哪裡。舊存檔沒有。 */
+  stats?: DuelStats;
   over?: 'win' | 'lose' | 'yield';
   /** 觸發這場過招的事件選項。 */
   choiceId: string;
+}
+
+export interface DuelStats {
+  bestHit: number;
+  bestCard?: string;
+  /** 你的氣血最低到過多少。 */
+  lowHp: number;
+}
+
+/** 一場過招的紀錄，結局的一生回顧用。 */
+export interface DuelRecord {
+  turn: number;
+  age: number;
+  name: string;
+  tier?: 'minor' | 'elite' | 'boss';
+  lethal: boolean;
+  result: 'win' | 'lose' | 'yield';
+  rounds: number;
+  bestHit: number;
+  bestCard?: string;
+  /** 氣血最低時剩幾成（0–1）。 */
+  low: number;
 }
 
 export interface Player {
@@ -663,6 +687,28 @@ export interface EndingResult {
   recaps: string[];
   /** 最重要的一件信物的回顧。 */
   keepsake?: string;
+  /** 江湖人給的名號。活得太短就沒有。 */
+  epithet?: string;
+  /** 一生回顧：按章節排的時間軸。 */
+  chapters?: LifeChapter[];
+  /** 這一生的過招。 */
+  feats?: { label: string; value: string }[];
+  /** 這一生的人。 */
+  people?: { name: string; note: string }[];
+}
+
+export interface LifeMoment {
+  age: number;
+  text: string;
+  kind: 'story' | 'duel' | 'death';
+  /** 同一件事裡那場過招的戰況。 */
+  detail?: string;
+}
+
+export interface LifeChapter {
+  title: string;
+  ages: string;
+  moments: LifeMoment[];
 }
 
 export type FocusReason = 'stage' | 'invalid' | 'sect' | 'master' | 'ambition' | 'region' | 'manual' | 'fatigue';
@@ -734,6 +780,8 @@ export interface GameState {
   snapshot?: Snapshot;
   deathCause?: string;
   ending?: EndingResult;
+  /** 打過的每一場過招。 */
+  duels?: DuelRecord[];
 }
 
 /** 結果畫面上等著處理的牌庫變化，一次處理一件。 */

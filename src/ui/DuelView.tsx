@@ -89,7 +89,7 @@ export function DuelView({ state, act }: Props) {
       </section>
 
       {d.over ? (
-        <DuelOver d={d} onFinish={() => act(() => finishDuel(state))} />
+        <DuelOver d={d} prevBest={Math.max(0, ...(state.duels ?? []).map((r) => r.bestHit))} first={!state.duels?.length} onFinish={() => act(() => finishDuel(state))} />
       ) : (
         <>
           <IntentMini d={d} />
@@ -426,9 +426,9 @@ function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; 
 }
 
 /** 一般過招打完，看一眼結局就自動收招；生死之戰要自己按。 */
-const AUTO_FINISH_MS = 1500;
+const AUTO_FINISH_MS = 2200;
 
-function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {
+function DuelOver({ d, prevBest, first, onFinish }: { d: DuelState; prevBest: number; first: boolean; onFinish: () => void }) {
   const finish = useRef(onFinish);
   finish.current = onFinish;
   useEffect(() => {
@@ -445,9 +445,24 @@ function DuelOver({ d, onFinish }: { d: DuelState; onFinish: () => void }) {
     lose: d.lethal ? `你倒在了${d.name}的面前。` : `你敗給了${d.name}。`,
     yield: d.lethal ? `你拚著一身傷，從${d.name}手下突圍而出。` : `你向${d.name}認輸了。`,
   }[d.over!];
+  const st = d.stats;
+  const low = st ? Math.max(0, Math.round((st.lowHp / d.me.max) * 100)) : undefined;
+  const record = !first && st && st.bestHit > prevBest;
   return (
     <div className={`duel-over ${d.over}`}>
       <p>{text}</p>
+      {st && (
+        <ul className="duel-report">
+          <li>{d.round} 回合</li>
+          {st.bestHit > 0 && (
+            <li className={record ? 'record' : undefined}>
+              最重一擊【{st.bestCard}】{st.bestHit}
+              {record && <span className="record-tag">生平最重</span>}
+            </li>
+          )}
+          {low !== undefined && low < 100 && <li className={low < 20 ? 'close' : undefined}>最險時剩 {low}% 氣血</li>}
+        </ul>
+      )}
       <button className="btn btn-primary" onClick={onFinish}>
         收招
       </button>

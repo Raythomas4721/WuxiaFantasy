@@ -1,3 +1,4 @@
+import { chapterMoments } from '../engine/chronicle';
 import { useState } from 'react';
 import { Tips } from './Tips';
 import { CONTENT } from '../content';
@@ -203,14 +204,8 @@ function ChapterHead({ state }: { state: GameState }) {
   const p = state.player;
   const index = stageIndex(p.age);
   const stage = LIFE_STAGES[index];
-  const prevFrom = LIFE_STAGES[index - 1]?.from ?? 0;
-  // 上一階段最重要的一兩件事
-  const looking = state.history
-    .filter((h) => h.recap && h.age >= prevFrom && h.age < stage.from)
-    .sort((a, b) => (b.recap?.weight ?? 0) - (a.recap?.weight ?? 0) || a.turn - b.turn)
-    .slice(0, 2)
-    .sort((a, b) => a.turn - b.turn)
-    .map((h) => h.recap!.text);
+  // 上一階段最重要的一兩件事，和那幾年最硬的一仗
+  const looking = index > 0 ? chapterMoments(state, index - 1, 2) : [];
 
   const where = [`如今你在${CONTENT.regions[p.region].name}`];
   if (p.sect) where.push(`是${CONTENT.sects[p.sect].name}的弟子`);
@@ -223,8 +218,11 @@ function ChapterHead({ state }: { state: GameState }) {
       <p className="chapter-opening">{stage.opening}</p>
       {looking.length > 0 && (
         <ul className="chapter-looking">
-          {looking.map((t, i) => (
-            <li key={i}>{t}</li>
+          {looking.map((m, i) => (
+            <li key={i} className={m.kind === 'duel' ? 'is-duel' : undefined}>
+              {m.age}歲，{m.text}
+              {m.detail && <span className="life-detail">{m.detail}</span>}
+            </li>
           ))}
         </ul>
       )}

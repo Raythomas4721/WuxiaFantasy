@@ -621,6 +621,12 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   const foeHp = d.foe.hp;
   const foeBlock = d.foe.block;
   applyCardEffect(d, c, e);
+  const dealt = foeHp - Math.max(0, d.foe.hp);
+  const st = (d.stats ??= { bestHit: 0, lowHp: d.me.hp });
+  if (dealt > st.bestHit) {
+    st.bestHit = dealt;
+    st.bestCard = c.name;
+  }
   if (c.kind === 'attack' && foeBlock > 0 && d.foe.block === 0 && d.foe.hp > 0) taunt(d, 'broken');
   if (c.selfHp) d.me.hp -= c.selfHp;
   d.me.played.push(id);
@@ -636,8 +642,14 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   if (c.kind === 'attack' && attacks === 3 && d.foe.hp > 0) taunt(d, 'combo');
   foeReact(d, foeHp);
   checkLowHp(d);
+  trackLow(d);
   checkOver(d);
   return d;
+}
+
+function trackLow(d: DuelState): void {
+  const st = (d.stats ??= { bestHit: 0, lowHp: d.me.hp });
+  st.lowHp = Math.min(st.lowHp, Math.max(0, d.me.hp));
 }
 
 /** 發動符合條件的第一張伏招；回傳它，讓呼叫者處理閃避與減半。 */
@@ -742,6 +754,7 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   if (meStart >= d.me.max * 0.3 && d.me.hp < d.me.max * 0.3 && d.me.hp > 0) taunt(d, 'gloat');
   foeReact(d, foeStart);
   checkLowHp(d);
+  trackLow(d);
   checkPhase(d);
   if (d.me.fortify) d.me.fortify = undefined;
   else d.me.block = Math.floor(d.me.block * (d.me.passive?.retainBlock ?? 0));

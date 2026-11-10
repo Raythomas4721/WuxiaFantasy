@@ -1,5 +1,5 @@
 import { CONTENT } from '../content';
-import type { GameState } from '../engine/types';
+import type { GameState, LifeChapter } from '../engine/types';
 import type { LifeUnlocks } from '../save/codex';
 
 interface Props {
@@ -21,6 +21,11 @@ export function EndingView({ state, unlocks, onNewLife, onCodex, onExit }: Props
         {p.name} · {bg.name} · {p.birthYear}–{p.birthYear + p.age}
       </p>
       <h1 className="ending-title">{e.title}</h1>
+      {e.epithet && (
+        <p className="ending-epithet">
+          江湖人稱<span className="epithet-seal">{e.epithet}</span>
+        </p>
+      )}
       <p className="ending-death">{e.deathLine}</p>
 
       <div className="story ending-text">
@@ -38,7 +43,37 @@ export function EndingView({ state, unlocks, onNewLife, onCodex, onExit }: Props
 
       {e.eraLine && <p className="ending-era">{e.eraLine}</p>}
 
-      {e.recaps.length > 0 && (
+      {e.chapters && e.chapters.length > 0 && <LifeTimeline chapters={e.chapters} />}
+
+      {e.feats && e.feats.length > 0 && (
+        <section className="ending-feats">
+          <h3>這一生的過招</h3>
+          <dl>
+            {e.feats.map((f) => (
+              <div key={f.label} className="feat">
+                <dt>{f.label}</dt>
+                <dd>{f.value}</dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
+
+      {e.people && e.people.length > 0 && (
+        <section className="ending-people">
+          <h3>這一生的人</h3>
+          <ul>
+            {e.people.map((x) => (
+              <li key={x.name + x.note}>
+                <span className="person-name">{x.name}</span>
+                <span className="person-note">{x.note}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {!e.chapters && e.recaps.length > 0 && (
         <section className="ending-recaps">
           <h3>人生回顧</h3>
           <ul>
@@ -83,5 +118,36 @@ export function EndingView({ state, unlocks, onNewLife, onCodex, onExit }: Props
         </button>
       </div>
     </main>
+  );
+}
+
+const KIND_MARK = { story: '', duel: '戰', death: '終' } as const;
+
+/** 一生回顧：一章一章往下讀，每件事前面標著歲數。 */
+function LifeTimeline({ chapters }: { chapters: LifeChapter[] }) {
+  return (
+    <section className="life-timeline">
+      <h3>一生</h3>
+      {chapters.map((c, ci) => (
+        <div key={c.title} className="life-chapter" style={{ animationDelay: `${ci * 0.25}s` }}>
+          <h4>
+            {c.title}
+            <span className="life-ages">{c.ages}</span>
+          </h4>
+          <ol>
+            {c.moments.map((m, i) => (
+              <li key={i} className={`life-moment is-${m.kind}`}>
+                <span className="life-age">{m.age}</span>
+                <span className="life-text">
+                  {KIND_MARK[m.kind] && <span className="life-mark">{KIND_MARK[m.kind]}</span>}
+                  {m.text}
+                  {m.detail && <span className="life-detail">{m.detail}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ))}
+    </section>
   );
 }
