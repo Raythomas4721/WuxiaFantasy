@@ -13,6 +13,43 @@ export const GENERIC: Record<TauntKind, string[]> = {
   defeat: ['你……你等著……', '算你狠。'],
 };
 
+/** 重逢時的開場白，依上一次的結果：won 你贏了他、lost 你輸了、fled 你突圍逃走。 */
+export type RematchKind = 'won' | 'lost' | 'fled';
+
+export const GENERIC_REMATCH: Record<RematchKind, string> = {
+  won: '上回輸給你，我一直記著。',
+  lost: '又是你？上回還沒吃夠苦頭？',
+  fled: '上回讓你跑了。這回可沒那麼便宜。',
+};
+
+export const REMATCH: Record<string, Record<RematchKind, string>> = {
+  scar: {
+    won: '上回讓你撿了便宜。今天，連本帶利一起討回來！',
+    lost: '還敢來？上回沒要你的命，是老子心軟。',
+    fled: '上回讓你跑了。今天，你跑不了。',
+  },
+  rival: {
+    won: '上次是我大意了。這回，我要你輸得心服口服！',
+    lost: '怎麼，還沒認清楚？你這輩子都比不上我。',
+    fled: '上回你跑得倒快。',
+  },
+  xie_lingshuang: {
+    won: '上一回輸給你，我回去練了很久。',
+    lost: '你又來了。這回，別讓我失望。',
+    fled: '上次你收手了。這回，別再留情。',
+  },
+  bater: {
+    won: '上一回你贏了。草原上的狼，不會輸兩次。',
+    lost: '你還是來了。我本來不想再對你出手。',
+    fled: '上回你走了。這一次，長生天不會再放你走。',
+  },
+  wumian: {
+    won: '……你還活著。那就再來一次。',
+    lost: '還沒死心？',
+    fled: '跑得了一次，跑不了兩次。',
+  },
+};
+
 export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
   kid_bully: {
     half: ['你、你敢打我？我告訴我娘去！'],

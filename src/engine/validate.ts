@@ -3,7 +3,7 @@
 import { TEMPLATE_KEYS } from './text';
 import type { Condition, Content, GameEffect, Outcome, OutcomeSpec, TextSpec, VarSpec } from './types';
 import { WORLD_FLAGS } from './world';
-import { TAUNTS } from '../content/taunts';
+import { REMATCH, TAUNTS } from '../content/taunts';
 import { encounterFoes } from '../content/encounters';
 
 /** 引擎自己設定的旗標。 */
@@ -182,6 +182,8 @@ export function validateContent(content: Content): ValidationReport {
   }
   for (const [key, n] of talentSlots) if (n !== 2) errors.push(`心得 ${key}：應該剛好兩個，現在 ${n} 個`);
   for (const id of Object.keys(TAUNTS)) if (!content.opponents[id]) errors.push(`台詞：未知過招對手 ${id}`);
+  const whos = new Set(Object.values(content.opponents).map((o) => o.who).filter(Boolean));
+  for (const who of Object.keys(REMATCH)) if (!whos.has(who)) errors.push(`重逢台詞：沒有對手的身分是 ${who}`);
   for (const f of encounterFoes) if (!content.opponents[f.opponent]) errors.push(`組合式小戰：未知過招對手 ${f.opponent}`);
   content.specialCards.forEach((sp, i) => {
     conditions.push({ where: `特殊牌 ${i}`, c: sp.if });

@@ -772,10 +772,16 @@ export function finishDuel(state: GameState): GameState {
   if (d.me.spent) s.player.money = Math.max(0, s.player.money - d.me.spent);
   // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
   applyEffects(s, (d.me.used ?? []).map((skill) => ({ type: 'skill' as const, skill, xp: DECK.duelXp })), rng);
+  const who = CONTENT.opponents[d.opponent]?.who;
   (s.duels ??= []).push({
     turn: s.turn,
     age: s.player.age,
     name: d.name,
+    opponent: d.opponent,
+    baseName: fill(CONTENT.opponents[d.opponent]?.name ?? d.name, s),
+    who,
+    nth: d.rematch ? d.rematch.times + 1 : who ? 1 : undefined,
+    avenged: d.over === 'win' && d.rematch !== undefined && d.rematch.last !== 'win' ? true : undefined,
     tier: e.node?.tier,
     lethal: d.lethal,
     result: d.over!,

@@ -8,6 +8,9 @@
   --line: #d6cab4;
   --accent: #9e2b25;
   --accent-soft: #f1dcd5;
+  /* 主要按鈕的底色與字色（深色模式的 accent 太亮，配淺色字看不清） */
+  --accent-fill: #9e2b25;
+  --on-accent: #fff8f0;
   --good: #3d6b4a;
   --bad: #9e2b25;
   --gold: #8a6a2a;
@@ -28,6 +31,7 @@
     --line: #3e3831;
     --accent: #d66a5c;
     --accent-soft: #3a2522;
+    --accent-fill: #a83a30;
     --good: #7fb08a;
     --bad: #e07f72;
     --gold: #cfae6a;
@@ -105,13 +109,13 @@ small {
 }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff8f0;
+  background: var(--accent-fill);
+  border-color: var(--accent-fill);
+  color: var(--on-accent);
 }
 
 .btn-primary:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--accent-fill);
   filter: brightness(1.08);
 }
 
@@ -2832,4 +2836,17 @@ small {
   text-align: right;
   font-size: 0.75rem;
   color: var(--ink-3);
+}
+
+/* 重逢的結果 */
+.duel-over p.duel-again {
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  margin-top: -0.4rem;
+}
+
+.duel-over p.duel-again.avenged {
+  color: var(--gold);
+  font-weight: 700;
+  animation: record-pop 0.5s ease;
 }

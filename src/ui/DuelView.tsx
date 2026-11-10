@@ -560,9 +560,16 @@ function DuelOver({ d, prevBest, first, onFinish }: { d: DuelState; prevBest: nu
   const st = d.stats;
   const low = st ? Math.max(0, Math.round((st.lowHp / d.me.max) * 100)) : undefined;
   const record = !first && st && st.bestHit > prevBest;
+  const rm = d.rematch;
+  const again = !rm
+    ? undefined
+    : d.over === 'win'
+      ? rm.last === 'win' ? '你又一次勝過了他。' : '這一回，你扳回了上一次的敗局。'
+      : d.over === 'lose' && rm.last === 'lose' ? '你又一次敗在他手下。' : undefined;
   return (
     <div className={`duel-over ${d.over}`}>
       <p>{text}</p>
+      {again && <p className={`duel-again ${d.over === 'win' && rm?.last !== 'win' ? 'avenged' : ''}`}>{again}</p>}
       {st && (
         <ul className="duel-report">
           <li>{d.round} 回合</li>

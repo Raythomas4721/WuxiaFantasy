@@ -310,7 +310,7 @@ const tells = (t: Partial<Record<IntentKind, string>>): Record<IntentKind, strin
 
 export const opponents: Record<string, OpponentDef> = {
   scar_young: {
-    id: 'scar_young', name: '疤臉', level: 1, wuxing: 4, temper: 'brute', traps: ['fanshou'],
+    id: 'scar_young', name: '疤臉', who: 'scar', level: 1, wuxing: 4, temper: 'brute', traps: ['fanshou'],
     tells: tells({ attack: '他把刀舉過頭頂，想一刀劈死你。', combo: '他的刀亂劈亂砍，毫無章法，卻又快又狠。' }),
   },
   tourney: {
@@ -318,7 +318,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ guard: '他抱拳守住門戶，一副不急不躁的樣子。' }),
   },
   rival: {
-    id: 'rival', name: '{rival}', level: { relative: -1, min: 1, max: 3 }, wuxing: 4, temper: 'brute', traps: ['weiou'],
+    id: 'rival', name: '{rival}', who: 'rival', level: { relative: -1, min: 1, max: 3 }, wuxing: 4, temper: 'brute', traps: ['weiou'],
     tells: tells({ attack: '他咬著牙，一拳就朝你臉上招呼過來。', guard: '他往打手身後一縮。' }),
   },
   senior: {
@@ -346,7 +346,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他把刀舉過肩，一副要硬碰硬的樣子。' }),
   },
   rival_lunwu: {
-    id: 'rival_lunwu', name: '{rival}', level: { relative: 0, min: 2, max: 4 }, wuxing: 5, temper: 'veteran',
+    id: 'rival_lunwu', name: '{rival}', who: 'rival', level: { relative: 0, min: 2, max: 4 }, wuxing: 5, temper: 'veteran',
     tells: tells({ feint: '他的拳頭虛晃，眼睛卻一直盯著你的下盤。', attack: '他咬著牙，一副拚命的樣子。' }),
   },
   jianfu_disciple: {
@@ -363,7 +363,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他的劍勢沉了下來，下一劍會很重。', feint: '他的劍尖輕輕點著，虛實難辨。' }),
   },
   xie_lingshuang: {
-    id: 'xie_lingshuang', name: '謝凌霜', level: 3, wuxing: 9, temper: 'veteran', specials: { drain: 1 }, phase2: { line: '寒衣。', specials: { drain: 2 }, traps: ['shuangjiang'] }, traps: ['huijian', 'shuangjiang'],
+    id: 'xie_lingshuang', name: '謝凌霜', who: 'xie_lingshuang', level: 3, wuxing: 9, temper: 'veteran', specials: { drain: 1 }, phase2: { line: '寒衣。', specials: { drain: 2 }, traps: ['shuangjiang'] }, traps: ['huijian', 'shuangjiang'],
     tells: tells({
       attack: '她的劍忽然停住了。你知道，下一劍會很快。',
       combo: '她手腕一翻，劍光碎成了一片。',
@@ -420,7 +420,7 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 章末首領（§1.1）----
   rival_boss: {
-    id: 'rival_boss', name: '{rival}', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, traps: ['weiou', 'fanshou'],
+    id: 'rival_boss', name: '{rival}', who: 'rival', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, traps: ['weiou', 'fanshou'],
     tells: tells({ attack: '他這幾年練得很苦，拳頭比從前硬多了。', feint: '他嘴上罵著，眼睛卻在找你的破綻。' }),
   },
   town_champion: {
@@ -444,7 +444,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ guard: '他身後是一整列騎兵。', attack: '他舉起了彎刀，騎兵們跟著發出了吼聲。' }),
   },
   scar_boss: {
-    id: 'scar_boss', name: '疤臉', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '當年我也是這樣殺了你爹的。', temper: 'brute', rage: 4 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_boss', name: '疤臉', who: 'scar', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '當年我也是這樣殺了你爹的。', temper: 'brute', rage: 4 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。', attack: '他咧開嘴，那道疤跟著扭了起來。' }),
   },
   young_challenger: {
@@ -452,7 +452,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他出手又快又急，像當年的你。' }),
   },
   wumian: {
-    id: 'wumian', name: '無面客', level: { relative: 0, min: 2, max: 5 }, wuxing: 9, temper: 'veteran', lethal: true, hpMult: 0.85,
+    id: 'wumian', name: '無面客', who: 'wumian', level: { relative: 0, min: 2, max: 5 }, wuxing: 9, temper: 'veteran', lethal: true, hpMult: 0.85,
     traps: ['huijian'], specials: { curse: 1.5, drain: 1 },
     phase2: { line: '……', specials: { curse: 2, drain: 1.5 }, rage: 3 },
     tells: tells({
@@ -463,11 +463,11 @@ export const opponents: Record<string, OpponentDef> = {
     }),
   },
   scar_old: {
-    id: 'scar_old', name: '疤臉', level: 2, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '你跟你爹一樣，都不知道什麼時候該逃。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_old', name: '疤臉', who: 'scar', level: 2, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '你跟你爹一樣，都不知道什麼時候該逃。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。' }),
   },
   bater: {
-    id: 'bater', name: '巴特爾', level: 3, wuxing: 7, temper: 'veteran', phase2: { line: '你是我遇過最難纏的人。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['huishen'],
+    id: 'bater', name: '巴特爾', who: 'bater', level: 3, wuxing: 7, temper: 'veteran', phase2: { line: '你是我遇過最難纏的人。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['huishen'],
     tells: tells({
       attack: '他把弓拉成了滿月。',
       combo: '他從箭袋裡一次抽出了三支箭。',

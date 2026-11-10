@@ -385,6 +385,8 @@ export interface FoeTrapDef {
 export interface OpponentDef {
   id: string;
   name: string;
+  /** 同一個人在不同時期的對手（例如疤臉年輕時、當上首領、老了）共用同一個身分，重逢時記得上一次。 */
+  who?: string;
   /** 固定等級，或 { relative }：依玩家主修武學等級浮動（比武、宿敵）。 */
   level: number | { relative: number; min?: number; max?: number };
   wuxing: number;
@@ -581,6 +583,8 @@ export interface DuelState {
   };
   /** 這一回合發生的事。 */
   log: DuelLogLine[];
+  /** 跟這個人交過手：之前打過幾次、上一次的結果。 */
+  rematch?: { times: number; wins: number; last: 'win' | 'lose' | 'yield' };
   /** 這場的戰報：最重的一擊、氣血最低到哪裡。舊存檔沒有。 */
   stats?: DuelStats;
   over?: 'win' | 'lose' | 'yield';
@@ -600,6 +604,15 @@ export interface DuelRecord {
   turn: number;
   age: number;
   name: string;
+  /** 對手 id 和不帶詞條的名字（「黑風寨的寨主」而不是「狡詐的黑風寨的寨主」）。 */
+  opponent?: string;
+  baseName?: string;
+  /** 對手的身分（只有會重逢的人才有）。 */
+  who?: string;
+  /** 和這個人的第幾次交手。 */
+  nth?: number;
+  /** 上一次輸了或逃了，這一次打贏。 */
+  avenged?: boolean;
   tier?: 'minor' | 'elite' | 'boss';
   lethal: boolean;
   result: 'win' | 'lose' | 'yield';

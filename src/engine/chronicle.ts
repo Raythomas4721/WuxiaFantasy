@@ -28,6 +28,8 @@ function duelWeight(r: DuelRecord): number {
   let w = TIER_RANK[r.tier ?? 'minor'];
   if (r.lethal) w += 2;
   if (r.low < CLOSE_CALL) w += 2;
+  if (r.avenged) w += 3;
+  else if ((r.nth ?? 1) >= 2) w += 1;
   return w;
 }
 
@@ -47,6 +49,8 @@ function plainCard(name: string): string {
 function duelLine(r: DuelRecord): string {
   if (r.result === 'yield') return `生死關頭被${r.name}逼退，拚著一身傷才逃了出來。`;
   if (r.result === 'lose') return `敗在${r.name}手下。`;
+  const again = (r.nth ?? 1) >= 2 ? `第${chineseNumber(r.nth!)}次和${r.name}交手，` : '';
+  if (r.avenged) return `${again}終於扳回了上一回的敗局。${r.bestCard && r.bestHit > 0 ? `一記【${plainCard(r.bestCard)}】打出 ${r.bestHit} 點傷。` : ''}`;
   const blow = r.bestCard && r.bestHit > 0 ? `，一記【${plainCard(r.bestCard)}】打出 ${r.bestHit} 點傷` : '';
   if (r.low < CLOSE_CALL) return `和${r.name}一戰，氣血只剩${pct(r.low)}%，硬是撐到最後${blow}。`;
   const rounds = r.rounds <= 2 ? `只用了${chineseNumber(r.rounds)}個回合` : `鏖戰${chineseNumber(r.rounds)}個回合`;
@@ -121,6 +125,17 @@ export function lifeFeats(s: GameState): { label: string; value: string }[] {
   if (best && best.bestHit > 0) {
     feats.push({ label: '最重的一擊', value: `【${best.bestCard ?? '？'}】${best.bestHit} 點（${best.age} 歲，對${best.name}）` });
   }
+
+  // 宿敵：交手兩次以上的人
+  const byWho = new Map<string, DuelRecord[]>();
+  for (const r of rs) if (r.who) byWho.set(r.who, [...(byWho.get(r.who) ?? []), r]);
+  const rivals = [...byWho.values()]
+    .filter((list) => list.length >= 2)
+    .map((list) => {
+      const won = list.filter((r) => r.result === 'win').length;
+      return `${list[list.length - 1].name}（交手 ${list.length} 次，勝 ${won} 次）`;
+    });
+  if (rivals.length > 0) feats.push({ label: '宿敵', value: rivals.join('、') });
 
   const close = wins.filter((r) => r.low < CLOSE_CALL).sort((a, b) => a.low - b.low)[0];
   if (close) feats.push({ label: '最險的一勝', value: `剩 ${pct(close.low)}% 氣血勝${close.name}（${close.age} 歲）` });

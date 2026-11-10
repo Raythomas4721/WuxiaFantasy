@@ -9,7 +9,7 @@ import { checkCondition, levelFromXp, skillLevel } from './conditions';
 import type { Rng } from './rng';
 import { growthPassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
-import { GENERIC, TAUNTS, type TauntKind } from '../content/taunts';
+import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
 import { fill } from './text';
 import type {
   CardDef, CardEffect, CardTag, DuelState, GameState, Intent, IntentKind, OpponentDef, Passive, TrapTrigger,
@@ -369,6 +369,8 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   };
   d.log.push({ who: 'sys', text: d.lethal ? `你和${d.name}之間，今天只有一個人能站著離開。` : `你和${d.name}拉開了架勢。` });
   if (affix) d.log.push({ who: 'sys', text: affix.text.replaceAll('{foe}', d.name) });
+  if (s && def.who) meetAgain(d, def.who, s);
+  else if (s) reputation(d, s);
   if (passive.names.length > 0) d.log.push({ who: 'sys', text: `你運起${passive.names.map((n) => `【${n.split('：')[0]}】`).join('')}。` });
   d.foe.intent = pickIntent(d, rng);
   d.me.energy += passive.firstRoundEnergy ?? 0;
@@ -382,6 +384,38 @@ export function createDuel(fighter: Fighter, opponentId: string, choiceId: strin
   if (passive.bleedStart) d.foe.bleed += passive.bleedStart;
   drawCards(d, DUEL.startHand + (passive.firstRoundDraw ?? 0), rng);
   return d;
+}
+
+/** 一場過招的結果，換成重逢台詞的種類。 */
+const REMATCH_KIND = { win: 'won', lose: 'lost', yield: 'fled' } as const;
+
+/**
+ * 重逢：之前和這個人交過手，他會記得上一次的結果；
+ * 你也摸過他的路數，看得到他下一招的數字。
+ */
+function meetAgain(d: DuelState, who: string, s: GameState): void {
+  const past = (s.duels ?? []).filter((r) => r.who === who);
+  if (past.length === 0) return;
+  const last = past[past.length - 1].result;
+  d.rematch = { times: past.length, wins: past.filter((r) => r.result === 'win').length, last };
+  const line = (REMATCH[who] ?? GENERIC_REMATCH)[REMATCH_KIND[last]];
+  say(d, 'foe', `{foe}：「${line}」`);
+  const seen = d.clear ? '' : '（看得到他下一招的數字）';
+  d.clear = true;
+  say(d, 'sys', `你們交過${['', '一', '兩', '三', '四', '五'][past.length] ?? '好幾'}次手，他的路數你心裡有數。${seen}`);
+}
+
+/** 名聲在外：每隔幾場，一般的對手會認出打倒過強敵的你，心裡發虛。 */
+const REPUTATION_EVERY = 3;
+
+function reputation(d: DuelState, s: GameState): void {
+  const rs = s.duels ?? [];
+  if (rs.length === 0 || rs.length % REPUTATION_EVERY !== 0) return;
+  const feat = [...rs].reverse().find((r) => r.result === 'win' && (r.tier === 'boss' || r.tier === 'elite' || r.lethal));
+  if (!feat) return;
+  say(d, 'foe', `{foe}打量了你幾眼，臉色變了：「你……你就是打贏${feat.baseName ?? feat.name}的那個人？」`);
+  say(d, 'sys', '對方心裡發虛，一開始就露出了破綻。');
+  d.foe.exposed = Math.max(d.foe.exposed, 1);
 }
 
 // ---------- 詞條、心法與信物（v0.5 §4、§6） ----------
