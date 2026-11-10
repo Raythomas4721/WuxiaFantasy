@@ -6,7 +6,7 @@
 
 import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, skillLevel } from './conditions';
-import type { Rng } from './rng';
+import { Rng } from './rng';
 import { growthPassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
 import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
@@ -677,6 +677,7 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
   if (c.selfHp) d.me.hp -= c.selfHp;
   d.me.played.push(id);
   if (!c.exhaust) d.me.discard.push(id);
+  else (d.me.gone ??= []).push(id);
   if (e.draw) drawCards(d, e.draw, rng);
 
   // 對手的暗招
@@ -937,4 +938,49 @@ export function healthAfter(d: DuelState): number {
   if (d.over === 'lose') return 0;
   if (d.over === 'yield') return Math.max(5, left - DUEL.fleeCost);
   return Math.max(1, Math.min(100, left));
+}
+
+// ---------- 回合預告 ----------
+
+/** 不擲骰子的亂數：不變招、不爆擊。預告用，只看照目前的意圖會發生什麼。 */
+class CalmRng extends Rng {
+  override next(): number {
+    return 0.999999;
+  }
+}
+
+export interface RoundPreview {
+  /** 看不透對手的招，不給數字。 */
+  hidden: boolean;
+  /** 這樣結束回合，預計失去的氣血。 */
+  taken: number;
+  /** 會被打倒。 */
+  down: boolean;
+  /** 最後一回合（比試）：照現在的氣血比例，結束時是贏是輸。 */
+  verdict?: 'win' | 'lose';
+  /** 對手會變招，實際可能不一樣。 */
+  mayChange: boolean;
+}
+
+/**
+ * 按「結束回合」之前的試算：用同一套規則把這一回合結束掉，看你會失去多少氣血。
+ * 不抽下一回合的牌（不洩露牌序）；看不穿暗招的話，暗招不算進去。
+ */
+export function previewRound(d: DuelState): RoundPreview {
+  const mayChange = TEMPER[d.foe.temper ?? CONTENT.opponents[d.opponent].temper].switch > 0;
+  if (!d.clear) return { hidden: true, taken: 0, down: false, mayChange };
+  const trial = structuredClone(d);
+  trial.me.deck = [];
+  trial.me.discard = [];
+  if (!d.seeTraps) trial.foe.traps = [];
+  const after = endRound(trial, new CalmRng(0));
+  const taken = Math.max(0, d.me.hp - Math.max(0, after.me.hp));
+  const lastRound = !d.lethal && d.round >= DUEL.maxRounds;
+  return {
+    hidden: false,
+    taken,
+    down: after.over === 'lose' && after.me.hp <= 0,
+    verdict: lastRound && after.over !== 'yield' ? (after.over === 'win' ? 'win' : after.over === 'lose' ? 'lose' : undefined) : undefined,
+    mayChange,
+  };
 }

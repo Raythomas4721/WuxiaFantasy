@@ -552,6 +552,8 @@ export interface DuelState {
     discard: string[];
     /** 蓋著的伏招。 */
     traps: string[];
+    /** 這場用完移出的牌。 */
+    gone?: string[];
     /** 這回合已打出的牌，連招用。 */
     played: string[];
     boost?: { tags: CardTag[]; dmg?: number; mult?: number };

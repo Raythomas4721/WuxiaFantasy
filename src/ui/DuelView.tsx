@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CONTENT } from '../content';
 import { LEVEL_NAMES } from '../engine/describe';
-import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, resolvedEffect } from '../engine/duel';
+import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, previewRound, resolvedEffect } from '../engine/duel';
 import { DuelStage, type Weapon } from './DuelStage';
 import { setSfxEnabled, sfx, sfxEnabled } from './sfx';
 import { Tips, type TipDef } from './Tips';
@@ -25,6 +25,7 @@ export function DuelView({ state, act }: Props) {
   const d = state.duel!;
   const intent = intentText(d);
   const press = useLongPress(d.me.hand.join('|'));
+  const [pile, setPile] = useState<Pile>();
 
   return (
     <article className="panel duel">
@@ -110,9 +111,21 @@ export function DuelView({ state, act }: Props) {
               <HandCard key={`${id}-${i}`} d={d} card={getCard(id)} playable={canPlay(d, i)} onPlay={() => act(() => duelPlay(state, i))} />
             ))}
           </div>
+          {pile && <PileView d={d} pile={pile} onPick={setPile} />}
+          <RoundPreviewLine d={d} />
           <div className="duel-actions">
-            <span className="muted small">
-              牌庫 {d.me.deck.length}・棄牌 {d.me.discard.length}・手牌 {d.me.hand.length}／{d.me.handMax ?? DUEL.handMax}
+            <span className="pile-buttons small">
+              {(['deck', 'discard', 'gone'] as const).map((p) => (
+                <button
+                  key={p}
+                  className={`pile-btn ${pile === p ? 'on' : ''}`}
+                  onClick={() => setPile(pile === p ? undefined : p)}
+                  aria-pressed={pile === p}
+                >
+                  {PILE_LABEL[p]} {pileCards(d, p).length}
+                </button>
+              ))}
+              <span className="muted">手牌 {d.me.hand.length}／{d.me.handMax ?? DUEL.handMax}</span>
             </span>
             <button
               className="btn btn-ghost btn-small"
@@ -132,6 +145,86 @@ export function DuelView({ state, act }: Props) {
 }
 
 const STRIKES: IntentKind[] = ['attack', 'combo', 'feint', 'drain', 'curse'];
+
+// ---------- 回合預告、看牌堆 ----------
+
+/** 按「結束回合」之前，先告訴你這樣結束會受多少傷。 */
+function RoundPreviewLine({ d }: { d: DuelState }) {
+  const p = previewRound(d);
+  const change = p.mayChange ? '（他有時會臨時變招，實際可能不一樣）' : '';
+  let text: string;
+  let tone = '';
+  if (p.hidden) {
+    text = '看不透他這一手，不知道結束回合會受多少傷。';
+  } else if (p.verdict) {
+    text = p.verdict === 'win' ? `最後一回合：照現在的氣血比例，結束時算你贏${p.taken > 0 ? `（還會受 ${p.taken} 傷）` : ''}。` : '最後一回合：照現在的氣血比例，結束時算你輸，還得再打一點。';
+    tone = p.verdict === 'win' ? 'safe' : 'danger';
+  } else if (p.down) {
+    text = `這樣結束回合，你會被打倒（受 ${p.taken} 傷）！先擋一擋。`;
+    tone = 'danger';
+  } else if (p.taken === 0) {
+    text = STRIKES.includes(d.foe.intent.kind) ? '這樣結束回合，他這一下傷不到你。' : '他這回合不出手，放心進攻。';
+    tone = 'safe';
+  } else {
+    text = `這樣結束回合，預計受 ${p.taken} 傷${d.me.block > 0 ? `（護體 ${d.me.block} 已算進去）` : ''}，剩 ${Math.max(0, d.me.hp - p.taken)}／${d.me.max}。`;
+    tone = p.taken >= d.me.hp * 0.5 ? 'warn' : '';
+  }
+  return (
+    <p className={`round-preview ${tone}`} aria-live="polite">
+      {text}
+      {!p.hidden && !p.verdict && change && <span className="muted">{change}</span>}
+    </p>
+  );
+}
+
+type Pile = 'deck' | 'discard' | 'gone';
+const PILE_LABEL: Record<Pile, string> = { deck: '抽牌堆', discard: '棄牌', gone: '已移出' };
+const PILE_NOTE: Record<Pile, string> = {
+  deck: '還沒抽到的牌。順序是洗過的，這裡照名稱排。抽完了會把棄牌洗回來。',
+  discard: '打過的牌。抽牌堆抽完時，會洗一洗變成新的抽牌堆。',
+  gone: '「用完移出」的牌，這場不會再回來；下一場又會在牌組裡。',
+};
+
+function pileCards(d: DuelState, p: Pile): string[] {
+  return p === 'deck' ? d.me.deck : p === 'discard' ? d.me.discard : d.me.gone ?? [];
+}
+
+/** 牌堆裡有哪些牌：同名的併在一起算張數。 */
+function PileView({ d, pile, onPick }: { d: DuelState; pile: Pile; onPick: (p?: Pile) => void }) {
+  const counts = new Map<string, number>();
+  for (const id of pileCards(d, pile)) counts.set(id, (counts.get(id) ?? 0) + 1);
+  const rows = [...counts].sort(([a], [b]) => getCard(a).name.localeCompare(getCard(b).name, 'zh-Hant'));
+  return (
+    <section className="pile-view" aria-label={PILE_LABEL[pile]}>
+      <header className="pile-head">
+        <strong>{PILE_LABEL[pile]}</strong>
+        <span className="muted small">{PILE_NOTE[pile]}</span>
+        <button className="tip-off" onClick={() => onPick(undefined)}>
+          收起
+        </button>
+      </header>
+      {rows.length === 0 ? (
+        <p className="muted small">沒有牌。</p>
+      ) : (
+        <ul>
+          {rows.map(([id, n]) => {
+            const c = getCard(id);
+            return (
+              <li key={id} className={`pile-row kind-${c.kind}`}>
+                <span className="pile-name">
+                  <span className="card-cost">{c.cost}</span>
+                  {c.name}
+                  {n > 1 && <span className="pile-count">×{n}</span>}
+                </span>
+                <span className="pile-text">{cardText(c)}</span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
+}
 
 /** 過招的指點：由上往下，挑第一則符合、還沒看過的。 */
 function duelTips(d: DuelState): TipDef[] {

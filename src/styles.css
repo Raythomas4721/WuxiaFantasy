@@ -2855,3 +2855,121 @@ small {
   color: var(--accent);
   font-weight: 700;
 }
+
+/* 回合預告 */
+.round-preview {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  background: var(--paper-2);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.round-preview .muted {
+  margin-left: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.round-preview.safe {
+  color: var(--good);
+}
+
+.round-preview.warn {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.round-preview.danger {
+  color: var(--bad);
+  font-weight: 700;
+  background: var(--accent-soft);
+}
+
+/* 看牌堆 */
+.pile-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  margin-right: auto;
+}
+
+.pile-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card);
+  padding: 0.1rem 0.6rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.pile-btn.on {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.pile-view {
+  margin: 0 0 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+.pile-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.pile-head .tip-off {
+  margin-left: auto;
+}
+
+.pile-view ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.3rem;
+}
+
+.pile-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem 0.7rem;
+  padding: 0.25rem 0 0.25rem 0.5rem;
+  border-left: 3px solid var(--ink-3);
+  font-size: 0.88rem;
+}
+
+.pile-row.kind-attack { border-left-color: var(--accent); }
+.pile-row.kind-guard { border-left-color: var(--good); }
+.pile-row.kind-trap { border-left-color: var(--gold); }
+.pile-row.kind-curse { border-left-color: var(--ink); }
+
+.pile-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  min-width: 7em;
+}
+
+.pile-name .card-cost {
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.72rem;
+}
+
+.pile-count {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
+.pile-text {
+  color: var(--ink-2);
+}

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
 import {
-  CRIT, DUEL, canPlay, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
+  CRIT, DUEL, canPlay, previewRound, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
 } from '../src/engine/duel';
 import { playSimpleRound } from '../src/engine/duelAI';
 import { NODE, chooseOption, choiceViews, finishDuel, newGame } from '../src/engine/game';
@@ -64,6 +64,34 @@ describe('打中部位', () => {
     const d = endRound(rigged('tourney', []), new Rng(1));
     expect(d.foeCrit).toBe(1);
     expect(40 - d.me.hp).toBe(Math.round(10 * CRIT.mult));
+  });
+});
+
+describe('回合預告', () => {
+  it('照目前的意圖試算結束回合會受多少傷：護體、伏招都算進去，不改動原本的過招', () => {
+    let d = rigged('tourney', ['parry', 'xieli']);
+    d.clear = true;
+    expect(previewRound(d)).toMatchObject({ hidden: false, taken: 10, down: false });
+    d = playCard(d, 0, new Rng(1)); // 招架：護體 5
+    expect(previewRound(d).taken).toBe(5);
+    d = playCard(d, 0, new Rng(1)); // 卸力：這一擊減半 → 5，再被護體擋掉
+    const before = structuredClone(d);
+    expect(previewRound(d).taken).toBe(0);
+    expect(d).toEqual(before);
+  });
+
+  it('會被打倒時警告；看不透的對手不給數字', () => {
+    const d = rigged('tourney', [], { kind: 'attack', value: 60 });
+    d.clear = true;
+    expect(previewRound(d).down).toBe(true);
+    d.clear = false;
+    expect(previewRound(d).hidden).toBe(true);
+  });
+
+  it('用完移出的牌記在已移出', () => {
+    const d = playCard(rigged('tourney', ['breathe']), 0, new Rng(1));
+    expect(d.me.gone).toEqual(['breathe']);
+    expect(d.me.discard).not.toContain('breathe');
   });
 });
 
