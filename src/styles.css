@@ -2758,3 +2758,78 @@ small {
   0% { transform: scale(1.6); opacity: 0; }
   100% { transform: none; opacity: 1; }
 }
+
+/* 長按手牌的說明 */
+.duel-hand .duel-card {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.card-peek {
+  margin: 0 0 0.6rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  animation: peek-in 0.15s ease;
+  cursor: pointer;
+}
+
+@keyframes peek-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+
+.peek-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.card-peek p {
+  margin: 0.4rem 0 0;
+  line-height: 1.7;
+}
+
+.peek-note {
+  color: var(--gold);
+  font-size: 0.9rem;
+}
+
+.peek-hint {
+  font-size: 0.9rem;
+}
+
+.peek-label {
+  display: inline-block;
+  margin-right: 0.45rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.peek-blocked {
+  color: var(--bad);
+  font-size: 0.9rem;
+}
+
+.peek-flavor {
+  color: var(--ink-3);
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.peek-close {
+  display: block;
+  margin-top: 0.4rem;
+  text-align: right;
+  font-size: 0.75rem;
+  color: var(--ink-3);
+}

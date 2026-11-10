@@ -24,6 +24,7 @@ interface Props {
 export function DuelView({ state, act }: Props) {
   const d = state.duel!;
   const intent = intentText(d);
+  const press = useLongPress(d.me.hand.join('|'));
 
   return (
     <article className="panel duel">
@@ -94,7 +95,17 @@ export function DuelView({ state, act }: Props) {
         <>
           <IntentMini d={d} />
           <Tips tips={duelTips(d)} />
-          <div className="duel-hand" onClickCapture={(ev) => flyCard(ev.target as HTMLElement)}>
+          {press.peek !== undefined && d.me.hand[press.peek] && (
+            <CardPeek d={d} index={press.peek} onClose={press.close} />
+          )}
+          <div
+            className="duel-hand"
+            {...press.handlers}
+            onClickCapture={(ev) => {
+              if (press.swallow(ev)) return;
+              flyCard(ev.target as HTMLElement);
+            }}
+          >
             {d.me.hand.map((id, i) => (
               <HandCard key={`${id}-${i}`} d={d} card={getCard(id)} playable={canPlay(d, i)} onPlay={() => act(() => duelPlay(state, i))} />
             ))}
@@ -142,6 +153,11 @@ function duelTips(d: DuelState): TipDef[] {
       id: 'duel-hints',
       when: d.me.hand.some((id, i) => canPlay(d, i) && cardHint(d, getCard(id), resolvedEffect(d, getCard(id)))),
       text: '有些牌上方會亮起小標籤：「擋這招」「伏這招」「連招」「破防」「致勝」……代表這張牌現在出，剛好對得上局面。拿不定主意時，先出亮著的牌。',
+    },
+    {
+      id: 'duel-longpress',
+      when: TOUCH && d.me.hand.length > 0,
+      text: '手機上看不清楚一張牌在幹嘛？長按它，會跳出完整說明和「為什麼現在適合出」，放開不會打出去。',
     },
     {
       id: 'duel-intent',
@@ -417,12 +433,108 @@ function cardHint(d: DuelState, card: CardDef, e: ReturnType<typeof resolvedEffe
   return undefined;
 }
 
-function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; playable: boolean; onPlay: () => void }) {
+/** 手牌上的附註與提示：這回合的實際傷害、伏招滿了沒、現在適不適合出。 */
+function handInfo(d: DuelState, card: CardDef, playable: boolean): { note?: string; hint?: Hint } {
   const e = resolvedEffect(d, card);
   const boosted = card.kind === 'attack' && e.dmg !== undefined && e.dmg !== card.dmg;
   const trapsFull = card.kind === 'trap' && d.me.traps.length >= DUEL.trapSlots;
   const note = boosted ? `這回合：傷害 ${e.dmg}` : trapsFull ? `伏招已滿（最多 ${DUEL.trapSlots} 張）` : undefined;
-  return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} hint={playable ? cardHint(d, card, e) : undefined} />;
+  return { note, hint: playable ? cardHint(d, card, e) : undefined };
+}
+
+function HandCard({ d, card, playable, onPlay }: { d: DuelState; card: CardDef; playable: boolean; onPlay: () => void }) {
+  const { note, hint } = handInfo(d, card, playable);
+  return <CardFace card={card} disabled={!playable} onClick={onPlay} note={note} hint={hint} />;
+}
+
+/** 觸控裝置（沒有滑鼠可以移上去看說明）。 */
+const TOUCH = typeof window !== 'undefined' && window.matchMedia?.('(hover: none)').matches;
+const LONG_PRESS_MS = 450;
+/** 手指移動超過這麼多像素就當作在捲動，不算長按。 */
+const PRESS_SLOP = 10;
+
+/**
+ * 手牌長按：按住不放一下子，就打開那張牌的說明，放開時不會出牌。
+ * 只認觸控和觸控筆；滑鼠照舊用移上去的提示。手牌一變（出了牌、換回合）就關掉。
+ */
+function useLongPress(handKey: string) {
+  const [peek, setPeek] = useState<number>();
+  const timer = useRef<number>();
+  const start = useRef<{ x: number; y: number }>();
+  const fired = useRef(false);
+  useEffect(() => setPeek(undefined), [handKey]);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const cancel = () => {
+    window.clearTimeout(timer.current);
+    start.current = undefined;
+  };
+  const handlers = {
+    onPointerDown(ev: React.PointerEvent<HTMLDivElement>) {
+      if (ev.pointerType === 'mouse') return;
+      const card = (ev.target as HTMLElement).closest('.duel-card');
+      const index = card ? Array.from(ev.currentTarget.children).indexOf(card) : -1;
+      if (index < 0) return;
+      fired.current = false;
+      start.current = { x: ev.clientX, y: ev.clientY };
+      window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => {
+        fired.current = true;
+        navigator.vibrate?.(12);
+        setPeek(index);
+      }, LONG_PRESS_MS);
+    },
+    onPointerMove(ev: React.PointerEvent<HTMLDivElement>) {
+      const s = start.current;
+      if (s && Math.hypot(ev.clientX - s.x, ev.clientY - s.y) > PRESS_SLOP) cancel();
+    },
+    onPointerUp: cancel,
+    onPointerCancel: cancel,
+    onContextMenu(ev: React.MouseEvent) {
+      if (start.current || fired.current) ev.preventDefault();
+    },
+  };
+  /** 長按之後放開的那一下 click 吞掉，不要出牌。 */
+  const swallow = (ev: React.MouseEvent) => {
+    if (!fired.current) return false;
+    fired.current = false;
+    ev.preventDefault();
+    ev.stopPropagation();
+    return true;
+  };
+  return { peek, close: () => setPeek(undefined), handlers, swallow };
+}
+
+/** 長按手牌跳出的說明：完整效果、這回合的實際數字、為什麼現在適合（或不能）出。 */
+function CardPeek({ d, index, onClose }: { d: DuelState; index: number; onClose: () => void }) {
+  const card = getCard(d.me.hand[index]);
+  const playable = canPlay(d, index);
+  const { note, hint } = handInfo(d, card, playable);
+  const skill = cardSkill(card.id);
+  const blocked = !playable && (card.cost > d.me.energy ? `內力不夠：要 ${card.cost}，你只剩 ${d.me.energy}` : '現在打不出去');
+  return (
+    <div className="card-peek" role="dialog" aria-label={`【${card.name}】說明`} onClick={onClose}>
+      <div className="peek-head">
+        <span className="card-cost">{card.cost}</span>
+        <strong>{card.name}</strong>
+        <span className="muted small">
+          {KIND_LABEL[card.kind]}
+          {card.tag && `〈${card.tag}〉`}
+          {skill && `・${CONTENT.skills[skill].name}`}
+        </span>
+      </div>
+      <p className="peek-text">{cardText(card)}</p>
+      {note && <p className="peek-note">{note}</p>}
+      {hint && (
+        <p className={`peek-hint hint-${hint.kind}`}>
+          <span className="peek-label">{hint.label}</span>
+          {hint.why}
+        </p>
+      )}
+      {blocked && <p className="peek-blocked">{blocked}</p>}
+      {card.flavor && <p className="peek-flavor">{card.flavor.replace(/{foe}/g, d.name)}</p>}
+      <span className="peek-close">點一下關閉</span>
+    </div>
+  );
 }
 
 /** 一般過招打完，看一眼結局就自動收招；生死之戰要自己按。 */

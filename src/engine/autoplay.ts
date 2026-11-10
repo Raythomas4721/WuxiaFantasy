@@ -41,6 +41,8 @@ export interface AutoplayOptions {
   persona?: Persona;
   /** 好鬥：有過招的選項就選它（量測「想打的玩家」用）。 */
   preferDuel?: boolean;
+  /** 走到這個狀態就停下（測試、在瀏覽器裡直接跳到某個畫面用）。 */
+  until?: (s: GameState) => boolean;
 }
 
 export function randomSetup(seed: number) {
@@ -128,7 +130,7 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
   const texts: string[] = [];
   let focusPicks = 0;
   const duels: AutoplayResult['duels'] = [];
-  for (let step = 0; step < MAX_STEPS && s.phase !== 'ended'; step++) {
+  for (let step = 0; step < MAX_STEPS && s.phase !== 'ended' && !options.until?.(s); step++) {
     if (s.phase === 'focus' && s.statPoints) {
       const k = autoStat(s);
       s = k ? allocateStat(s, k) : { ...s, statPoints: undefined };
@@ -195,6 +197,6 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       throw new Error(`autoplay 無法處理階段：${s.phase}`);
     }
   }
-  if (s.phase !== 'ended') throw new Error(`第 ${seed} 號人生沒有在 ${MAX_STEPS} 步內結束`);
+  if (s.phase !== 'ended' && !options.until?.(s)) throw new Error(`第 ${seed} 號人生沒有在 ${MAX_STEPS} 步內結束`);
   return { state: s, events, texts, focusPicks, persona, duels };
 }
