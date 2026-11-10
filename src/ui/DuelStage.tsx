@@ -105,6 +105,7 @@ function diff(prev: DuelState, d: DuelState, weapon: Weapon, tally: RoundTally):
       float('me', `−${meLoss}`, 'dmg', 180);
     } else if (blows.length > 0) float('me', '格', 'block', 180);
     if (dodged) float('me', '閃', 'block', 180);
+    if ((d.foeCrit ?? 0) > (prev.foeCrit ?? 0)) float('me', '要害', 'dmg', 420);
     // 內傷發作、伏招反擊
     if (foeLoss > 0) {
       fx.foe = fx.foe ?? 'hit';
@@ -142,8 +143,13 @@ function diff(prev: DuelState, d: DuelState, weapon: Weapon, tally: RoundTally):
     const last = d.me.played[d.me.played.length - 1];
     const hits = (last && getCard(last).hits) || 1;
     const attacks = d.me.played.filter((id) => getCard(id).kind === 'attack').length;
+    // 打中部位：要害是高光，手腕、膝彎飄一個小字
+    const spot = d.lastSpot && d.lastSpot.seq !== prev.lastSpot?.seq ? d.lastSpot : undefined;
+    if (spot && spot.kind !== 'crit') float('foe', spot.name, 'block', 320);
     if (d.over === 'win' && !prev.over) {
-      fx.highlight = d.me.hp <= d.me.max * CLOSE_CALL ? { text: '險勝', tone: 'gold' } : { text: '致命一擊', tone: 'red' };
+      fx.highlight = d.me.hp <= d.me.max * CLOSE_CALL ? { text: '險勝', tone: 'gold' } : { text: spot?.kind === 'crit' ? `一擊封喉` : '致命一擊', tone: 'red' };
+    } else if (spot?.kind === 'crit') {
+      fx.highlight = { text: `爆擊・${spot.name}`, tone: 'red' };
     } else if (foeLoss >= Math.max(BIG_HIT, d.foe.max * BIG_HIT_RATIO)) {
       fx.highlight = { text: hits > 1 ? '連環' : '重擊', tone: 'red' };
     } else if (!tally.combo && attacks >= 3 && foeLoss > 0 && tally.dmg >= Math.max(COMBO_DMG, d.foe.max * COMBO_RATIO)) {

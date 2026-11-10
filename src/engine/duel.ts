@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
-export const FOE_REALM = [1, 1.25, 1.55, 1.65, 1.9, 2.15];
+export const FOE_REALM = [1.06, 1.32, 1.64, 1.75, 2.02, 2.28];
 
 /** 平衡數值集中在這裡。 */
 export const DUEL = {
@@ -649,12 +649,14 @@ export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelSta
     return d;
   }
 
-  const e = resolvedEffect(d, c);
+  const e = { ...resolvedEffect(d, c) };
+  const spot = c.kind === 'attack' && e.dmg ? rollSpot(d, c, e, rng) : undefined;
   const nums = effectText({ dmg: e.dmg, hits: e.hits, block: e.block, heal: e.heal }).join('、');
   say(d, 'me', `【${c.name}】${c.flavor}${nums ? `（${nums}）` : ''}`);
   const foeHp = d.foe.hp;
   const foeBlock = d.foe.block;
   applyCardEffect(d, c, e);
+  if (spot) landSpot(d, spot);
   const dealt = foeHp - Math.max(0, d.foe.hp);
   const st = (d.stats ??= { bestHit: 0, lowHp: d.me.hp });
   if (dealt > st.bestHit) {
@@ -686,6 +688,70 @@ function trackLow(d: DuelState): void {
   st.lowHp = Math.min(st.lowHp, Math.max(0, d.me.hp));
 }
 
+// ---------- 打中部位：要害爆擊、手腕、膝彎 ----------
+
+/** 打中要害的機率與傷害倍數；破綻、暗器（打穴）、眼力好都更容易打中要害。 */
+export const CRIT = {
+  base: 0.07,
+  exposed: 0.07,
+  needle: 0.05,
+  sharpEye: 0.03,
+  mult: 1.5,
+  /** 沒打中要害時，打中手腕或膝彎的機率（各一半）。 */
+  limb: 0.12,
+  /** 打中手腕：對手下一擊剩幾成。 */
+  wrist: 0.75,
+  /** 對手出手也可能打中你的要害（每次出手擲一次，只算第一下）。 */
+  foe: 0.05,
+};
+
+const MY_VITALS = ['肋下', '肩頭', '小腹', '胸口'];
+
+const VITALS = ['咽喉', '心口', '太陽穴', '後頸', '丹田'];
+
+type Spot = { kind: 'crit' | 'wrist' | 'knee'; name: string };
+
+export function critChance(d: DuelState, c: CardDef): number {
+  return CRIT.base + (d.foe.exposed > 0 ? CRIT.exposed : 0) + (c.tag === '針' ? CRIT.needle : 0) + (d.seeTraps ? CRIT.sharpEye : 0);
+}
+
+/** 出招前擲一次：打中要害就把這一招的傷害放大。 */
+function rollSpot(d: DuelState, c: CardDef, e: CardEffect, rng: Rng): Spot | undefined {
+  if (rng.chance(critChance(d, c))) {
+    e.dmg = Math.round(e.dmg! * CRIT.mult);
+    return { kind: 'crit', name: rng.pick(VITALS) };
+  }
+  if (!rng.chance(CRIT.limb)) return undefined;
+  return rng.chance(0.5) ? { kind: 'wrist', name: '手腕' } : { kind: 'knee', name: '膝彎' };
+}
+
+/** 打中之後：說一句、套用手腕與膝彎的效果、記進戰報。 */
+function landSpot(d: DuelState, spot: Spot): void {
+  d.lastSpot = { ...spot, seq: (d.lastSpot?.seq ?? 0) + 1 };
+  const st = (d.stats ??= { bestHit: 0, lowHp: d.me.hp });
+  if (spot.kind === 'crit') {
+    st.crits = (st.crits ?? 0) + 1;
+    say(d, 'sys', `正中{foe}的${spot.name}！爆擊（傷害 ×${CRIT.mult}）`);
+    return;
+  }
+  if (d.foe.hp <= 0) return;
+  if (spot.kind === 'knee') {
+    d.foe.exposed = Math.max(d.foe.exposed, 1);
+    say(d, 'sys', '這一下打在{foe}的膝彎，他腳下一軟，露出了破綻（這回合）。');
+    return;
+  }
+  const it = d.foe.intent;
+  if (STRIKE_INTENTS.includes(it.kind) && it.value > 1) {
+    const before = it.value;
+    it.value = Math.max(1, Math.floor(it.value * CRIT.wrist));
+    say(d, 'sys', `這一下打在{foe}的手腕，他握兵刃的手一麻，下一擊輕了（${before} → ${it.value}）。`);
+  } else {
+    say(d, 'sys', '這一下打在{foe}的手腕，他甩了甩手，臉色難看。');
+  }
+}
+
+const STRIKE_INTENTS: IntentKind[] = ['attack', 'combo', 'feint', 'drain', 'curse'];
+
 /** 發動符合條件的第一張伏招；回傳它，讓呼叫者處理閃避與減半。 */
 function springTrap(d: DuelState, trigger: TrapTrigger, rng: Rng): CardDef | undefined {
   const i = d.me.traps.findIndex((id) => getCard(id).trigger === trigger);
@@ -708,6 +774,8 @@ function springTrap(d: DuelState, trigger: TrapTrigger, rng: Rng): CardDef | und
 function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
   const trap = (intent.kind === 'feint' && springTrap(d, 'foeFeint', rng)) || springTrap(d, 'foeAttack', rng);
   const verb = intent.kind === 'feint' ? '虛晃一招，趁你分神時出手' : intent.kind === 'combo' ? '連續出手' : '出手';
+  // 對手也會打中你的要害：只算第一下
+  const crit = !trap?.dodge && rng.chance(CRIT.foe) ? rng.pick(MY_VITALS) : undefined;
   for (let i = 0; i < (intent.hits ?? 1); i++) {
     if (d.foe.hp <= 0) return;
     let dmg = intent.value + d.foe.charge + (d.foe.rage ?? 0);
@@ -715,10 +783,13 @@ function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
       if (i === 0) say(d, 'foe', `${d.name}${verb}，卻撲了個空。`);
       continue;
     }
+    if (crit && i === 0) dmg = Math.round(dmg * CRIT.mult);
     if (trap?.halve) dmg = Math.ceil(dmg / 2);
     const taken = hit(d.me, dmg);
-    say(d, 'foe', `${d.name}${verb}${(intent.hits ?? 1) > 1 ? `（第 ${i + 1} 下）` : ''}，你受了 ${taken} 點傷。`);
+    const where = crit && i === 0 ? `，正中你的${crit}（爆擊）` : '';
+    say(d, 'foe', `${d.name}${verb}${(intent.hits ?? 1) > 1 ? `（第 ${i + 1} 下）` : ''}${where}，你受了 ${taken} 點傷。`);
   }
+  if (crit) d.foeCrit = (d.foeCrit ?? 0) + 1;
   d.foe.charge = 0;
   if (intent.kind === 'feint') d.me.exposed = 2;
 }

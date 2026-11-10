@@ -160,6 +160,11 @@ function duelTips(d: DuelState): TipDef[] {
       text: '手機上看不清楚一張牌在幹嘛？長按它，會跳出完整說明和「為什麼現在適合出」，放開不會打出去。',
     },
     {
+      id: 'duel-crit',
+      when: d.lastSpot !== undefined,
+      text: '出招有機會打中特定部位：打中要害是「爆擊」，傷害 ×1.6；打中手腕，他下一擊會變輕；打中膝彎，他會露出破綻。對手有破綻時、用暗器時，比較容易打中要害。',
+    },
+    {
       id: 'duel-intent',
       when: d.clear && strike,
       text: '對手那一格的印章是他的下一招。「攻 12」代表你按「結束回合」之後，他會打你 12 點。',
@@ -573,6 +578,7 @@ function DuelOver({ d, prevBest, first, onFinish }: { d: DuelState; prevBest: nu
       {st && (
         <ul className="duel-report">
           <li>{d.round} 回合</li>
+          {(st.crits ?? 0) > 0 && <li className="crit">爆擊 {st.crits} 次</li>}
           {st.bestHit > 0 && (
             <li className={record ? 'record' : undefined}>
               最重一擊【{st.bestCard}】{st.bestHit}

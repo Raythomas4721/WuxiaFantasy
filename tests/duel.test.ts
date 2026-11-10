@@ -1,7 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
 import {
-  DUEL, canPlay, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
+  CRIT, DUEL, canPlay, createDuel, deckFor, endRound, getCard, legacyDeck, playCard, resolvedEffect, yieldDuel, type Fighter,
 } from '../src/engine/duel';
 import { playSimpleRound } from '../src/engine/duelAI';
 import { NODE, chooseOption, choiceViews, finishDuel, newGame } from '../src/engine/game';
@@ -27,6 +27,46 @@ function rigged(opponent: string, hand: string[], intent: DuelState['foe']['inte
   return d;
 }
 
+/** 驗算數字的測試先關掉「打中部位」的運氣，測完還原。 */
+const LUCK = { ...CRIT };
+function noLuck() {
+  beforeEach(() => Object.assign(CRIT, { base: 0, exposed: 0, needle: 0, sharpEye: 0, limb: 0, foe: 0 }));
+  afterEach(() => Object.assign(CRIT, LUCK));
+}
+
+describe('打中部位', () => {
+  afterEach(() => Object.assign(CRIT, LUCK));
+
+  it('打中要害：這一招傷害 ×1.5，記進戰報', () => {
+    Object.assign(CRIT, { base: 1, foe: 0 });
+    let d = rigged('tourney', ['punch']);
+    const hp = d.foe.hp;
+    d = playCard(d, 0, new Rng(1));
+    expect(d.lastSpot?.kind).toBe('crit');
+    expect(hp - d.foe.hp).toBe(Math.round(5 * CRIT.mult));
+    expect(d.stats?.crits).toBe(1);
+  });
+
+  it('打中手腕，對手下一擊變輕；打中膝彎，他露出破綻', () => {
+    Object.assign(CRIT, { base: 0, exposed: 0, needle: 0, sharpEye: 0, limb: 1, foe: 0 });
+    const seen = new Set<string>();
+    for (let seed = 1; seed < 40 && seen.size < 2; seed++) {
+      const d = playCard(rigged('tourney', ['punch']), 0, new Rng(seed));
+      seen.add(d.lastSpot!.kind);
+      if (d.lastSpot!.kind === 'wrist') expect(d.foe.intent.value).toBe(Math.floor(10 * CRIT.wrist));
+      else expect(d.foe.exposed).toBeGreaterThan(0);
+    }
+    expect(seen).toEqual(new Set(['wrist', 'knee']));
+  });
+
+  it('對手也會打中你的要害', () => {
+    Object.assign(CRIT, { foe: 1 });
+    const d = endRound(rigged('tourney', []), new Rng(1));
+    expect(d.foeCrit).toBe(1);
+    expect(40 - d.me.hp).toBe(Math.round(10 * CRIT.mult));
+  });
+});
+
 describe('牌庫', () => {
   it('舊存檔換算：主修武學依等級加入招式，4 級起升級，奇遇牌也算進去', () => {
     expect(legacyDeck(person({ hanjiang: 5 }))).toEqual(expect.arrayContaining(['hanjiang1', 'xietiao']));
@@ -50,6 +90,7 @@ describe('牌庫', () => {
 });
 
 describe('過招規則', () => {
+  noLuck();
   it('同樣的種子打出同樣的過招', () => {
     const run = () => {
       const rng = new Rng(42);
@@ -170,6 +211,7 @@ describe('事件裡的過招', () => {
 });
 
 describe('C3、C4：牌的新效果、心法、敵人的招式', () => {
+  noLuck();
   it('反擊：傷害加上目前的護體；鎮守的護體留到下一回合', () => {
     let d = rigged('tourney', ['zhenshou', 'fanji'], { kind: 'guard', value: 1 });
     d = playCard(d, 0, new Rng(1));

@@ -126,6 +126,9 @@ export function lifeFeats(s: GameState): { label: string; value: string }[] {
     feats.push({ label: '最重的一擊', value: `【${best.bestCard ?? '？'}】${best.bestHit} 點（${best.age} 歲，對${best.name}）` });
   }
 
+  const crits = rs.reduce((n, r) => n + (r.crits ?? 0), 0);
+  if (crits > 0) feats.push({ label: '打中要害', value: `${crits} 次` });
+
   // 宿敵：交手兩次以上的人
   const byWho = new Map<string, DuelRecord[]>();
   for (const r of rs) if (r.who) byWho.set(r.who, [...(byWho.get(r.who) ?? []), r]);

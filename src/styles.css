@@ -2850,3 +2850,8 @@ small {
   font-weight: 700;
   animation: record-pop 0.5s ease;
 }
+
+.duel-report li.crit {
+  color: var(--accent);
+  font-weight: 700;
+}

@@ -585,6 +585,10 @@ export interface DuelState {
   log: DuelLogLine[];
   /** 跟這個人交過手：之前打過幾次、上一次的結果。 */
   rematch?: { times: number; wins: number; last: 'win' | 'lose' | 'yield' };
+  /** 對手打中你要害的次數（畫面靠它變化知道是新的一下）。 */
+  foeCrit?: number;
+  /** 最近一次打中的部位（seq 每次加一，畫面靠它知道是新的一下）。 */
+  lastSpot?: { kind: 'crit' | 'wrist' | 'knee'; name: string; seq: number };
   /** 這場的戰報：最重的一擊、氣血最低到哪裡。舊存檔沒有。 */
   stats?: DuelStats;
   over?: 'win' | 'lose' | 'yield';
@@ -594,6 +598,8 @@ export interface DuelState {
 
 export interface DuelStats {
   bestHit: number;
+  /** 打中要害的次數。 */
+  crits?: number;
   bestCard?: string;
   /** 你的氣血最低到過多少。 */
   lowHp: number;
@@ -619,6 +625,8 @@ export interface DuelRecord {
   rounds: number;
   bestHit: number;
   bestCard?: string;
+  /** 打中要害的次數。 */
+  crits?: number;
   /** 氣血最低時剩幾成（0–1）。 */
   low: number;
 }

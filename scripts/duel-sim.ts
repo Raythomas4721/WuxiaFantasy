@@ -88,7 +88,11 @@ function playSmartRound(state: DuelState, rng: Rng): DuelState {
   };
   search(state, []);
   let d = state;
-  for (const i of best) d = playCard(d, i, rng);
+  // 真的出牌時可能爆擊提早打倒對手，計畫裡剩下的牌就不出了
+  for (const i of best) {
+    if (d.over || !canPlay(d, i)) break;
+    d = playCard(d, i, rng);
+  }
   return d.over ? d : endRound(d, rng);
 }
 
