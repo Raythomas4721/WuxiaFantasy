@@ -103,6 +103,11 @@ export function checkCondition(s: GameState, c?: Condition): boolean {
   if (c.npcPresent && !npcPresent(s, c.npcPresent)) return false;
   if (c.npcAlive && !c.npcAlive.every((id) => npcAlive(s, id))) return false;
   if (c.notFired && c.notFired.some((id) => s.fired[id])) return false;
+  if (c.fought) {
+    const past = (s.duels ?? []).filter((r) => r.who === c.fought!.who);
+    if (past.length === 0) return false;
+    if (c.fought.last && !c.fought.last.includes(past[past.length - 1].result)) return false;
+  }
   if (c.items && !c.items.every((id) => p.items?.includes(id))) return false;
   if (c.notItems && c.notItems.some((id) => p.items?.includes(id))) return false;
   if (c.property && !p.properties?.some((x) => x.kind === c.property)) return false;

@@ -301,6 +301,9 @@ export function validateContent(content: Content): ValidationReport {
       npcRefs.forEach((n) => !has(content.npcs, n) && errors.push(`${where}：未知人物 ${n}`));
       [...(c.notFired ?? []), ...(c.scheduled ?? [])].forEach((id) => !eventIds.has(id) && errors.push(`${where}：未知事件 ${id}`));
       [...(c.items ?? []), ...(c.notItems ?? [])].forEach((id) => !content.items[id] && errors.push(`${where}：未知信物 ${id}`));
+      if (c.fought && !Object.values(content.opponents).some((o) => o.who === c.fought!.who)) {
+        errors.push(`${where}：沒有對手的身分是 ${c.fought.who}`);
+      }
     });
   }
 

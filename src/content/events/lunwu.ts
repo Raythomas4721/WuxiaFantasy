@@ -113,6 +113,14 @@ export const lunwuEvents: GameEvent[] = [
     tags: ['martial', 'sparring'],
     text: [
       {
+        if: { flags: ['rival_bully'], notFlags: ['rival_settled'], fought: { who: 'rival', last: ['win'] } },
+        text: '正賽抽籤的結果出來了。你的對手，是{rival}。上回交手是你贏了，他當時咬著牙認了——可他現在看你的眼神，一點也不像認了。「青冥台上，天下人都看著。這回不一樣。」',
+      },
+      {
+        if: { flags: ['rival_bully'], notFlags: ['rival_settled'], fought: { who: 'rival', last: ['lose', 'yield'] } },
+        text: '正賽抽籤的結果出來了。你的對手，是{rival}。從小到大，你在他手下就沒贏過。他站在台的另一頭，對你笑了笑：「又是你？我都替你累了。」',
+      },
+      {
         if: { flags: ['rival_bully'], notFlags: ['rival_settled'] },
         text: '正賽抽籤的結果出來了。你的對手，是{rival}。他站在台的另一頭，對你笑了笑：「我等這一天，等很久了。」',
       },
@@ -126,11 +134,19 @@ export const lunwuEvents: GameEvent[] = [
         hidden: true,
         duel: {
           opponent: 'rival_lunwu',
-          success: {
-            text: '{rival}倒在台上，半天爬不起來。台下有人認出了他，竊竊私語。你沒有看他，轉身走下了台。',
-            effects: [fame(5), flag('beat_rival_lunwu'), flag('rival_settled'), rel('rival', -10), next('lunwu_final')],
-            recap: { weight: 4, text: '{ageCn}歲那年，你在青冥台上當著天下人的面，打敗了{rival}。' },
-          },
+          success: [
+            {
+              if: { fought: { who: 'rival', last: ['lose', 'yield'] } },
+              text: '{rival}倒在台上，半天爬不起來。從小到大，這是你第一次贏他——偏偏是在天下人面前。台下有人認出了他，竊竊私語。你沒有看他，轉身走下了台。',
+              effects: [fame(5), flag('beat_rival_lunwu'), flag('rival_settled'), rel('rival', -10), next('lunwu_final')],
+              recap: { weight: 4, text: '{ageCn}歲那年，你在青冥台上第一次贏了{rival}，當著天下人的面。' },
+            },
+            {
+              text: '{rival}倒在台上，半天爬不起來。台下有人認出了他，竊竊私語。你沒有看他，轉身走下了台。',
+              effects: [fame(5), flag('beat_rival_lunwu'), flag('rival_settled'), rel('rival', -10), next('lunwu_final')],
+              recap: { weight: 4, text: '{ageCn}歲那年，你在青冥台上當著天下人的面，打敗了{rival}。' },
+            },
+          ],
           failure: {
             text: '你輸了。{rival}站在你面前，笑得很大聲。整座青冥台都聽得見。',
             effects: [flag('lost_to_rival'), fame(1), xinxing(1)],

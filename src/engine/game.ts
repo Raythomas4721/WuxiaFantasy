@@ -22,6 +22,7 @@ import { STAT_MAX, STAT_POINTS_PER_CHAPTER, perk } from './talents';
 import type {
   Check,
   Condition,
+  DuelRecord,
   ChoiceView,
   DuelState,
   FocusContext,
@@ -729,7 +730,12 @@ function applyChoiceOutcome(
   pushTags(s, e.tags ?? []);
   setResult(s, rng, { title: e.title, text, check });
   s.current = undefined;
-  // 打出了名聲：江湖上開始叫你的名號（或改口）
+  // 過招的結果由 finishDuel 先記下這一場，再看名號
+  if (!afterDuel) noteEpithet(s);
+}
+
+/** 打出了名聲：江湖上開始叫你的名號（或改口）。 */
+function noteEpithet(s: GameState): void {
   const ep = s.player.alive ? updateEpithet(s) : undefined;
   if (ep) {
     s.result!.epithet = ep;
@@ -810,7 +816,7 @@ export function finishDuel(state: GameState): GameState {
   // 用什麼就精什麼：打出過哪門武學的牌，那門武學就多一點經驗
   applyEffects(s, (d.me.used ?? []).map((skill) => ({ type: 'skill' as const, skill, xp: DECK.duelXp })), rng);
   const who = CONTENT.opponents[d.opponent]?.who;
-  (s.duels ??= []).push({
+  const record: DuelRecord = {
     turn: s.turn,
     age: s.player.age,
     name: d.name,
@@ -827,9 +833,12 @@ export function finishDuel(state: GameState): GameState {
     bestCard: d.stats?.bestCard,
     crits: d.stats?.crits,
     low: Math.max(0, d.stats?.lowHp ?? d.me.hp) / d.me.max,
-  });
+  };
   s.duel = undefined;
+  // 結果文字看的是「這一場之前」的交手紀錄，所以先套結果、再記下這一場
   applyChoiceOutcome(s, rng, e, choice, won ? choice.duel!.success : choice.duel!.failure, won ? 'success' : 'failure', true);
+  (s.duels ??= []).push(record);
+  noteEpithet(s);
   if (!s.player.alive) {
     s.followUp = undefined;
     s.upcoming = undefined;

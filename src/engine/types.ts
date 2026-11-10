@@ -45,6 +45,8 @@ export interface Condition {
   npcAlive?: string[];
   /** 這些事件都還沒發生過。 */
   notFired?: string[];
+  /** 之前和這個人（對手的身分 who）交過手；有 last 時，上一次的結果要在其中。 */
+  fought?: { who: string; last?: ('win' | 'lose' | 'yield')[] };
   /** 這些排程事件都還在等待中（尚未發生也未過期）。 */
   scheduled?: string[];
   /** 行囊裡有這些信物／沒有這些信物。 */

@@ -315,19 +315,49 @@ export const nodeEvents: GameEvent[] = [
     title: '冤家',
     priority: 10,
     conditions: { flags: ['rival_bully'] },
-    text: '{rival}在鎮口等你。這幾年他拜了個師父，聽說練得很苦。「從小到大，你總是擋我的路。今天，我們把帳算清楚。」鎮上的人圍了一圈。',
+    text: [
+      {
+        if: { fought: { who: 'rival', last: ['win'] } },
+        text: '{rival}在鎮口等你。小時候在街上那一架，他被你打得灰頭土臉，這件事他記了好幾年。這幾年他拜了個師父，聽說練得很苦。「上回是我大意，不算數。今天，我們把帳算清楚。」鎮上的人圍了一圈。',
+      },
+      {
+        if: { fought: { who: 'rival', last: ['lose', 'yield'] } },
+        text: '{rival}在鎮口等你。小時候他在街上把你揍得爬不起來，這幾年又拜了師父，更不把你放在眼裡了。「從小到大你就沒贏過我。今天，讓全鎮的人都看清楚。」鎮上的人圍了一圈。',
+      },
+      { text: '{rival}在鎮口等你。這幾年他拜了個師父，聽說練得很苦。「從小到大，你總是擋我的路。今天，我們把帳算清楚。」鎮上的人圍了一圈。' },
+    ],
     choices: [
       {
         id: 'fight',
         text: '接下這一戰',
         duel: {
           opponent: 'rival_boss',
-          success: {
-            text: '{rival}倒在地上，喘著氣，好半天才說了一句：「……我服了。」從那以後，鎮上再也沒人敢欺負陸平那樣的孩子。',
-            effects: [fame(4), flag('rival_beaten'), rel('rival', 10)],
-            recap: { weight: 3, text: '十八歲前，你在鎮口和{rival}了結了從小結下的梁子。' },
-          },
-          failure: { text: '你輸了。{rival}居高臨下地看著你，冷笑一聲，帶著人走了。', effects: [fame(-1), rel('rival', -5)] },
+          success: [
+            {
+              if: { fought: { who: 'rival', last: ['lose', 'yield'] } },
+              text: '{rival}倒在地上，喘著氣，不敢相信地看著你。小時候那個被他揍得爬不起來的孩子，今天把他打倒了。好半天，他才說了一句：「……我服了。」從那以後，鎮上再也沒人敢欺負陸平那樣的孩子。',
+              effects: [fame(4), flag('rival_beaten'), rel('rival', 10)],
+              recap: { weight: 3, text: '十八歲前，你在鎮口打倒了從小欺負你的{rival}。' },
+            },
+            {
+              text: '{rival}倒在地上，喘著氣，好半天才說了一句：「……我服了。」從那以後，鎮上再也沒人敢欺負陸平那樣的孩子。',
+              effects: [fame(4), flag('rival_beaten'), rel('rival', 10)],
+              recap: { weight: 3, text: '十八歲前，你在鎮口和{rival}了結了從小結下的梁子。' },
+            },
+          ],
+          failure: [
+            {
+              if: { fought: { who: 'rival', last: ['lose', 'yield'] } },
+              text: '你又輸了。{rival}居高臨下地看著你：「跟小時候一樣。」他冷笑一聲，帶著人走了。',
+              effects: [fame(-1), rel('rival', -5)],
+            },
+            {
+              if: { fought: { who: 'rival', last: ['win'] } },
+              text: '你輸了。{rival}居高臨下地看著你，笑得很痛快：「這下扯平了。」他帶著人走了。',
+              effects: [fame(-1), rel('rival', -5)],
+            },
+            { text: '你輸了。{rival}居高臨下地看著你，冷笑一聲，帶著人走了。', effects: [fame(-1), rel('rival', -5)] },
+          ],
         },
       },
       { id: 'avoid', text: '不跟他一般見識，轉身就走', outcome: { text: '你轉身走了。背後傳來一陣哄笑。', effects: [fame(-2), xinxing(1)] } },
@@ -415,19 +445,44 @@ export const nodeEvents: GameEvent[] = [
     title: '了斷',
     priority: 20,
     conditions: { flags: ['blood_feud'], notFlags: ['revenge_done', 'feud_resolved'] },
-    text: '你終於找到了疤臉。他老了，頭髮白了一半，那道疤卻還是一樣猙獰。他認出了你，慢慢把刀抽了出來：「我等你很多年了。」',
+    text: [
+      {
+        if: { fought: { who: 'scar', last: ['yield'] } },
+        text: '你又找到了疤臉。上一回你被他逼得拚命突圍，胸口那道傷到現在陰天還會疼。他看見你，咧嘴笑了：「命真硬。這回，別再跑了。」',
+      },
+      {
+        if: { fought: { who: 'scar', last: ['lose'] } },
+        text: '你終於找到了疤臉。他老了，頭髮白了一半。當年在村口，你被他一刀背砸倒，眼睜睜看著那把刀落下去。他瞇著眼認了半天：「當年門口那個小崽子？」他慢慢把刀抽了出來，「我等你很多年了。」',
+      },
+      { text: '你終於找到了疤臉。他老了，頭髮白了一半，那道疤卻還是一樣猙獰。他認出了你，慢慢把刀抽了出來：「我等你很多年了。」' },
+    ],
     choices: [
       {
         id: 'fight',
         text: '了結這筆血債',
         duel: {
           opponent: 'scar_boss',
-          success: {
-            text: '疤臉倒在血泊裡。你站了很久，久到天都黑了。這麼多年背在身上的東西，忽然輕了。',
-            effects: [flag('revenge_done'), flag('revenge_by_hand'), fame(3), align(-5)],
-            recap: { weight: 5, text: '你終於親手了結了疤臉。' },
-          },
-          failure: { text: '你被疤臉一刀劈開了胸口，拚著最後一口氣逃了出來。', effects: [] },
+          success: [
+            {
+              if: { fought: { who: 'scar', last: ['lose', 'yield'] } },
+              text: '疤臉倒在血泊裡。當年你在他刀下站都站不起來，今天，是他再也站不起來了。你站了很久，久到天都黑了。這麼多年背在身上的東西，忽然輕了。',
+              effects: [flag('revenge_done'), flag('revenge_by_hand'), fame(3), align(-5)],
+              recap: { weight: 5, text: '你終於親手了結了疤臉。當年敗在他刀下的那一筆，一起算清了。' },
+            },
+            {
+              text: '疤臉倒在血泊裡。你站了很久，久到天都黑了。這麼多年背在身上的東西，忽然輕了。',
+              effects: [flag('revenge_done'), flag('revenge_by_hand'), fame(3), align(-5)],
+              recap: { weight: 5, text: '你終於親手了結了疤臉。' },
+            },
+          ],
+          failure: [
+            {
+              if: { fought: { who: 'scar', last: ['yield'] } },
+              text: '又一次。疤臉的刀劈開了你的胸口，你拚著最後一口氣逃了出來。背後傳來他的笑聲：「下回早點來，我老了，等不了你幾年了。」',
+              effects: [],
+            },
+            { text: '你被疤臉一刀劈開了胸口，拚著最後一口氣逃了出來。', effects: [] },
+          ],
         },
       },
       {
