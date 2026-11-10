@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
-export const FOE_REALM = [1, 1.2, 1.55, 1.75, 2.02, 2.28];
+export const FOE_REALM = [0.95, 1.1, 1.38, 1.52, 1.75, 2];
 
 /** 平衡數值集中在這裡。 */
 export const DUEL = {
@@ -447,7 +447,8 @@ const AFFIXES: { name: string; text: string; hpMult?: number; rage?: number; tra
 function rollAffix(s: GameState, rng: Rng): (typeof AFFIXES)[number] | undefined {
   const tier = s.current ? CONTENT.events.find((e) => e.id === s.current!.eventId)?.node?.tier : undefined;
   if (tier !== 'minor' && tier !== 'elite') return undefined;
-  if (tier === 'minor' && !rng.chance(0.5)) return undefined;
+  // 小戰一半、精英六成會帶詞條
+  if (!rng.chance(tier === 'minor' ? 0.5 : 0.6)) return undefined;
   return rng.pick(AFFIXES);
 }
 
