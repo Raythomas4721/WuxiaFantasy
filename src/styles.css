@@ -3037,3 +3037,20 @@ small {
   font-size: 0.8rem;
   color: var(--ink-2);
 }
+
+/* 首領絕技 */
+.duel-intent.intent-sig,
+.intent-mini.intent-sig {
+  border-color: var(--bad);
+  background: var(--accent-soft);
+}
+
+.intent-sig .intent-seal {
+  background: var(--bad);
+  color: var(--card);
+}
+
+.intent-sig .intent-name {
+  color: var(--bad);
+  font-weight: 700;
+}

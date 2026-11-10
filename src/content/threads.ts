@@ -14,6 +14,14 @@ export const threads: ThreadDef[] = [
     advances: ['revenge_chance'],
   },
   {
+    id: 'seek_sword',
+    title: '學劍',
+    priority: 58,
+    conditions: { flags: ['seek_sword'], notFlags: ['shen_friend', 'joined_qinghen'], notFired: ['rare_cave'], maxAge: 45 },
+    text: '你想學劍。聽說醉劍沈孤舟常在江南、川蜀的酒樓喝酒；青衡劍府每隔幾年在青冥山開山門收人；深山裡，也許還有前人留下的劍痕。',
+    advances: ['shen_wine_1', 'jianfu_exam', 'rare_cave'],
+  },
+  {
     id: 'zhou_son',
     title: '門邊的孩子',
     priority: 70,

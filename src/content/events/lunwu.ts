@@ -226,13 +226,17 @@ export const lunwuEvents: GameEvent[] = [
     kind: 'normal',
     title: '劍府考核',
     weight: 30,
-    weightMods: [{ if: { flags: ['world_jianfu_rise'] }, mult: 1.5 }, { if: { flags: ['world_jianfu_fall'] }, mult: 0.5 }],
+    weightMods: [
+      { if: { flags: ['world_jianfu_rise'] }, mult: 1.5 },
+      { if: { flags: ['world_jianfu_fall'] }, mult: 0.5 },
+      { if: { flags: ['seek_sword'] }, mult: 2 },
+    ],
     repeatable: true,
     cooldown: 3,
     maxTimes: 2,
     conditions: {
       minAge: 13, maxAge: 30, hasSect: false, minAlignment: 0,
-      any: [{ regions: ['qingming'] }, { flags: ['lunwu_watched'] }, { flagMin: { lunwu_entered: 1 } }],
+      any: [{ regions: ['qingming'] }, { flags: ['lunwu_watched'] }, { flagMin: { lunwu_entered: 1 } }, { flags: ['seek_sword'] }],
     },
     tags: ['martial', 'sect'],
     text: [

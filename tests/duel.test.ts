@@ -67,6 +67,23 @@ describe('打中部位', () => {
   });
 });
 
+describe('首領絕技', () => {
+  noLuck();
+  it('第二回合蓄勢預告，第三回合打出絕技', () => {
+    let d = createDuel(fighter(['parry', 'parry', 'parry', 'parry', 'parry', 'parry', 'parry']), 'bandit_chief', 'x', new Rng(3));
+    expect(d.foe.intent.sig).toBeUndefined();
+    d = endRound(d, new Rng(3));
+    expect(d.foe.intent).toMatchObject({ kind: 'charge', sig: '鬼頭刀・橫掃' });
+    expect(previewRound(d).taken).toBe(0);
+    d = endRound(d, new Rng(3));
+    expect(d.foe.intent).toMatchObject({ kind: 'attack', sig: '鬼頭刀・橫掃' });
+    const hp = d.me.hp;
+    d = endRound(d, new Rng(3));
+    expect(d.log.some((l) => l.text.includes('使出【鬼頭刀・橫掃】'))).toBe(true);
+    expect(hp - d.me.hp).toBeGreaterThan(0);
+  });
+});
+
 describe('回合預告', () => {
   it('照目前的意圖試算結束回合會受多少傷：護體、伏招都算進去，不改動原本的過招', () => {
     let d = rigged('tourney', ['parry', 'xieli']);

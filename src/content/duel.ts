@@ -364,7 +364,7 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他的劍勢沉了下來，下一劍會很重。', feint: '他的劍尖輕輕點著，虛實難辨。' }),
   },
   xie_lingshuang: {
-    id: 'xie_lingshuang', name: '謝凌霜', who: 'xie_lingshuang', level: 3, wuxing: 9, temper: 'veteran', specials: { drain: 1 }, phase2: { line: '寒衣。', specials: { drain: 2 }, traps: ['shuangjiang'] }, traps: ['huijian', 'shuangjiang'],
+    id: 'xie_lingshuang', name: '謝凌霜', signature: { name: '寒衣・三疊', tell: '{foe}的劍尖在空中畫了一個圈，寒氣一層一層疊了上來。', mult: 0.55, hits: 3 }, who: 'xie_lingshuang', level: 3, wuxing: 9, temper: 'veteran', specials: { drain: 1 }, phase2: { line: '寒衣。', specials: { drain: 2 }, traps: ['shuangjiang'] }, traps: ['huijian', 'shuangjiang'],
     tells: tells({
       attack: '她的劍忽然停住了。你知道，下一劍會很快。',
       combo: '她手腕一翻，劍光碎成了一片。',
@@ -404,7 +404,7 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 精英 ----
   bandit_chief: {
-    id: 'bandit_chief', name: '黑風寨的寨主', level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', specials: { enrage: 1.5 }, hpMult: 0.75, traps: ['fanshou'],
+    id: 'bandit_chief', name: '黑風寨的寨主', signature: { name: '鬼頭刀・橫掃', tell: '{foe}把鬼頭刀往後一拖，刀背貼著地，像在攢一股勁。', mult: 1.3 }, level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', specials: { enrage: 1.5 }, hpMult: 0.75, traps: ['fanshou'],
     tells: tells({ attack: '他把鬼頭刀往肩上一扛，咧嘴笑了。', feint: '他的刀尖晃來晃去，像在逗你。' }),
   },
   xueyi_assassin: {
@@ -421,31 +421,31 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 章末首領（§1.1）----
   rival_boss: {
-    id: 'rival_boss', name: '{rival}', who: 'rival', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, traps: ['weiou', 'fanshou'],
+    id: 'rival_boss', name: '{rival}', signature: { name: '拚命三郎', tell: '{foe}吐了口唾沫，把袖子捋到肩膀上，眼睛都紅了。', mult: 0.75, hits: 2 }, who: 'rival', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, traps: ['weiou', 'fanshou'],
     tells: tells({ attack: '他這幾年練得很苦，拳頭比從前硬多了。', feint: '他嘴上罵著，眼睛卻在找你的破綻。' }),
   },
   town_champion: {
-    id: 'town_champion', name: '連守七場的擂主', level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', specials: { heal: 1 }, phase2: { line: '好，那我也不留手了。', temper: 'veteran', traps: ['fanshou'] }, traps: ['tiebu'],
+    id: 'town_champion', name: '連守七場的擂主', signature: { name: '擂台連環腿', tell: '{foe}腳下踩了個古怪的步子，重心全壓在右腿上。', mult: 0.7, hits: 2 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', specials: { heal: 1 }, phase2: { line: '好，那我也不留手了。', temper: 'veteran', traps: ['fanshou'] }, traps: ['tiebu'],
     tells: tells({ guard: '他穩穩站在擂台中央，等你過去。' }),
   },
   sect_champion: {
-    id: 'sect_champion', name: '同門裡的第一人', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', specials: { drain: 1 }, phase2: { line: '師父沒教過你這一招吧？', temper: 'veteran', traps: ['huijian'] }, traps: ['huijian'],
+    id: 'sect_champion', name: '同門裡的第一人', signature: { name: '鎮門一式', tell: '{foe}收招回胸，擺出師父壓箱底的起手式。', mult: 1.3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', specials: { drain: 1 }, phase2: { line: '師父沒教過你這一招吧？', temper: 'veteran', traps: ['huijian'] }, traps: ['huijian'],
     tells: tells({ guard: '他的架勢一絲不亂，是師父手把手教出來的。' }),
   },
   escort_robber: {
-    id: 'escort_robber', name: '劫鏢的賊首', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '兄弟們，一起上！', specials: { curse: 1, enrage: 1.5 } }, traps: ['weiou', 'fanshou'],
+    id: 'escort_robber', name: '劫鏢的賊首', signature: { name: '飛刀連環', tell: '{foe}的手往腰間一摸，指縫裡夾著三把亮晃晃的東西。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '兄弟們，一起上！', specials: { curse: 1, enrage: 1.5 } }, traps: ['weiou', 'fanshou'],
     tells: tells({ feint: '他吹了一聲口哨，兩邊的林子裡都有了動靜。' }),
   },
   famous_blade: {
-    id: 'famous_blade', name: '成名的刀客', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '你逼我拔出第二把刀。', temper: 'brute', rage: 4 }, traps: ['tiebu'],
+    id: 'famous_blade', name: '成名的刀客', signature: { name: '拔刀斬', tell: '{foe}的刀還在鞘裡，手按在刀柄上，整個人靜得像一塊石頭。', mult: 1.45 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '你逼我拔出第二把刀。', temper: 'brute', rage: 4 }, traps: ['tiebu'],
     tells: tells({ attack: '他的刀還在鞘裡，殺氣已經到了。' }),
   },
   mongol_chiliarch: {
-    id: 'mongol_chiliarch', name: '蒙古千夫長', level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', specials: { enrage: 1 }, phase2: { line: '放箭！', specials: { enrage: 1.5, curse: 1 } }, hpMult: 0.78, lethal: true, traps: ['yuanbing', 'huishen'],
+    id: 'mongol_chiliarch', name: '蒙古千夫長', signature: { name: '騎射連珠', tell: '{foe}從箭囊裡一口氣抽出三支箭，扣在弦上。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'guard', specials: { enrage: 1 }, phase2: { line: '放箭！', specials: { enrage: 1.5, curse: 1 } }, hpMult: 0.78, lethal: true, traps: ['yuanbing', 'huishen'],
     tells: tells({ guard: '他身後是一整列騎兵。', attack: '他舉起了彎刀，騎兵們跟著發出了吼聲。' }),
   },
   scar_boss: {
-    id: 'scar_boss', name: '疤臉', who: 'scar', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '當年我也是這樣殺了你爹的。', temper: 'brute', rage: 4 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_boss', name: '疤臉', signature: { name: '斷門刀', tell: '{foe}雙手握刀，刀尖慢慢舉過頭頂——當年村口那一刀，就是這個架勢。', mult: 1.4 }, who: 'scar', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '當年我也是這樣殺了你爹的。', temper: 'brute', rage: 4 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。', attack: '他咧開嘴，那道疤跟著扭了起來。' }),
   },
   zhou_son: {
@@ -457,11 +457,11 @@ export const opponents: Record<string, OpponentDef> = {
     tells: tells({ attack: '他周身的氣脈逆著走，出手的路數邪得讓人頭皮發麻。', drain: '他的指尖泛著青黑色。' }),
   },
   young_challenger: {
-    id: 'young_challenger', name: '上門挑戰的年輕人', level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '前輩，晚輩要拚命了！', rage: 3 },
+    id: 'young_challenger', name: '上門挑戰的年輕人', signature: { name: '少年意氣', tell: '{foe}深吸一口氣，眼睛亮得嚇人。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '前輩，晚輩要拚命了！', rage: 3 },
     tells: tells({ attack: '他出手又快又急，像當年的你。' }),
   },
   wumian: {
-    id: 'wumian', name: '無面客', who: 'wumian', level: { relative: 0, min: 2, max: 5 }, wuxing: 9, temper: 'veteran', lethal: true, hpMult: 0.85,
+    id: 'wumian', name: '無面客', signature: { name: '一線', tell: '白面具忽然不動了。四周靜得連風聲都沒有。', mult: 1.5 }, who: 'wumian', level: { relative: 0, min: 2, max: 5 }, wuxing: 9, temper: 'veteran', lethal: true, hpMult: 0.85,
     traps: ['huijian'], specials: { curse: 1.5, drain: 1 },
     phase2: { line: '……', specials: { curse: 2, drain: 1.5 }, rage: 3 },
     tells: tells({
@@ -472,11 +472,11 @@ export const opponents: Record<string, OpponentDef> = {
     }),
   },
   scar_old: {
-    id: 'scar_old', name: '疤臉', who: 'scar', level: 2, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '你跟你爹一樣，都不知道什麼時候該逃。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
+    id: 'scar_old', name: '疤臉', signature: { name: '斷門刀', tell: '{foe}雙手握刀，刀尖慢慢舉過頭頂——當年村口那一刀，就是這個架勢。', mult: 1.4 }, who: 'scar', level: 2, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '你跟你爹一樣，都不知道什麼時候該逃。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['fanshou', 'tiebu'],
     tells: tells({ feint: '他的刀尖低垂，看起來破綻百出，像是故意的。' }),
   },
   bater: {
-    id: 'bater', name: '巴特爾', who: 'bater', level: 3, wuxing: 7, temper: 'veteran', phase2: { line: '你是我遇過最難纏的人。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['huishen'],
+    id: 'bater', name: '巴特爾', signature: { name: '白翎穿雲', tell: '{foe}把弓拉成了滿月，箭尖穩穩地對著你的咽喉。', mult: 1.45 }, who: 'bater', level: 3, wuxing: 7, temper: 'veteran', phase2: { line: '你是我遇過最難纏的人。', temper: 'brute', rage: 3 }, hpMult: 0.78, lethal: true, traps: ['huishen'],
     tells: tells({
       attack: '他把弓拉成了滿月。',
       combo: '他從箭袋裡一次抽出了三支箭。',

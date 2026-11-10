@@ -329,11 +329,33 @@ function makeIntent(kind: IntentKind, level: number, rng: Rng): Intent {
   }
 }
 
+/** 絕技最早第幾回合開始蓄勢；兩次絕技至少隔幾回合。 */
+const SIG_FIRST_ROUND = 2;
+const SIG_GAP = 4;
+
 function pickIntent(d: DuelState, rng: Rng, except?: IntentKind): Intent {
   const def = CONTENT.opponents[d.opponent];
   const weights: Partial<Record<IntentKind, number>> = { ...TEMPER[d.foe.temper ?? def.temper].weights, ...(d.foe.specials ?? def.specials) };
   // 氣血是滿的就不回氣
   if (d.foe.hp >= d.foe.max) delete weights.heal;
+  // 首領絕技：蓄勢一回合預告，下一回合打出來
+  const sig = def.signature;
+  if (sig && except === undefined) {
+    const st = (d.foe.sig ??= { ready: false, last: -99 });
+    const per = Math.round(DUEL.foeAttack(d.level) * sig.mult);
+    if (st.ready) {
+      st.ready = false;
+      st.last = d.round;
+      d.foe.streak = (d.foe.streak ?? 0) + 1;
+      return { kind: sig.hits ? 'combo' : 'attack', value: per, hits: sig.hits, sig: sig.name };
+    }
+    if (d.round >= SIG_FIRST_ROUND && d.round - st.last >= SIG_GAP) {
+      st.ready = true;
+      d.foe.streak = 0;
+      say(d, 'foe', `${sig.tell.replaceAll('{foe}', d.name)}（下回合：【${sig.name}】）`);
+      return { kind: 'charge', value: 0, sig: sig.name, next: per };
+    }
+  }
   // 連續出手好幾回合，要換一口氣：這一招只能是守勢、蓄勢這類不打人的招
   if ((d.foe.streak ?? 0) >= DUEL.foeStrikeStreak) {
     for (const k of STRIKE_INTENTS) delete weights[k];
@@ -791,7 +813,9 @@ function springTrap(d: DuelState, trigger: TrapTrigger, rng: Rng): CardDef | und
 
 function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
   const trap = (intent.kind === 'feint' && springTrap(d, 'foeFeint', rng)) || springTrap(d, 'foeAttack', rng);
-  const verb = intent.kind === 'feint' ? '虛晃一招，趁你分神時出手' : intent.kind === 'combo' ? '連續出手' : '出手';
+  const verb = intent.sig
+    ? `使出【${intent.sig}】`
+    : intent.kind === 'feint' ? '虛晃一招，趁你分神時出手' : intent.kind === 'combo' ? '連續出手' : '出手';
   // 對手也會打中你的要害：只算第一下
   const crit = !trap?.dodge && rng.chance(CRIT.foe) ? rng.pick(MY_VITALS) : undefined;
   for (let i = 0; i < (intent.hits ?? 1); i++) {
@@ -831,7 +855,8 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   const foeStart = d.foe.hp;
   const meStart = d.me.hp;
   let intent = d.foe.intent;
-  if (rng.chance(temper.switch)) {
+  // 絕技不會臨時變招
+  if (!intent.sig && rng.chance(temper.switch)) {
     intent = pickIntent(d, rng, intent.kind);
     say(d, 'foe', `${d.name}忽然變招！`);
   }
@@ -849,6 +874,11 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
       break;
     case 'charge':
       d.foe.charge += intent.value;
+      if (intent.sig) {
+        say(d, 'foe', `${d.name}屏住氣息，【${intent.sig}】就要出手了。`);
+        springTrap(d, 'foeCharge', rng);
+        break;
+      }
       say(d, 'foe', `${d.name}凝神蓄勢，下一擊會更重（+${intent.value}）。`);
       springTrap(d, 'foeCharge', rng);
       break;
@@ -930,6 +960,10 @@ export function intentText(d: DuelState): { label: string; detail: string } {
     attack: '出手', combo: '連擊', guard: '守勢', charge: '蓄勢', feint: '虛招', drain: '點穴', enrage: '發狠', heal: '回氣', curse: '下毒',
   };
   if (!d.clear) return { label: '？', detail: def.tells[it.kind] };
+  if (it.sig && it.kind === 'charge') {
+    return { label: `蓄勢・${it.sig}`, detail: `下回合要使出【${it.sig}】：約 ${(it.next ?? 0) + charge + it.value}${def.signature?.hits ? ` × ${def.signature.hits}` : ''} 傷。先準備護體或伏招。` };
+  }
+  if (it.sig) return { label: `絕技・${it.sig}`, detail: def.signature?.tell.replaceAll('{foe}', d.name) ?? '' };
   const value =
     it.kind === 'guard' || it.kind === 'charge' ? `${it.value}` : `${it.value + charge}${it.hits ? ` × ${it.hits}` : ''}`;
   return { label: `${labels[it.kind]} ${value}`, detail: def.tells[it.kind] };

@@ -149,7 +149,7 @@ export const youthEvents: GameEvent[] = [
     kind: 'normal',
     title: '醉劍',
     weight: 9,
-    weightMods: [{ if: { traits: ['haojiu'] }, mult: 3 }],
+    weightMods: [{ if: { traits: ['haojiu'] }, mult: 3 }, { if: { flags: ['seek_sword'] }, mult: 3 }],
     conditions: { minAge: 14, maxAge: 45, npcPresent: 'shen_guzhou' },
     tags: ['tavern', 'travel'],
     text: '酒肆的角落裡，一個邋遢的中年人趴在桌上，腰間掛著一柄舊劍。掌櫃正揪著他的衣領要酒錢，他眼睛都沒睜開，只嘟囔了一句：「記帳。」',

@@ -615,7 +615,8 @@ export const adultEvents: GameEvent[] = [
     title: '石壁殘劍',
     weight: 3,
     rare: true,
-    conditions: { minAge: 15, maxAge: 45, minStats: { fuyuan: 7 } },
+    weightMods: [{ if: { flags: ['seek_sword'] }, mult: 2 }],
+    conditions: { minAge: 15, maxAge: 45, any: [{ minStats: { fuyuan: 7 } }, { flags: ['seek_sword'] }] },
     tags: ['chance', 'travel'],
     text: '你在山中避雨，誤入一個山洞。洞壁上刻滿了劍痕，深淺不一，有的已經被青苔蓋住。最深處刻著一行小字：「後來者，看得懂便拿去。」',
     choices: [

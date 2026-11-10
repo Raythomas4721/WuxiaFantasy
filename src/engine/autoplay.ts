@@ -2,7 +2,7 @@
 
 import { playSimpleRound } from './duelAI';
 import {
-  allocateStat,
+  allocateStat, chooseMainSkill,
   chooseFocus, chooseOption, choiceViews, finishDuel, focusOptions, newGame, nextTurn, rollTraitOptions, startLife,
 } from './game';
 import { CONTENT } from '../content';
@@ -21,6 +21,7 @@ function autoStat(s: GameState): StatName | undefined {
 }
 
 const MAX_STEPS = 3000;
+const SWORDS = ['hanjiang', 'qinghen', 'shibi'];
 
 export interface AutoplayResult {
   state: GameState;
@@ -179,6 +180,9 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
       s = finishDuel({ ...s, duel: d, rng: rng.state });
     } else if (s.phase === 'result') {
       for (let i = 0; i < 10 && s.deckTasks?.length; i++) s = autoDeckTask(s);
+      // 學到了劍法就改練劍（玩家多半會這樣做）
+      const sword = SWORDS.find((k) => (s.player.skills[k] ?? 0) > 0);
+      if (sword && !SWORDS.includes(mainSkill(s).skill ?? '')) s = chooseMainSkill(s, sword);
       // 市集：立志發財的人只買產業；其他人一半的回合會買一樣買得起的東西
       const offers = marketOffers(s).filter((o) => o.enabled);
       const saver = s.player.ambition === 'wealth';

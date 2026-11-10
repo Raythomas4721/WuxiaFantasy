@@ -370,6 +370,21 @@ export interface Intent {
   /** attack、combo、feint 的每一擊傷害；guard 的護體；charge 的蓄勢量。 */
   value: number;
   hits?: number;
+  /** 首領絕技的名字：蓄勢（charge）時是預告，出手時是那一招本身。 */
+  sig?: string;
+  /** 蓄勢預告時：下回合絕技每一擊的傷害（不含蓄勢加成）。 */
+  next?: number;
+}
+
+/** 首領的招牌絕技：先蓄勢一回合（預告），下一回合打出來。 */
+export interface SignatureDef {
+  name: string;
+  /** 蓄勢時的動作描寫，{foe} 會代換成對手名字。 */
+  tell: string;
+  /** 每一擊是平常出手的幾倍。 */
+  mult: number;
+  /** 連擊幾下（不寫就是一下）。 */
+  hits?: number;
 }
 
 /** 對手的暗招：玩家做了某件事時發動，每場一次。 */
@@ -392,6 +407,8 @@ export interface FoeTrapDef {
 export interface OpponentDef {
   id: string;
   name: string;
+  /** 首領的招牌絕技。 */
+  signature?: SignatureDef;
   /** 同一個人在不同時期的對手（例如疤臉年輕時、當上首領、老了）共用同一個身分，重逢時記得上一次。 */
   who?: string;
   /** 固定等級，或 { relative }：依玩家主修武學等級浮動（比武、宿敵）。 */
@@ -588,6 +605,8 @@ export interface DuelState {
     streak?: number;
     /** 第二階段換過的打法。 */
     temper?: 'brute' | 'veteran' | 'guard';
+    /** 絕技：下回合要打出來了；上一次打出絕技是第幾回合。 */
+    sig?: { ready: boolean; last: number };
     specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>;
     intent: Intent;
     traps: { id: string; used: boolean }[];
