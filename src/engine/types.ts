@@ -575,6 +575,8 @@ export interface DuelState {
     phase2?: boolean;
     /** 這場已經喊過的台詞種類。 */
     said?: string[];
+    /** 連續出手（攻擊類意圖）的回合數，太多就要換氣。 */
+    streak?: number;
     /** 第二階段換過的打法。 */
     temper?: 'brute' | 'veteran' | 'guard';
     specials?: Partial<Record<'drain' | 'enrage' | 'heal' | 'curse', number>>;

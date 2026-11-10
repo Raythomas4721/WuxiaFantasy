@@ -16,7 +16,7 @@ import type {
 } from './types';
 
 /** 對手也有境界：玩家境界高了會多內力、多抽牌，同級對手的氣血與出手跟著放大（依等級）。 */
-export const FOE_REALM = [1.06, 1.32, 1.64, 1.75, 2.02, 2.28];
+export const FOE_REALM = [1, 1.2, 1.55, 1.75, 2.02, 2.28];
 
 /** 平衡數值集中在這裡。 */
 export const DUEL = {
@@ -35,7 +35,10 @@ export const DUEL = {
   /** 氣血上限 = 30 ＋ 根骨 × 2 ＋ 境界加成（設計文件 v0.5 §3.1）。 */
   playerHp: (gengu: number, level: number) => 30 + gengu * 2 + REALM[Math.min(5, level)].hp,
   foeHp: (level: number) => Math.round((45 + level * 10) * FOE_REALM[Math.min(5, level)]),
-  foeAttack: (level: number) => (11 + level * 2.5) * FOE_REALM[Math.min(5, level)],
+  /** 前期出手輕一點（0 級約 9、1 級約 14），四級以後和舊公式差不多。 */
+  foeAttack: (level: number) => (9 + level * 3) * FOE_REALM[Math.min(5, level)],
+  /** 對手連續出手幾回合之後，要換一口氣（下一招一定不是攻擊）。 */
+  foeStrikeStreak: 2,
   foeGuard: (level: number) => 4 + level * 2,
   foeCharge: (level: number) => Math.round(3 + level * 1.5),
   /** 看穿暗招要比對手高出的悟性。 */
@@ -326,9 +329,16 @@ function pickIntent(d: DuelState, rng: Rng, except?: IntentKind): Intent {
   const weights: Partial<Record<IntentKind, number>> = { ...TEMPER[d.foe.temper ?? def.temper].weights, ...(d.foe.specials ?? def.specials) };
   // 氣血是滿的就不回氣
   if (d.foe.hp >= d.foe.max) delete weights.heal;
+  // 連續出手好幾回合，要換一口氣：這一招只能是守勢、蓄勢這類不打人的招
+  if ((d.foe.streak ?? 0) >= DUEL.foeStrikeStreak) {
+    for (const k of STRIKE_INTENTS) delete weights[k];
+    say(d, 'sys', `${d.name}連攻了好幾回合，氣息有點亂，得緩一緩。`);
+  }
+  if (Object.keys(weights).filter((k) => k !== except).length === 0) weights.guard = 1;
   const kind = rng.weighted(
     (Object.keys(weights) as IntentKind[]).filter((k) => k !== except).map((k) => ({ item: k, weight: weights[k]! })),
   )!;
+  d.foe.streak = STRIKE_INTENTS.includes(kind) ? (d.foe.streak ?? 0) + 1 : 0;
   return makeIntent(kind, d.level, rng);
 }
 
