@@ -655,6 +655,8 @@ export interface Player {
   sect?: string;
   masters: string[];
   ambition?: string;
+  /** 江湖名號：成名的地方固定下來；新的一章才可能改口。 */
+  epithet?: { name: string; place: string; stage: number };
   alive: boolean;
   /** 跟著你一輩子的牌庫（設計文件 v0.5 §2）。舊存檔沒有，讀檔時從武學等級換算。 */
   deck?: string[];
@@ -689,6 +691,8 @@ export interface TurnResult {
   gains: string[];
   check?: 'success' | 'failure';
   rumor?: string;
+  /** 這件事之後，江湖上開始（或改口）叫你這個名號。 */
+  epithet?: { name: string; prev?: string };
 }
 
 export interface Snapshot {

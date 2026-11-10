@@ -50,7 +50,10 @@ export function GameScreen({ state, unlocks, onChange, onNewLife, onCodex, onExi
     <div className="game">
       <header className="game-header">
         <div className="game-title">
-          <span className="player-name">{p.name}</span>
+          <span className="player-name">
+            {p.name}
+            {p.epithet && <span className="header-epithet">「{p.epithet.name}」</span>}
+          </span>
           <span className="header-meta">
             {eraName(year)}（{year}）· {chineseNumber(p.age)}歲 · {CONTENT.regions[p.region].name}
           </span>
@@ -145,6 +148,16 @@ function PhaseView({ state, act }: { state: GameState; act: (fn: () => GameState
                 </li>
               ))}
             </ul>
+          )}
+          {r.epithet && (
+            <aside className="epithet-award">
+              <span className="epithet-seal">{r.epithet.name}</span>
+              <p>
+                {r.epithet.prev
+                  ? `你的名聲變了。江湖上不再叫你「${r.epithet.prev}」，改口叫你「${r.epithet.name}」。`
+                  : '你的事傳開了。從今往後，江湖上有人這樣叫你。'}
+              </p>
+            </aside>
           )}
           {r.rumor && (
             <aside className="rumor">

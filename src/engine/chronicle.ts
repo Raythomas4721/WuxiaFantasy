@@ -7,7 +7,7 @@ import { LEVEL_NAMES } from './describe';
 import { mainSkill } from './duel';
 import { LIFE_STAGES, chapterTitle, stageIndex } from './stages';
 import { chineseNumber } from './text';
-import type { DuelRecord, GameState, LifeChapter, LifeMoment } from './types';
+import type { DuelRecord, GameState, LifeChapter, LifeMoment, StatName } from './types';
 
 /** 每章最多幾件事（不含過招與終章）。 */
 const MOMENTS_PER_CHAPTER = 3;
@@ -151,18 +151,23 @@ const WEAPON_WORD: Record<string, { noun: string; plain: string; grit: string }>
   qinghen: { noun: '劍', plain: '劍客', grit: '孤' },
   shoucheng: { noun: '槍', plain: '槍手', grit: '鐵' },
   yeyu: { noun: '針', plain: '暗器手', grit: '冷' },
-  liuyun: { noun: '燕', plain: '飛客', grit: '孤' },
+  liuyun: { noun: '影', plain: '飛客', grit: '孤' },
   changquan: { noun: '拳', plain: '拳師', grit: '鐵' },
   shijing: { noun: '拳', plain: '拳師', grit: '鐵' },
 };
 
+/** 打法、為人都沒有特色時，看最突出的屬性取字。福緣不好取字，就用平實的稱呼。 */
+const STAT_WORD: Partial<Record<StatName, string>> = { gengu: '鐵', wuxing: '巧', danshi: '猛', xinxing: '靜', meili: '玉' };
+/** 最突出的屬性至少要到這裡，才拿來取字。 */
+const STAT_WORD_AT = 6;
+
 const PLACE_WORD: Record<string, string> = { jiangnan: '江南', xiangyang: '襄陽', shu: '川蜀', qingming: '青冥' };
 
-/** 江湖名號：地方 + 為人或打法 + 兵器，例如「襄陽快劍」「江南義拳」。 */
-export function epithet(s: GameState): string | undefined {
+/** 江湖名號：地方 + 為人或打法 + 兵器，例如「襄陽快劍」「江南義拳」。place 是成名的地方（不給就用現在所在地）。 */
+export function epithet(s: GameState, fixedPlace?: string): string | undefined {
   const p = s.player;
   if (p.age < EPITHET_MIN_AGE) return undefined;
-  const place = PLACE_WORD[p.region] ?? '';
+  const place = fixedPlace ?? PLACE_WORD[p.region] ?? '';
   const main = mainSkill(s);
   const med = skillLevel(s, 'baicao');
   if (med >= 3 && med > main.level) return `${place}${p.chivalry >= 30 ? '仁心' : '妙手'}`;
@@ -180,7 +185,41 @@ export function epithet(s: GameState): string | undefined {
   else if (close >= 2) adj = w.grit;
   else if (killer >= 3) adj = '斷';
   else if (p.fame >= 60) adj = '一';
+  else {
+    const [top, value] = (Object.entries(p.stats) as [StatName, number][]).sort((a, b) => b[1] - a[1])[0];
+    if (value >= STAT_WORD_AT) adj = STAT_WORD[top] ?? '';
+  }
   return adj ? `${place}${adj}${w.noun}` : `${place}${w.plain}`;
+}
+
+/** 名望「小有名氣」以上，或打倒過首領、強敵，江湖上才會開始叫你的名號。 */
+const RENOWN_FAME = 10;
+
+function renowned(s: GameState): boolean {
+  if (s.player.fame >= RENOWN_FAME) return true;
+  return (s.duels ?? []).some((r) => r.result === 'win' && (r.tier === 'boss' || r.tier === 'elite' || r.lethal));
+}
+
+/**
+ * 人生中途的名號：第一次夠格就給；之後要到新的一章，算出來的名號不一樣了才改口。
+ * 成名的地方固定，不會因為搬家就一直變。有變化時回傳新舊名號。就地修改。
+ */
+export function updateEpithet(s: GameState): { name: string; prev?: string } | undefined {
+  const p = s.player;
+  const stage = stageIndex(p.age);
+  if (!p.epithet) {
+    if (!renowned(s)) return undefined;
+    const name = epithet(s);
+    if (!name) return undefined;
+    p.epithet = { name, place: PLACE_WORD[p.region] ?? '', stage };
+    return { name };
+  }
+  if (stage <= p.epithet.stage) return undefined;
+  const name = epithet(s, p.epithet.place);
+  if (!name || name === p.epithet.name) return undefined;
+  const prev = p.epithet.name;
+  p.epithet = { ...p.epithet, name, stage };
+  return { name, prev };
 }
 
 function relationNote(v: number): string | undefined {

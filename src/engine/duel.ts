@@ -423,7 +423,8 @@ function reputation(d: DuelState, s: GameState): void {
   if (rs.length === 0 || rs.length % REPUTATION_EVERY !== 0) return;
   const feat = [...rs].reverse().find((r) => r.result === 'win' && (r.tier === 'boss' || r.tier === 'elite' || r.lethal));
   if (!feat) return;
-  say(d, 'foe', `{foe}打量了你幾眼，臉色變了：「你……你就是打贏${feat.baseName ?? feat.name}的那個人？」`);
+  const known = s.player.epithet ? `人稱『${s.player.epithet.name}』、` : '';
+  say(d, 'foe', `{foe}打量了你幾眼，臉色變了：「你……你就是${known}打贏${feat.baseName ?? feat.name}的那個人？」`);
   say(d, 'sys', '對方心裡發虛，一開始就露出了破綻。');
   d.foe.exposed = Math.max(d.foe.exposed, 1);
 }

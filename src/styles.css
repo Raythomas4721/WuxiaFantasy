@@ -2973,3 +2973,34 @@ small {
 .pile-text {
   color: var(--ink-2);
 }
+
+/* 人生中途的名號 */
+.header-epithet {
+  margin-left: 0.3rem;
+  font-size: 0.8em;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+}
+
+.epithet-award {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0.8rem 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  animation: record-pop 0.6s ease;
+}
+
+.epithet-award .epithet-seal {
+  margin: 0;
+  flex: none;
+  font-size: 1.05rem;
+}
+
+.epithet-award p {
+  margin: 0;
+  line-height: 1.7;
+}

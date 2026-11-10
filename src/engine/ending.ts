@@ -47,7 +47,7 @@ export function computeEnding(s: GameState): EndingResult {
     deathLine: `${eraName(year)}（${year}），你${cause}，享年${chineseNumber(s.player.age)}歲。`,
     recaps,
     keepsake: keepsake ? fill(keepsake.ending, s) : undefined,
-    epithet: epithet(s),
+    epithet: s.player.epithet?.name ?? epithet(s),
     chapters: lifeChapters(s),
     feats: lifeFeats(s),
     people: lifePeople(s),

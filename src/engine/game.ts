@@ -3,6 +3,7 @@
 // 一回合：intro → (focus) → event → result → 下一回合 … → ended
 // 七歲以前沒有方針，直接進事件。方針選定後會延續，只在新階段、轉折、倦怠或玩家要求時重選。
 
+import { updateEpithet } from './chronicle';
 import { CONTENT } from '../content';
 import { checkCondition, currentYear, martialLevel, npcAlive, skillLevel, unmetHints } from './conditions';
 import { LEVEL_NAMES, STAT_NAMES, STAT_ORDER } from './describe';
@@ -235,6 +236,22 @@ function describeGains(s: GameState): string[] {
   return out;
 }
 
+const EPITHET_RUMOR_CHANCE = 0.3;
+
+/** 關於你的傳聞：傳著傳著就走了樣。 */
+function epithetRumor(s: GameState, rng: Rng): string {
+  const n = s.player.epithet!.name;
+  const feat = [...(s.duels ?? [])].reverse().find((r) => r.result === 'win' && (r.tier === 'boss' || r.tier === 'elite' || r.lethal));
+  const lines = [
+    `茶館裡說書的，這陣子講的是一個叫「${n}」的人，講得神乎其神。你在角落聽著，差點沒認出那是自己。`,
+    `路上有個後生攔住你問路，末了壓低聲音問：「聽說『${n}』就在這一帶，您老見過嗎？」`,
+    `有人在客棧的牆上用炭寫了「${n}到此一遊」。你很確定那不是你寫的。`,
+    `鎮上的孩子玩打仗，搶著要當「${n}」，沒人肯當壞人。`,
+  ];
+  if (feat) lines.push(`聽說「${n}」打倒了${feat.baseName ?? feat.name}。傳到第三個人嘴裡，已經變成一個人打倒了一整個山頭。`);
+  return rng.pick(lines);
+}
+
 function pickRumor(s: GameState, rng: Rng): string | undefined {
   if (s.flags.inquire) {
     delete s.flags.inquire;
@@ -242,6 +259,8 @@ function pickRumor(s: GameState, rng: Rng): string | undefined {
     if (news) return news;
   }
   if (!rng.chance(RUMOR_CHANCE)) return undefined;
+  // 有了名號，傳聞裡也會有你的事
+  if (s.player.epithet && rng.chance(EPITHET_RUMOR_CHANCE)) return epithetRumor(s, rng);
   const pool = CONTENT.rumors
     .filter((r) => !s.shownRumors.includes(r.id) && checkCondition(s, r.conditions))
     .map((r) => ({ item: r, weight: r.weight ?? 1 }));
@@ -710,6 +729,19 @@ function applyChoiceOutcome(
   pushTags(s, e.tags ?? []);
   setResult(s, rng, { title: e.title, text, check });
   s.current = undefined;
+  // 打出了名聲：江湖上開始叫你的名號（或改口）
+  const ep = s.player.alive ? updateEpithet(s) : undefined;
+  if (ep) {
+    s.result!.epithet = ep;
+    s.history.push({
+      turn: s.turn,
+      age: s.player.age,
+      year: currentYear(s),
+      title: '名號',
+      text: ep.prev ? `江湖上不再叫你「${ep.prev}」，改口叫你「${ep.name}」了。` : `江湖上開始有人叫你「${ep.name}」。`,
+      recap: { weight: 4, text: ep.prev ? `江湖上改口叫你「${ep.name}」。` : `江湖上開始有人叫你「${ep.name}」。` },
+    });
+  }
 }
 
 // ---------- 過招 ----------
