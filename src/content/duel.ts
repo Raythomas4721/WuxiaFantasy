@@ -226,6 +226,7 @@ export const cards: Record<string, CardDef> = {
   yebuxie: card({ id: 'yebuxie', name: '夜雨不歇', rarity: 'rare', kind: 'skill', tag: '針', cost: 2, bleedMult: 3, flavor: '雨下了一整夜。{foe}身上的每一個針眼都在發作。' }),
 
   // ---- 醫術 ----
+  yunqi: card({ id: 'yunqi', name: '運氣療傷', kind: 'skill', tag: '氣', cost: 1, heal: 6, exhaust: true, flavor: '你退開半步，一口真氣在胸口轉了一圈，疼得輕了些。' }),
   jinchuang: card({ id: 'jinchuang', name: '金創藥', kind: 'skill', tag: '藥', cost: 1, heal: 8, exhaust: true, flavor: '你抽空往傷口上抹了一把藥。' }),
 
   // ---- 傷與心魔 ----
@@ -254,7 +255,7 @@ export const skillCards: Record<string, string[]> = {
 /** 獎勵池裡不分門派的奇招（設計文件 v0.5 §5）。 */
 export const commonCards: string[] = [
   'breathe', 'xieli', 'jieli', 'xuhuang', 'pinming', 'kanpo', 'tiebushan', 'liusanfen', 'tingshen', 'zhouxuan', 'juechu', 'cangfeng',
-  'bengong', 'zuibu',
+  'bengong', 'zuibu', 'yunqi',
 ];
 
 /** v0.4 的奇遇牌。v0.5 起改由事件直接加進牌庫，這張表只用來換算舊存檔。 */

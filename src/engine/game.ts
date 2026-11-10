@@ -281,15 +281,15 @@ export const NODE = {
   /** 一段日子擲幾個關卡。 */
   perPeriod: 2,
   /** 歇：回復多少健康；行醫的人多回一些。 */
-  restHeal: 15,
-  restHealMedicine: 25,
+  restHeal: 20,
+  restHealMedicine: 30,
   /** 每過一年回復多少健康；一段日子最多回復多少。 */
   healPerYear: 25,
   healMax: 60,
   /** 一段日子至少回復多少（少年時一段日子只有一年）。 */
   healMin: 35,
   /** 打贏之後喘口氣，回復的健康。 */
-  winHeal: 15,
+  winHeal: 20,
   /** 同一年接連發生的事件之間回復的健康。 */
   chainHeal: 25,
   /** 健康低於這裡，這段日子有可能病死。 */
@@ -302,9 +302,12 @@ export const NODE = {
   removeStep: 25,
 };
 
-export function rollNode(focusId: string, rng: Rng): NodeKind {
+const QUIET_NODES: NodeKind[] = ['rest', 'insight', 'market'];
+
+export function rollNode(focusId: string, rng: Rng, except: NodeKind[] = []): NodeKind {
   const weights = CONTENT.nodeWeights[focusId] ?? { story: 1 };
-  return rng.weighted((Object.entries(weights) as [NodeKind, number][]).map(([item, weight]) => ({ item, weight }))) ?? 'story';
+  const pool = (Object.entries(weights) as [NodeKind, number][]).filter(([k]) => !except.includes(k));
+  return rng.weighted(pool.map(([item, weight]) => ({ item, weight }))) ?? 'story';
 }
 
 /** 這段日子要打的章末首領：剛結束的那一章（晚年在 62 歲）。每章只打一次。 */
@@ -337,7 +340,9 @@ function runNode(s: GameState, rng: Rng, focusId: string, far = false): void {
   const first = s.upcoming?.focus === focusId ? s.upcoming.node : rollNode(focusId, rng);
   s.upcoming = undefined;
   const boss = dueBoss(s);
-  s.nodeQueue = boss ? [first] : [first, ...Array.from({ length: NODE.perPeriod - 1 }, () => rollNode(focusId, rng))];
+  s.nodeQueue = [first];
+  // 歇、閉關、武館一段日子只來一次，免得接連跳出好幾件一樣的升級、刪牌
+  for (let i = 1; i < (boss ? 1 : NODE.perPeriod); i++) s.nodeQueue.push(rollNode(focusId, rng, s.nodeQueue.filter((n) => QUIET_NODES.includes(n))));
   // 遠路：路上多一場小戰
   if (far) s.nodeQueue.unshift('fight');
   if (boss) {
