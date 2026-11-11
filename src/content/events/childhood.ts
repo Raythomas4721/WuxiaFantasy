@@ -16,14 +16,14 @@ export const childhoodEvents: GameEvent[] = [
     text: [
       {
         if: { backgrounds: ['merchant'] },
-        text: '你滿週歲，家裡擺了三桌酒。紅漆托盤上放著一柄小木劍、一支湖筆、一副小算盤和一包藥材。父親的生意夥伴們笑著下注，賭你會抓什麼。',
+        text: '你滿週歲，家裡擺了三桌酒。紅漆托盤上放著一柄小木劍、一支湖筆、一副小算盤和一包藥材。{father}的生意夥伴們笑著下注，賭你會抓什麼。',
       },
       {
         if: { backgrounds: ['physician'] },
-        text: '你滿週歲那天，藥鋪提早關了門。父親在藥櫃前鋪了一塊布，擺上木劍、毛筆、銅錢，還有一株曬乾的當歸。',
+        text: '你滿週歲那天，藥鋪提早關了門。{father}在藥櫃前鋪了一塊布，擺上木劍、毛筆、銅錢，還有一株曬乾的當歸。',
       },
       {
-        text: '你滿週歲那天，母親在竹蓆上擺了幾樣東西：一柄削好的小木劍、一支禿了毛的筆、幾枚銅錢，還有一把從田埂上摘來的野草。鄰居們圍在門口看熱鬧。',
+        text: '你滿週歲那天，{mother}在竹蓆上擺了幾樣東西：一柄削好的小木劍、一支禿了毛的筆、幾枚銅錢，還有一把從田埂上摘來的野草。鄰居們圍在門口看熱鬧。',
       },
     ],
     choices: [
@@ -61,9 +61,9 @@ export const childhoodEvents: GameEvent[] = [
       },
       {
         id: 'none',
-        text: '什麼都不抓，爬回母親懷裡',
+        text: '什麼都不抓，爬回{mother}懷裡',
         outcome: {
-          text: '你什麼也沒抓，爬回母親懷裡睡著了。有人說這孩子沒出息，母親卻說：「平平安安就好。」',
+          text: '你什麼也沒抓，爬回{mother}懷裡睡著了。有人說這孩子沒出息，{mother}卻說：「平平安安就好。」',
           effects: [fuyuan(1), flag('zhua_none'), card('liusanfen', 'punch')],
         },
       },
@@ -96,13 +96,13 @@ export const childhoodEvents: GameEvent[] = [
       },
       {
         id: 'family_recipe',
-        text: '父親連夜翻遍醫書，配出一帖方子',
+        text: '{father}連夜翻遍醫書，配出一帖方子',
         requires: { backgrounds: ['physician'] },
         hidden: true,
         outcome: {
-          text: '父親守了你三夜。燒退後，他摸著你的頭說：「這病根，將來得你自己學會治。」',
+          text: '{father}守了你三夜。燒退後，{father}摸著你的頭說：「這病根，將來得你自己學會治。」',
           effects: [xp('baicao', 1), flag('illness_managed')],
-          recap: { weight: 1, text: '{ageCn}歲那年你大病一場，父親說，這病根將來得你自己學會治。' },
+          recap: { weight: 1, text: '{ageCn}歲那年你大病一場，{father}說，這病根將來得你自己學會治。' },
         },
       },
     ],
@@ -481,7 +481,7 @@ export const childhoodEvents: GameEvent[] = [
     weight: 25,
     conditions: { minAge: 7, maxAge: 12, backgrounds: ['physician'] },
     tags: ['medicine', 'family'],
-    text: '父親把十二味藥材排在桌上，蒙住了你的眼睛：「聞、嘗、摸。說錯三樣，今天不准吃飯。」',
+    text: '{father}把十二味藥材排在桌上，蒙住了你的眼睛：「聞、嘗、摸。說錯三樣，今天不准吃飯。」',
     choices: [
       {
         id: 'smell',
@@ -490,7 +490,7 @@ export const childhoodEvents: GameEvent[] = [
           stats: ['wuxing'],
           difficulty: 5,
           success: {
-            text: '你只錯了一樣。父親難得地笑了，把一本手抄的藥書塞進你懷裡。',
+            text: '你只錯了一樣。{father}難得地笑了，把一本手抄的藥書塞進你懷裡。',
             effects: [xp('baicao', 3), wuxing(1)],
           },
           failure: {
@@ -503,16 +503,16 @@ export const childhoodEvents: GameEvent[] = [
         id: 'cheat',
         text: '偷偷掀開布角看',
         outcome: {
-          text: '你全答對了。父親沉默了一會兒，說：「藥會騙人，病不會。你騙得了我，騙不了病。」那一夜你沒有睡著。',
+          text: '你全答對了。{father}沉默了一會兒，說：「藥會騙人，病不會。你騙得了我，騙不了病。」那一夜你沒有睡著。',
           effects: [xp('baicao', 1), xinxing(1), flag('father_lesson')],
-          recap: { weight: 1, text: '{ageCn}歲那年辨藥時你作了弊，父親說：「你騙得了我，騙不了病。」' },
+          recap: { weight: 1, text: '{ageCn}歲那年辨藥時你作了弊，{father}說：「你騙得了我，騙不了病。」' },
         },
       },
       {
         id: 'ask',
-        text: '求父親先教你怎麼分辨',
+        text: '求{father}先教你怎麼分辨',
         outcome: {
-          text: '父親愣了一下，然後一樣一樣地講給你聽。那天晚上，藥鋪的燈一直亮到三更。',
+          text: '{father}愣了一下，然後一樣一樣地講給你聽。那天晚上，藥鋪的燈一直亮到三更。',
           effects: [xp('baicao', 2), xinxing(1)],
         },
       },
@@ -551,13 +551,13 @@ export const childhoodEvents: GameEvent[] = [
       },
       {
         id: 'with_father',
-        text: '跟著父親一起去救人',
+        text: '跟著{father}一起去救人',
         requires: { backgrounds: ['physician'] },
         hidden: true,
         outcome: {
-          text: '你跟在父親身後，記下每一個病人的脈象。林鶴年經過時看了你的藥方一眼，提筆改了一味藥，又把方子還給你：「其餘的都對。」',
+          text: '你跟在{father}身後，記下每一個病人的脈象。林鶴年經過時看了你的藥方一眼，提筆改了一味藥，又把方子還給你：「其餘的都對。」',
           effects: [xp('baicao', 3), rel('lin_henian', 30), meet('lin_henian'), flag('plague_helper'), chiv(5)],
-          recap: { weight: 2, text: '{ageCn}歲那年川蜀大疫，你跟著父親救人，藥王林鶴年改過你寫的藥方。' },
+          recap: { weight: 2, text: '{ageCn}歲那年川蜀大疫，你跟著{father}救人，藥王林鶴年改過你寫的藥方。' },
         },
       },
       {
