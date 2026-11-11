@@ -77,6 +77,8 @@ export type GameEffect =
   | { type: 'addFlag'; key: string; delta: number }
   | { type: 'clearFlag'; key: string }
   | { type: 'relation'; npc: string; delta: number }
+  /** 認識的人（含兒時玩伴）交情都 +delta。 */
+  | { type: 'bonds'; delta: number }
   | { type: 'money' | 'health' | 'fame' | 'chivalry' | 'alignment'; delta: number }
   | { type: 'skill'; skill: string; xp: number }
   /** 改以這門武學為主修（觸類旁通：直接追到比原主修低一級）。 */
@@ -220,7 +222,8 @@ export interface FocusDef {
   childhood?: boolean;
   conditions?: Condition;
   tags: string[];
-  growth: { effect: GameEffect; chance?: number }[];
+  /** 每段日子的收穫；寫了 if 的只有條件符合才有（例如出身不同，幫家裡做事學到的不同）。 */
+  growth: { effect: GameEffect; chance?: number; if?: Condition }[];
   /** 平淡歲月的摘要，從符合條件的句子裡隨機挑一句。 */
   summary: VarSpec;
 }
@@ -258,6 +261,8 @@ export interface AmbitionDef {
   fulfilled: Condition;
   /** 心事欄顯示的具體目標。 */
   goal: string;
+  /** 合這個志向的方針（方針卡上標「宜」）。 */
+  focuses: string[];
   fulfilledText: string;
   unfulfilledText: string;
 }

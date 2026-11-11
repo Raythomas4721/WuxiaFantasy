@@ -83,17 +83,6 @@ function pickChoice(s: GameState, ids: string[], persona: Persona, rng: Rng): st
   return rng.pick(scored.filter((x) => x.score === best).map((x) => x.id));
 }
 
-/** 模擬玩家照志向會偏好的方針。 */
-const AMBITION_FOCUS: Record<string, string[]> = {
-  martial: ['martial'],
-  chivalry: ['travel', 'social'],
-  healer: ['medicine', 'study'],
-  wealth: ['work', 'trade'],
-  nation: ['martial', 'travel'],
-  revenge: ['martial'],
-  peace: ['rest', 'work'],
-};
-
 /** 選牌的偏好：主修武學的牌最好，其次是其他武學的牌，再來是奇招；基本牌最不想要。 */
 function cardScore(s: GameState, id: string): number {
   const main = mainSkill(s).skill;
@@ -140,7 +129,7 @@ export function playLife(seed: number, options: AutoplayOptions = {}): AutoplayR
     if (s.phase === 'focus') {
       const focuses = focusOptions(s);
       // 有志向的人，一半的時候會照志向過日子
-      const wanted = s.player.ambition && policy.chance(0.5) ? AMBITION_FOCUS[s.player.ambition] ?? [] : [];
+      const wanted = s.player.ambition && policy.chance(0.5) ? CONTENT.ambitions[s.player.ambition]?.focuses ?? [] : [];
       const fits = focuses.filter((f) => wanted.includes(f.id));
       const preferred = focuses.find((f) => f.id === options.preferFocus) ?? (fits.length > 0 ? policy.pick(fits) : undefined);
       focusPicks += 1;

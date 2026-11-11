@@ -75,6 +75,11 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
     case 'clearFlag':
       delete s.flags[e.key];
       break;
+    case 'bonds': {
+      const met = Object.keys(CONTENT.npcs).filter((id) => s.flags[`met_${id}`]);
+      for (const npc of ['companion', ...met]) applyEffect(s, { type: 'relation', npc, delta: e.delta }, rng);
+      break;
+    }
     case 'relation': {
       // 正派人物對名聲不好的人，好感只長一半。
       const halved = e.delta > 0 && p.alignment < 0 && CONTENT.npcs[e.npc]?.righteous;

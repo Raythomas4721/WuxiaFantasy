@@ -1,7 +1,7 @@
 // 世界設定：出身、地區、特質、方針、武學、門派、人物。全部為原創或真實歷史。
 
 import type { BackgroundDef, FocusDef, NpcDef, RegionDef, SectDef, SkillDef, TraitDef } from '../engine/types';
-import { add, chiv, danshi, fame, fuyuan, gengu, health, meili, money, rel, train, wuxing, xinxing, xp } from './dsl';
+import { add, bonds, chiv, danshi, fame, fuyuan, gengu, health, meili, money, rel, train, wuxing, xinxing, xp } from './dsl';
 
 export const backgrounds: Record<string, BackgroundDef> = {
   farmer: {
@@ -210,7 +210,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'kid_study',
     name: '上私塾',
-    desc: '跟著先生讀書識字。',
+    desc: '跟著先生讀書識字。悟性高的人，往後閉關悟招時收穫更多。',
     childhood: true,
     tags: ['study'],
     growth: [{ effect: wuxing(1), chance: 0.5 }],
@@ -224,7 +224,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'kid_play',
     name: '四處玩耍',
-    desc: '和玩伴上山下河。',
+    desc: '和玩伴上山下河。交情夠深的玩伴，長大後會在生死關頭出手相助。',
     childhood: true,
     tags: ['social', 'village'],
     growth: [
@@ -242,13 +242,15 @@ export const focuses: FocusDef[] = [
   {
     id: 'kid_help',
     name: '幫家裡做事',
-    desc: '下田、看店或在藥鋪打下手。',
+    desc: '下田、看店或在藥鋪打下手。出身不同，學到的也不同。',
     childhood: true,
     tags: ['work', 'village', 'medicine'],
     growth: [
-      { effect: gengu(1), chance: 0.4 },
+      { effect: gengu(1), chance: 0.4, if: { not: { backgrounds: ['physician', 'merchant'] } } },
+      { effect: xp('baicao', 1), chance: 0.6, if: { backgrounds: ['physician'] } },
+      { effect: money(20), if: { backgrounds: ['merchant'] } },
       { effect: xinxing(1), chance: 0.3 },
-      { effect: money(5) },
+      { effect: money(10), if: { not: { backgrounds: ['merchant'] } } },
     ],
     summary: [
       {
@@ -295,7 +297,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'study',
     name: '讀書',
-    desc: '悟性增長，可能遇到書院與科舉的機會。',
+    desc: '悟性增長，常有閉關悟招的機會；也可能遇到書院與科舉。',
     tags: ['study'],
     growth: [{ effect: wuxing(1), chance: 0.4 }],
     summary: [
@@ -321,7 +323,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'work',
     name: '謀生',
-    desc: '賺取錢財，磨練心性。',
+    desc: '賺取錢財，磨練心性。錢能在市集買兵器、護具，過招時一直有用。',
     tags: ['work', 'village'],
     growth: [{ effect: money(25) }, { effect: xinxing(1), chance: 0.15 }],
     summary: [
@@ -361,9 +363,9 @@ export const focuses: FocusDef[] = [
   {
     id: 'social',
     name: '結交',
-    desc: '結識朋友，經營人情。',
+    desc: '結識朋友，經營人情。交情深的人，生死關頭會出手相助。',
     tags: ['social', 'tavern'],
-    growth: [{ effect: meili(1), chance: 0.3 }, { effect: fame(1) }],
+    growth: [{ effect: bonds(4) }, { effect: meili(1), chance: 0.3 }, { effect: fame(1) }],
     summary: [
       '這段日子你結識了不少朋友，酒喝了不少，人情也欠了不少。',
       '你在茶樓裡認識了幾個說得上話的人，三天兩頭聚在一起。',
@@ -399,7 +401,7 @@ export const focuses: FocusDef[] = [
   {
     id: 'rest',
     name: '休養',
-    desc: '調養身體，遠離是非。',
+    desc: '調養身體，遠離是非。歇著的時候，正好把練雜的招式理一理。',
     tags: ['rest'],
     growth: [{ effect: health(25) }, { effect: xinxing(1), chance: 0.15 }],
     summary: [

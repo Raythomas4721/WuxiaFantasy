@@ -627,6 +627,7 @@ function runFocus(s: GameState, rng: Rng, focusId: string, far = false): void {
   // 連續做同一件事，收穫會越來越少：第四次起每多一次，成長機率再打一次折。
   const fatigue = streak >= FATIGUE_STREAK ? FATIGUE_MULT ** (streak - FATIGUE_STREAK + 1) : 1;
   for (const g of focus.growth) {
+    if (g.if && !checkCondition(s, g.if)) continue;
     if (!rng.chance((g.chance ?? 1) * fatigue)) continue;
     applyEffects(s, [g.effect], rng);
     if (focusId === 'trade' && g.effect.type === 'money' && g.effect.delta > 0 && s.player.properties?.some((x) => x.kind === 'shop')) {

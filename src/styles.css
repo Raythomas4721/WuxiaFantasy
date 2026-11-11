@@ -320,6 +320,17 @@ small {
   color: var(--gold);
 }
 
+.focus-card.advised {
+  border-color: var(--good);
+}
+
+.focus-advice {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  color: var(--good);
+  font-weight: 600;
+}
+
 .focus-line {
   font-size: 0.8rem;
   color: var(--ink-2);

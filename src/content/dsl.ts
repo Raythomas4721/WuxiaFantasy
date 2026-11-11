@@ -13,6 +13,8 @@ export const meili = (d: number) => stat('meili', d);
 export const flag = (key: string, value: boolean | number | string = true): GameEffect => ({ type: 'flag', key, value });
 export const add = (key: string, delta = 1): GameEffect => ({ type: 'addFlag', key, delta });
 export const rel = (npc: string, delta: number): GameEffect => ({ type: 'relation', npc, delta });
+/** 認識的人交情都加一點。 */
+export const bonds = (delta: number): GameEffect => ({ type: 'bonds', delta });
 export const money = (delta: number): GameEffect => ({ type: 'money', delta });
 export const health = (delta: number): GameEffect => ({ type: 'health', delta });
 export const fame = (delta: number): GameEffect => ({ type: 'fame', delta });

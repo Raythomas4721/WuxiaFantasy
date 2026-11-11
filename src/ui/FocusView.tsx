@@ -7,6 +7,8 @@ import { FATIGUE_STREAK, allocateStat, chooseFocus, focusOptions, streakIfChosen
 import { LIFE_STAGES, chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber } from '../engine/text';
 import { activeThreads, ambitionView, type ThreadView } from '../engine/threads';
+import { focusAdvice } from '../engine/advice';
+import { checkCondition } from '../engine/conditions';
 import { STAT_NAMES, STAT_ORDER } from '../engine/describe';
 import { STAT_MAX, STAT_PERK2_AT, STAT_PERKS, STAT_PERK_AT } from '../engine/talents';
 import type { FocusDef, GameState, NodeKind } from '../engine/types';
@@ -17,12 +19,16 @@ const TRAIN_NAMES = { martial: '武學', medicine: '醫術', sect: '門派武學
 const CN_DIGIT = ['', '一', '兩', '三', '四', '五', '六', '七', '八', '九'];
 const CHANCE = (c: number) => (c === 0.5 ? '一半機會' : c < 0.1 ? '偶爾' : `${CN_DIGIT[Math.round(c * 10)] ?? ''}成機會`);
 
-/** 方針的收穫：從 growth 直接算出來，改了內容這裡會跟著變。 */
-export function focusGains(f: FocusDef): string {
+/** 方針的收穫：從 growth 直接算出來，改了內容這裡會跟著變。給了 state 就只列這個人拿得到的。 */
+export function focusGains(f: FocusDef, s?: GameState): string {
   return f.growth
+    .filter((g) => !g.if || !s || checkCondition(s, g.if))
     .map(({ effect: e, chance }) => {
       let t = '';
       if (e.type === 'stat') t = `${STAT_NAMES[e.stat]} +${e.delta}`;
+      else if (e.type === 'skill') t = `${CONTENT.skills[e.skill]?.name ?? e.skill}入門`;
+      else if (e.type === 'relation') t = `${e.npc === 'companion' && s ? s.companion.name : CONTENT.npcs[e.npc]?.name ?? '玩伴'}交情 +${e.delta}`;
+      else if (e.type === 'bonds') t = `認識的人交情都 +${e.delta}`;
       else if (e.type === 'train') t = `${TRAIN_NAMES[e.kind]}進境`;
       else if (e.type === 'money') t = e.delta > 0 ? `錢 +${e.delta}` : `花費 ${-e.delta} 文`;
       else if (e.type === 'fame') t = `名望 +${e.delta}`;
@@ -36,11 +42,11 @@ export function focusGains(f: FocusDef): string {
 }
 
 const NODE_HINT: Partial<Record<NodeKind, string>> = {
-  fight: '⚔ 小戰',
-  elite: '☠ 精英',
-  insight: '☯ 悟招（升級一張牌）',
-  market: '⚖ 武館（買牌、刪牌）',
-  rest: '☕ 歇息（回健康）',
+  fight: '⚔ 小戰（贏了挑新招）',
+  elite: '☠ 精英（難打，獎勵好）',
+  insight: '☯ 閉關（升級一張牌）',
+  market: '⚖ 武館（花錢學招、改招）',
+  rest: '☕ 歇息（回健康、可刪一張牌）',
 };
 
 /** 這個方針常遇到的關卡：權重 20 以上的，由多到少。 */
@@ -64,7 +70,9 @@ export function FocusView({ state, act }: Props) {
   const prompt = state.focusPrompt;
   const isChapter = !prompt || prompt.reason === 'stage';
   const threads = activeThreads(state);
-  const options = focusOptions(state);
+  const advice = focusAdvice(state, focusOptions(state));
+  // 此刻「宜」的方針排在前面，其餘照原本的順序
+  const options = [...focusOptions(state)].sort((a, b) => Number(Boolean(advice[b.id])) - Number(Boolean(advice[a.id])));
   const [travelling, setTravelling] = useState(false);
 
   return (
@@ -111,17 +119,18 @@ export function FocusView({ state, act }: Props) {
           return (
             <button
               key={f.id}
-              className={`focus-card ${current ? 'current' : ''}`}
+              className={`focus-card ${current ? 'current' : ''} ${advice[f.id] ? 'advised' : ''}`}
               onClick={() => (f.id === 'travel' ? setTravelling(true) : act(() => chooseFocus(state, f.id)))}
             >
               <span className="pick-title">
                 {f.name}
                 {current && <span className="focus-current">照舊</span>}
               </span>
+              {advice[f.id] && <span className="focus-advice">宜・{advice[f.id]}</span>}
               <span className="pick-desc">{f.desc}</span>
               <span className="focus-line">
                 <b>收穫</b>
-                {focusGains(f)}
+                {focusGains(f, state)}
               </span>
               <span className="focus-line">
                 <b>常遇</b>
