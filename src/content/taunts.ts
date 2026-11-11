@@ -158,6 +158,48 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     gloat: ['你也想練？可惜，書只有一本。'],
     defeat: ['書上……沒寫……這一招……'],
   },
+  flying_thief: {
+    half: ['追了我三條街，你屬狗的？'],
+    gloat: ['還追？腿都軟了吧。'],
+    defeat: ['東西……還你就是了。'],
+  },
+  tyrant_coach: {
+    half: ['哪來的野小子，敢管老爺的事！'],
+    gloat: ['在這鎮上，老爺說了算。'],
+    defeat: ['我……我只是混口飯吃……'],
+  },
+  river_pirate: {
+    half: ['在水上跟我打？你找錯地方了！'],
+    gloat: ['江裡的魚，今晚有得吃了。'],
+    defeat: ['船……船給你……'],
+  },
+  wanted_poisoner: {
+    half: ['可惜了，這麼好的身手。'],
+    combo: ['急什麼？毒總要慢慢發作的。'],
+    gloat: ['覺得手腳發麻了吧？'],
+    defeat: ['這筆賞錢……便宜你了。'],
+  },
+  iron_monk: {
+    half: ['好！這一路上，你是第一個。'],
+    gloat: ['招牌，貧僧收下了。'],
+    defeat: ['阿彌陀佛……貧僧輸得心服。'],
+  },
+  impostor: {
+    half: ['原來真的這麼難打……'],
+    gloat: ['江湖上只認名字，不認臉。'],
+    defeat: ['我……我只是想活得像你一樣……'],
+  },
+  old_peer: {
+    half: ['哈！你也老了！'],
+    broken: ['這一下，還有當年的味道。'],
+    gloat: ['服不服老？'],
+    defeat: ['好……這一場，我等了一輩子。'],
+  },
+  deserter_captain: {
+    half: ['一個老頭子，也敢擋道？'],
+    gloat: ['這村子，今天歸我了。'],
+    defeat: ['撤……都撤……'],
+  },
   young_challenger: {
     half: ['不……我不會輸的！'],
     gloat: ['老了就該讓路！'],

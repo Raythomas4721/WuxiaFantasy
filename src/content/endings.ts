@@ -157,7 +157,7 @@ export const endings: EndingDef[] = [
   {
     id: 'biaoxing',
     title: '鏢行天下',
-    priority: 56,
+    priority: 73,
     conditions: { flags: ['chief_escort'] },
     hint: '在長風鏢局當上總鏢頭。',
     text: '長風鏢局的鏢旗插遍了半個天下。路上的山賊遠遠看見那面旗，就知道這一趟不好惹——那是你的旗。',

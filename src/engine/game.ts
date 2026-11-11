@@ -330,15 +330,21 @@ export function rollNode(focusId: string, rng: Rng, except: NodeKind[] = []): No
   return rng.weighted(pool.map(([item, weight]) => ({ item, weight }))) ?? 'story';
 }
 
-/** 這段日子要打的章末首領：剛結束的那一章（晚年在 62 歲）。每章只打一次。 */
-export function dueBoss(s: GameState): GameEvent | undefined {
+/**
+ * 這段日子要打的章末首領：剛結束的那一章（晚年在 62 歲）。每章只打一次。
+ * 有切身恩怨的首領（priority 高）優先；都是尋常首領時，給了 rng 就隨機挑一個，每一輪人生遇到的不一樣。
+ */
+export function dueBoss(s: GameState, rng?: Rng): GameEvent | undefined {
   const stage = stageIndex(s.player.age);
   const k = s.player.age >= NODE.lastBossAge ? 5 : stage - 1;
   if (k < 2 || s.bosses?.includes(k)) return undefined;
   s.bosses = [...(s.bosses ?? []), k];
-  return CONTENT.events
+  const pool = CONTENT.events
     .filter((e) => e.kind === 'node' && e.node?.tier === 'boss' && e.node.stage === k && eventAllowed(s, e))
-    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))[0];
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0));
+  const top = pool[0];
+  if (!top || !rng) return top;
+  return rng.pick(pool.filter((e) => (e.priority ?? 0) === (top.priority ?? 0)));
 }
 
 function pickEncounter(s: GameState, tier: 'minor' | 'elite', rng: Rng): GameEvent | undefined {
@@ -359,7 +365,7 @@ function runNode(s: GameState, rng: Rng, focusId: string, far = false): void {
   // 一段日子擲兩個關卡；這段日子有章末首領的話，首領之後只再擲一個
   const first = s.upcoming?.focus === focusId ? s.upcoming.node : rollNode(focusId, rng);
   s.upcoming = undefined;
-  const boss = dueBoss(s);
+  const boss = dueBoss(s, rng);
   s.nodeQueue = [first];
   // 歇、閉關、武館一段日子只來一次，免得接連跳出好幾件一樣的升級、刪牌
   for (let i = 1; i < (boss ? 1 : NODE.perPeriod); i++) s.nodeQueue.push(rollNode(focusId, rng, s.nodeQueue.filter((n) => QUIET_NODES.includes(n))));

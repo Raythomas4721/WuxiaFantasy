@@ -467,6 +467,54 @@ export const nodeEvents: GameEvent[] = [
       { id: 'avoid', text: '認輸下台', outcome: { text: '你抱拳認輸。台下有人可惜，有人起鬨。', effects: [] } },
     ],
   },
+  {
+    id: 'b_temple_thief',
+    kind: 'node',
+    node: { tier: 'boss', stage: 2 },
+    title: '飛賊',
+    priority: 0,
+    text: '廟會那一夜，城隍廟的功德箱被人撬了。你看見一條黑影翻上牆頭，想也沒想就追了上去。追過三條街、兩座屋頂，那人終於在一條死巷裡停了下來，回頭看你。',
+    choices: [
+      {
+        id: 'fight',
+        text: '把東西交出來',
+        duel: {
+          opponent: 'flying_thief',
+          success: {
+            text: '飛賊被你按在牆角，懷裡的銅錢叮叮噹噹掉了一地。廟祝提著燈籠趕來，非要分你一點香油錢。',
+            effects: [fame(3), chiv(3), money(20)],
+            recap: { weight: 2, text: '少年時，你在廟會的夜裡追了三條街，抓住了一個飛賊。' },
+          },
+          failure: { text: '他一腳踹在你胸口，借力翻上牆頭，眨眼就不見了。', effects: [fame(1)] },
+        },
+      },
+      { id: 'avoid', text: '巷子太黑，算了', outcome: { text: '你在巷口站了一會兒，轉身回去了。', effects: [] } },
+    ],
+  },
+  {
+    id: 'b_bully_coach',
+    kind: 'node',
+    node: { tier: 'boss', stage: 2 },
+    title: '教頭',
+    priority: 0,
+    text: '鎮上的錢老爺家養著一個武教頭，專替老爺收「平安錢」。這天他把一個不肯交錢的貨郎打翻在地，擔子踩得稀爛。街上的人都低著頭走過去，只有你停了下來。',
+    choices: [
+      {
+        id: 'fight',
+        text: '「住手。」',
+        duel: {
+          opponent: 'tyrant_coach',
+          success: {
+            text: '教頭摔進了路邊的水溝裡，爬起來時臉都綠了。那天以後，錢老爺家的平安錢，再也沒人去收。',
+            effects: [fame(3), chiv(4), align(2)],
+            recap: { weight: 2, text: '少年時，你當街打翻了惡霸家的教頭。' },
+          },
+          failure: { text: '你被打得鼻青臉腫。貨郎扶著你回家，一路上一直在道謝。', effects: [chiv(2)] },
+        },
+      },
+      { id: 'avoid', text: '低頭走過去', outcome: { text: '你低著頭走過去了。貨郎的哭聲，你在巷口還聽得見。', effects: [chiv(-2)] } },
+    ],
+  },
   // 第四章・青年（19～29）
   {
     id: 'b_sect_trial',
@@ -515,6 +563,54 @@ export const nodeEvents: GameEvent[] = [
         },
       },
       { id: 'avoid', text: '趁亂溜走', outcome: { text: '你趁亂鑽進了林子。後面傳來商隊的哭喊聲。', effects: [chiv(-3)] } },
+    ],
+  },
+  {
+    id: 'b_river_pirate',
+    kind: 'node',
+    node: { tier: 'boss', stage: 3 },
+    title: '江上',
+    priority: 0,
+    text: '你搭的夜船行到江心，四面忽然冒出幾條快艇，一夥水寇攀著船舷爬了上來。船老大跪在甲板上直磕頭。水寇的頭子赤著上身，提著一把魚叉，一眼就看見了你腰上的兵器。',
+    choices: [
+      {
+        id: 'fight',
+        text: '擋在船客前面',
+        duel: {
+          opponent: 'river_pirate',
+          success: {
+            text: '水寇頭子翻身落進江裡，他的手下跟著跳船逃了。天亮靠岸時，一船的人都要請你吃飯。',
+            effects: [fame(3), chiv(3), money(30)],
+            recap: { weight: 2, text: '青年時，你在夜船上一個人打退了一夥水寇。' },
+          },
+          failure: { text: '你被一網兜住，扔進了江裡。等你游上岸，船早就被洗劫一空。', effects: [] },
+        },
+      },
+      { id: 'avoid', text: '交出盤纏，不惹事', outcome: { text: '你把錢袋扔了過去。水寇頭子掂了掂，咧嘴一笑，走了。', effects: [money(-20)] } },
+    ],
+  },
+  {
+    id: 'b_bounty',
+    kind: 'node',
+    node: { tier: 'boss', stage: 3 },
+    title: '懸賞',
+    priority: 0,
+    text: '城門口貼著一張懸賞榜：一個綽號「毒手書生」的人，半年裡在三個縣毒死了七戶人家。賞錢不少，榜貼了三個月，沒人敢揭。你順著線索追到一間山寺，他正坐在廊下搖著扇子，好像早就在等你。',
+    choices: [
+      {
+        id: 'fight',
+        text: '揭榜拿人',
+        duel: {
+          opponent: 'wanted_poisoner',
+          success: {
+            text: '你把他捆了送到縣衙。縣太爺親手把賞錢交給你，還要請你當捕頭。',
+            effects: [fame(4), chiv(3), money(80)],
+            recap: { weight: 2, text: '青年時，你揭了懸賞榜，親手拿下了毒手書生。' },
+          },
+          failure: { text: '你中了毒，在山寺裡躺了七天才爬得起來。他早就不知去向了。', effects: [] },
+        },
+      },
+      { id: 'avoid', text: '這錢不好賺，算了', outcome: { text: '你轉身下山。那張懸賞榜，後來又貼了很久。', effects: [] } },
     ],
   },
   // 第五章・壯年（30～49）
@@ -669,6 +765,54 @@ export const nodeEvents: GameEvent[] = [
       { id: 'avoid', text: '閉門不見', outcome: { text: '你閉門不見。刀客在門外站了一夜，第二天走了。江湖上開始有人說你怕了。', effects: [fame(-3)] } },
     ],
   },
+  {
+    id: 'b_iron_monk',
+    kind: 'node',
+    node: { tier: 'boss', stage: 4 },
+    title: '頭陀',
+    priority: 0,
+    text: '一個雲遊的鐵頭陀這兩年一路往南，見到有名號的人就上門比試，贏了就把人家的招牌扛走。他的禪杖上已經掛了十幾塊。這一天，他站在了你的門口。',
+    choices: [
+      {
+        id: 'fight',
+        text: '請大師進門',
+        duel: {
+          opponent: 'iron_monk',
+          success: {
+            text: '頭陀合掌退了三步，把禪杖上的招牌一塊一塊卸下來：「這些，請施主替貧僧還回去。」',
+            effects: [fame(6)],
+            recap: { weight: 3, text: '壯年時，一個扛走了十幾塊招牌的鐵頭陀，在你門前栽了跟頭。' },
+          },
+          failure: { text: '頭陀把你的名字刻在一塊木板上，掛上了禪杖。', effects: [fame(-2)] },
+        },
+      },
+      { id: 'avoid', text: '閉門不見', outcome: { text: '頭陀在門口唸了一夜的經，天亮就走了。江湖上開始有人說你怕了。', effects: [fame(-3)] } },
+    ],
+  },
+  {
+    id: 'b_impostor',
+    kind: 'node',
+    node: { tier: 'boss', stage: 4 },
+    title: '冒名',
+    priority: 0,
+    text: '這兩年江湖上出了好幾樁命案，兇手留下的話都一樣：「要報仇，來找{name}。」你找了大半年，終於在一間客棧堵到了他。那人轉過身，衣著、兵器，連站的樣子都學得跟你一模一樣。',
+    choices: [
+      {
+        id: 'fight',
+        text: '拆穿他',
+        duel: {
+          opponent: 'impostor',
+          success: {
+            text: '你把他押到苦主面前，一樁一樁地對質。這件事傳開以後，江湖上提起你的名字，多了幾分敬意。',
+            effects: [fame(5), align(3)],
+            recap: { weight: 3, text: '壯年時，有人冒你的名頭殺人。你找了大半年，親手拆穿了他。' },
+          },
+          failure: { text: '他從窗口逃了。那些命案，有一半人到現在還算在你頭上。', effects: [fame(-2), align(-3)] },
+        },
+      },
+      { id: 'avoid', text: '清者自清，隨他去', outcome: { text: '你沒有去找他。可是江湖上的人，不是每個都分得清。', effects: [fame(-3), align(-4)] } },
+    ],
+  },
   // 第六章・晚年
   {
     id: 'b_young_challenger',
@@ -692,6 +836,58 @@ export const nodeEvents: GameEvent[] = [
         },
       },
       { id: 'avoid', text: '擺擺手，說自己老了', outcome: { text: '你擺擺手，請他喝了一杯茶。他喝完，有點失望地走了。', effects: [] } },
+    ],
+  },
+  {
+    id: 'b_old_peer',
+    kind: 'node',
+    node: { tier: 'boss', stage: 5 },
+    title: '故人',
+    priority: 0,
+    text: '一個白頭髮的老人拄著兵器找上門來。你看了半天才認出他：年輕時跟你交過手，那一場沒分出勝負，兩個人約好了「下回再打」。這一等，就是幾十年。',
+    choices: [
+      {
+        id: 'fight',
+        text: '「來，把那一場打完。」',
+        duel: {
+          opponent: 'old_peer',
+          success: {
+            text: '你們打完了，兩個人都坐在地上喘氣。他哈哈大笑，從背上解下一罈酒：「輸給你，不冤。」那一夜，你們喝到天亮。',
+            effects: [fame(2), xinxing(1)],
+            recap: { weight: 3, text: '晚年時，年輕時的老對手找上門來。你們把幾十年前那一場打完了，又喝了一整夜的酒。' },
+          },
+          failure: { text: '他贏了，卻比你還累。他從背上解下一罈酒：「這下扯平了。」那一夜，你們喝到天亮。', effects: [xinxing(1)] },
+        },
+      },
+      {
+        id: 'avoid',
+        text: '「都這把年紀了，喝酒吧。」',
+        outcome: { text: '他愣了一下，笑了，把兵器靠在門邊。那一場，終究是沒打完。', effects: [xinxing(1)] },
+      },
+    ],
+  },
+  {
+    id: 'b_village_raid',
+    kind: 'node',
+    node: { tier: 'boss', stage: 5 },
+    title: '老將',
+    priority: 0,
+    text: '一夥亂兵闖進了你住的鎮子，挨家挨戶地搶。鎮上的年輕人躲的躲、逃的逃。你從牆上取下那件好些年沒碰過的兵器，一個人站到了街心。',
+    choices: [
+      {
+        id: 'fight',
+        text: '站在街心',
+        duel: {
+          opponent: 'deserter_captain',
+          success: {
+            text: '亂兵的頭目倒在你腳下，其餘的人一鬨而散。躲在門後的鄉親們一個一個走出來，看你的眼神，像在看一尊廟裡的神。',
+            effects: [fame(4), chiv(5), align(3)],
+            recap: { weight: 3, text: '晚年時，亂兵進了鎮子。你一個人站在街心，把他們擋了回去。' },
+          },
+          failure: { text: '你被打倒在地。亂兵搶完了東西，臨走前看了你一眼，沒再動手。', effects: [chiv(2)] },
+        },
+      },
+      { id: 'avoid', text: '帶著鄰居躲進地窖', outcome: { text: '你們在地窖裡躲了一天一夜。出來時，半條街都燒了。', effects: [chiv(-1)] } },
     ],
   },
 ];

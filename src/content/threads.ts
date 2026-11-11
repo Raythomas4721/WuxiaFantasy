@@ -141,6 +141,14 @@ export const threads: ThreadDef[] = [
     text: '你扯下過無面客的一截袖子。血衣樓的人，從不忘記。',
     advances: ['b_xueyi_doom'],
   },
+  {
+    id: 'lu_escort',
+    title: '陸平',
+    priority: 35,
+    conditions: { scheduled: ['escort_invite'], hasSect: false },
+    text: '陸平在長風鏢局當鏢師。他說過，以後有事，到鏢局找他。',
+    advances: ['escort_invite'],
+  },
   // ---- 錯過就沒有的機緣 ----
   {
     id: 'yaogu',

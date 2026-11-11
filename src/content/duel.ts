@@ -483,6 +483,39 @@ export const opponents: Record<string, OpponentDef> = {
     id: 'young_challenger', name: '上門挑戰的年輕人', signature: { name: '少年意氣', tell: '{foe}深吸一口氣，眼睛亮得嚇人。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '前輩，晚輩要拚命了！', rage: 3 },
     tells: tells({ attack: '他出手又快又急，像當年的你。' }),
   },
+  // ---- 章末首領：尋常的那幾位，每一輪隨機遇到 ----
+  flying_thief: {
+    id: 'flying_thief', name: '飛簷走壁的賊', signature: { name: '燕子三抄水', tell: '{foe}腳尖在牆上一點，整個人翻上了半空。', mult: 0.45, hits: 3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '小子，追得挺緊啊。', temper: 'brute', rage: 2 }, traps: ['huishen'],
+    tells: tells({ feint: '他在屋脊上左晃右晃，看不清要往哪邊跳。', attack: '他從袖子裡抖出一把短刀。' }),
+  },
+  tyrant_coach: {
+    id: 'tyrant_coach', name: '惡霸家的教頭', signature: { name: '鐵砂掌', tell: '{foe}把兩隻手掌在褲腿上蹭了蹭，掌心黑得發亮。', mult: 1.3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '老爺養我，就是為了今天！', temper: 'veteran', traps: ['fanshou'] }, traps: ['tiebu'],
+    tells: tells({ attack: '他的巴掌比蒲扇還大。', guard: '他雙臂一抱，等你自己撞上來。' }),
+  },
+  river_pirate: {
+    id: 'river_pirate', name: '水寇頭子', signature: { name: '翻江', tell: '{foe}一腳踩住船舷，整條船都歪了過來。', mult: 1.35 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'brute', specials: { curse: 1, enrage: 1 }, phase2: { line: '下水！把他拖下水！', temper: 'veteran', specials: { curse: 1.5 } }, traps: ['weiou'],
+    tells: tells({ attack: '他赤著腳，在搖晃的甲板上站得比你還穩。', curse: '他朝你甩過來一張濕淋淋的漁網。' }),
+  },
+  wanted_poisoner: {
+    id: 'wanted_poisoner', name: '毒手書生', signature: { name: '笑裡藏針', tell: '{foe}搖著扇子笑了一笑，扇骨裡有東西在閃。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 8, temper: 'veteran', specials: { curse: 1.5, drain: 0.5 }, phase2: { line: '這張臉，畫在榜上倒是挺好看。', specials: { curse: 2, drain: 1 } }, traps: ['huijian'],
+    tells: tells({ feint: '他慢條斯理地搖著扇子，像在跟你談詩。', curse: '扇面一翻，一股甜膩的香氣飄了過來。' }),
+  },
+  iron_monk: {
+    id: 'iron_monk', name: '鐵頭陀', signature: { name: '金剛撞', tell: '{foe}低下頭，把一顆光頭對準了你，腳下的青石磚裂了。', mult: 1.5 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', specials: { heal: 1 }, phase2: { line: '阿彌陀佛，施主好硬的手。', temper: 'brute', rage: 4 }, traps: ['tiebu'],
+    tells: tells({ guard: '他把念珠繞在拳頭上，站著不動，像一口鐘。', attack: '他一拳砸下來，帶著風聲。' }),
+  },
+  impostor: {
+    id: 'impostor', name: '冒你名頭的人', signature: { name: '照貓畫虎', tell: '{foe}擺出一個你再熟悉不過的起手式——那是你的招。', mult: 1.3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 7, temper: 'veteran', specials: { drain: 1 }, phase2: { line: '你的招，我學得不像嗎？', temper: 'brute', rage: 3 }, traps: ['fanshou'],
+    tells: tells({ attack: '他出手的路數，跟你有七八分像。', feint: '他學你學得太像了，連你慣用的虛招都一樣。' }),
+  },
+  old_peer: {
+    id: 'old_peer', name: '白頭的老對手', signature: { name: '四十年', tell: '{foe}擺出的架勢，和幾十年前一模一樣，只是慢了一點。', mult: 1.3 }, level: { relative: 0, min: 1, max: 5 }, wuxing: 7, temper: 'guard', specials: { heal: 1 }, phase2: { line: '痛快！再來！', temper: 'veteran' }, traps: ['huijian'],
+    tells: tells({ guard: '他不急，等你先出手。年輕時他就是這樣。', attack: '他的手有點抖，出招卻還是那麼準。' }),
+  },
+  deserter_captain: {
+    id: 'deserter_captain', name: '亂兵的頭目', hpMult: 1.15, signature: { name: '連環刀', tell: '{foe}換了一口氣，刀光一層疊著一層。', mult: 0.5, hits: 3 }, level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '老東西，還挺能打！', specials: { enrage: 1.5 } }, traps: ['weiou'],
+    tells: tells({ attack: '他的刀上還沾著別人的血。', enrage: '他身後的亂兵跟著鼓噪起來。' }),
+  },
   wumian: {
     id: 'wumian', name: '無面客', signature: { name: '一線', tell: '白面具忽然不動了。四周靜得連風聲都沒有。', mult: 1.5 }, who: 'wumian', level: { relative: 0, min: 2, max: 5 }, wuxing: 9, temper: 'veteran', lethal: true, hpMult: 0.85,
     traps: ['huijian'], specials: { curse: 1.5, drain: 1 },

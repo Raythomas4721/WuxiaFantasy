@@ -119,7 +119,7 @@ export const youthEvents: GameEvent[] = [
         text: '拉他喝酒，聊到天亮',
         outcome: {
           text: '陸平說，當年要不是你擋在前面，他大概早就離開那個鎮子了。臨走前他說：「以後有事，到鏢局找我。」',
-          effects: [rel('lu_ping', 20), meili(1), flag('lu_friend')],
+          effects: [rel('lu_ping', 20), meili(1), flag('lu_friend'), later('escort_invite', 2, 5, 10)],
           recap: { weight: 2, text: '當年被你救下的陸平回來找你，你們喝酒聊到了天亮。' },
         },
       },
@@ -138,8 +138,41 @@ export const youthEvents: GameEvent[] = [
         text: '寒暄幾句就送客',
         outcome: {
           text: '陸平有些失落，留下一包江南的茶葉就走了。',
-          effects: [rel('lu_ping', 5)],
+          effects: [rel('lu_ping', 5), later('escort_invite', 3, 6, 10)],
         },
+      },
+    ],
+  },
+  {
+    id: 'escort_invite',
+    kind: 'normal',
+    title: '一趟大鏢',
+    scheduledOnly: true,
+    conditions: { hasSect: false, maxAge: 45 },
+    tags: ['work', 'travel'],
+    text: '陸平又來了，這回風塵僕僕，連茶都顧不上喝：「鏢局接了一趟大鏢，路上不太平，總鏢頭要我找個信得過的人。我第一個就想到你。」',
+    choices: [
+      {
+        id: 'join',
+        text: '「我跟你走。」從此在鏢局落腳',
+        outcome: {
+          text: '那趟鏢走了兩個月，平平安安送到了地頭。回來那天，總鏢頭把一塊腰牌扔給你：「長風鏢局的人了。」',
+          effects: [join('changfeng'), xp('liuyun', 2), rel('lu_ping', 20), add('escort_success'), money(40)],
+          recap: { weight: 2, text: '{ageCn}歲那年，陸平請你幫忙押一趟大鏢。鏢送到了，你也成了長風鏢局的人。' },
+        },
+      },
+      {
+        id: 'once',
+        text: '幫這一趟，不入鏢局',
+        outcome: {
+          text: '那趟鏢走了兩個月，平平安安送到了地頭。總鏢頭給了你一份厚厚的酬勞，說鏢局的門隨時為你開著。',
+          effects: [money(60), rel('lu_ping', 15), fame(1)],
+        },
+      },
+      {
+        id: 'decline',
+        text: '「這回真的走不開。」',
+        outcome: { text: '陸平點點頭，沒有多說，轉身又上了路。', effects: [rel('lu_ping', -5)] },
       },
     ],
   },
@@ -379,9 +412,12 @@ export const youthEvents: GameEvent[] = [
     kind: 'normal',
     title: '鏢局招人',
     weight: 9,
-    conditions: { minAge: 15, maxAge: 30, regions: ['jiangnan'], hasSect: false },
+    conditions: { minAge: 15, maxAge: 32, hasSect: false },
     tags: ['work', 'travel'],
-    text: '長風鏢局在城門口貼了告示：招趟子手，管吃管住，月錢三百文。告示前圍了一圈人，有個鏢師正讓應徵的人輪流舉石鎖。',
+    text: [
+      { if: { regions: ['jiangnan'] }, text: '長風鏢局在城門口貼了告示：招趟子手，管吃管住，月錢三百文。告示前圍了一圈人，有個鏢師正讓應徵的人輪流舉石鎖。' },
+      { text: '長風鏢局的分號在城門口貼了告示：招趟子手，管吃管住，月錢三百文。告示前圍了一圈人，有個鏢師正讓應徵的人輪流舉石鎖。' },
+    ],
     choices: [
       {
         id: 'lift',

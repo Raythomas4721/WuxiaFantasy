@@ -1143,6 +1143,187 @@ export const adultEvents: GameEvent[] = [
       },
     ],
   },
+  // ---- 晚年：五十歲以後才有的事 ----
+  {
+    id: 'late_manual',
+    kind: 'normal',
+    title: '著書',
+    weight: 14,
+    conditions: { minAge: 50, any: [{ minMartial: 3 }, { minSkill: { baicao: 3 } }] },
+    tags: ['study', 'martial', 'medicine', 'rest'],
+    text: '這些年你常常半夜醒來，想起某一招、某一個方子，怕自己哪天忘了。你買了一刀紙，打算把這一輩子學到的東西，一樣一樣寫下來。',
+    choices: [
+      {
+        id: 'pass',
+        text: '寫成一部書，交給徒弟',
+        requires: { flags: ['has_disciple'] },
+        hint: '你沒有徒弟',
+        outcome: {
+          text: '你寫了整整一個冬天。交到徒弟手上那天，他捧著那疊紙，手一直在抖。',
+          effects: [flag('wrote_manual'), fame(3), xinxing(1)],
+          recap: { weight: 4, text: '{ageCn}歲那年，你把畢生所學寫成了一部書，交給了徒弟。' },
+        },
+      },
+      {
+        id: 'carve',
+        text: '刻在深山的石壁上，留給有緣人',
+        outcome: {
+          text: '你帶著鑿子進了山，一筆一劃鑿了三個月。下山時你沒有回頭。也許幾十年後，會有個年輕人在這裡停下腳步。',
+          effects: [flag('wrote_manual'), flag('carved_wall'), fuyuan(1), xinxing(1)],
+          recap: { weight: 4, text: '{ageCn}歲那年，你把畢生所學刻在了深山的石壁上，留給有緣人。' },
+        },
+      },
+      {
+        id: 'burn',
+        text: '寫完了，又一把火燒掉',
+        outcome: {
+          text: '你看著紙灰飛起來。這些東西救過人，也傷過人。該留下什麼，不該留下什麼，你想了一輩子，還是沒想明白。',
+          effects: [xinxing(2), align(2)],
+          recap: { weight: 3, text: '{ageCn}歲那年，你把畢生所學寫了下來，又一把火燒掉了。' },
+        },
+      },
+    ],
+  },
+  {
+    id: 'late_companion',
+    kind: 'normal',
+    title: '白頭',
+    weight: 14,
+    conditions: { minAge: 52, minRelation: { companion: 40 }, notFlags: ['companion_close'] },
+    tags: ['social', 'village', 'rest'],
+    text: '門口站著一個頭髮花白的人，手裡提著兩條魚。你愣了半天，他先笑了：「怎麼，不認得了？」是{companion}。當年一起爬樹掏鳥窩的人，如今走路也要扶著牆了。',
+    choices: [
+      {
+        id: 'stay',
+        text: '「別走了，就在我這裡住下。」',
+        outcome: {
+          text: '{companion}真的住下了。你們每天下午在院子裡下棋，為了一步棋能吵到天黑，第二天又坐回老地方。',
+          effects: [rel('companion', 20), flag('companion_close'), xinxing(1)],
+          recap: { weight: 4, text: '{ageCn}歲那年，{companion}提著兩條魚來看你，從此在你家住了下來。' },
+        },
+      },
+      {
+        id: 'home',
+        text: '一起回老家看看',
+        outcome: {
+          text: '後山的那個樹洞還在，裡面的寶貝早就爛成了泥。你們在樹下坐了一個下午，誰也沒說話。',
+          effects: [rel('companion', 15), xinxing(2)],
+          recap: { weight: 4, text: '{ageCn}歲那年，你和{companion}一起回了一趟老家，在後山的樹下坐了一個下午。' },
+        },
+      },
+      {
+        id: 'meal',
+        text: '留他吃頓飯',
+        outcome: { text: '魚燉得很爛。{companion}吃完飯就走了，說下回再來。你們都知道，也許沒有下回了。', effects: [rel('companion', 10)] },
+      },
+    ],
+  },
+  {
+    id: 'late_grandchild',
+    kind: 'normal',
+    title: '膝下',
+    weight: 12,
+    conditions: { minAge: 52, flags: ['married'] },
+    tags: ['village', 'rest', 'social'],
+    text: '小孫子抱著你的腿不肯放，仰著頭問：「大人們都說你年輕時很厲害。有多厲害？」',
+    choices: [
+      {
+        id: 'teach',
+        text: '在院子裡教他紮馬步',
+        requires: { minMartial: 2 },
+        outcome: {
+          text: '他蹲了不到一炷香就哭了，第二天卻又自己跑來，在院子裡等你。',
+          effects: [flag('taught_grandchild'), xinxing(1), gengu(1)],
+          recap: { weight: 2, text: '晚年時，你在院子裡教小孫子紮馬步。' },
+        },
+      },
+      {
+        id: 'story',
+        text: '把這些年的事當故事講給他聽',
+        outcome: {
+          text: '你從村口的那棵樹講起，講到他睡著了。那些驚心動魄的事，到了你嘴裡，都變成了一句「後來啊」。',
+          effects: [meili(1), xinxing(1)],
+        },
+      },
+      {
+        id: 'books',
+        text: '「厲害有什麼用。來，我教你認字。」',
+        outcome: { text: '他噘著嘴，還是乖乖坐到了桌邊。你握著他的手，一筆一劃寫下了他的名字。', effects: [wuxing(1), xinxing(1)] },
+      },
+    ],
+  },
+  {
+    id: 'late_gratitude',
+    kind: 'normal',
+    title: '恩人',
+    weight: 12,
+    conditions: { minAge: 50, minChivalry: 30 },
+    tags: ['social', 'travel', 'village'],
+    text: '一個年輕人找上門來，進門就跪下磕頭。他說，他爹三十年前在路上被人救過一命，臨終前交代：一定要找到那個人，當面道一聲謝。他找了三年，才找到你。',
+    choices: [
+      {
+        id: 'forgot',
+        text: '「有這回事嗎？我不記得了。」',
+        outcome: {
+          text: '你是真的不記得了。這一輩子出手的次數太多，哪一次是哪一次，早就分不清。年輕人愣了一下，又重重磕了三個頭。',
+          effects: [xinxing(1), fame(2)],
+          recap: { weight: 3, text: '晚年時，有人找了你三年，只為替父親道一聲謝。你已經不記得那件事了。' },
+        },
+      },
+      {
+        id: 'accept',
+        text: '扶他起來，留他吃頓飯',
+        outcome: {
+          text: '飯桌上他說了很多他爹的事。原來你隨手救下的那個人，後來也救了很多人。',
+          effects: [chiv(3), fame(2), meili(1)],
+          recap: { weight: 3, text: '晚年時，一個年輕人來替父親道謝。你這才知道，當年救下的人，後來也救了很多人。' },
+        },
+      },
+      {
+        id: 'gift',
+        text: '收下他帶來的謝禮',
+        outcome: { text: '是一包銀子，不多，看得出是攢了很久的。', effects: [money(60)] },
+      },
+    ],
+  },
+  {
+    id: 'late_enemy',
+    kind: 'normal',
+    title: '仇家的後人',
+    weight: 12,
+    conditions: { minAge: 50, maxAlignment: -15 },
+    tags: ['feud', 'village', 'travel'],
+    text: '夜裡你聽見院牆上有動靜。一個少年握著短刀翻進來，手抖得厲害，嘴唇咬出了血。你認得那雙眼睛：很多年前，倒在你手下的某個人，也是這樣看著你。',
+    choices: [
+      {
+        id: 'spare',
+        text: '把刀奪下來，讓他走',
+        outcome: {
+          text: '你把短刀丟在地上：「練十年再來。」他走了。你在院子裡站到天亮，想著十年後自己還在不在。',
+          effects: [xinxing(1), align(4)],
+          recap: { weight: 3, text: '晚年時，仇家的後人半夜來尋仇。你奪下他的刀，讓他走了。' },
+        },
+      },
+      {
+        id: 'confess',
+        text: '「你爹的事，我告訴你。」',
+        outcome: {
+          text: '你把當年的事一五一十說了，沒有替自己辯解一句。他聽完，把刀插回鞘裡，哭了。',
+          effects: [xinxing(2), align(6), chiv(2)],
+          recap: { weight: 3, text: '晚年時，仇家的後人來尋仇。你把當年的事原原本本告訴了他。' },
+        },
+      },
+      {
+        id: 'kill',
+        text: '斬草除根',
+        outcome: {
+          text: '他連你的衣角都沒碰到。你把他埋在後院的樹下，那棵樹後來長得特別好。',
+          effects: [align(-10), chiv(-5)],
+          recap: { weight: 3, text: '晚年時，仇家的後人來尋仇，你沒有讓他活著離開。' },
+        },
+      },
+    ],
+  },
   {
     id: 'retire_choice',
     kind: 'forced',
