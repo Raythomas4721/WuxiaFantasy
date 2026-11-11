@@ -144,6 +144,10 @@ function effectText(e: CardEffect): string[] {
   if (e.pierce) out.push('無視護體');
   if (e.breakGuard) out.push('打掉護體');
   if (e.breakTrap) out.push('破除一張暗招');
+  if (e.seal) out.push(`點穴：對手這一招每一擊 −${e.seal}`);
+  if (e.stun) out.push('定身：對手這一招使不出來（絕技只減半）');
+  if (e.cleanse) out.push(`解掉牌堆裡 ${e.cleanse} 張「傷」「心魔」`);
+  if (e.ward) out.push(e.ward > 1 ? `之後 ${e.ward} 次點穴、下毒無效` : '下一次點穴、下毒無效');
   if (e.boostNext) {
     const b = e.boostNext;
     out.push(`下一張${tagList(b.tags)}${b.mult ? `傷害 × ${b.mult}` : `傷害 +${b.dmg}`}`);
@@ -718,8 +722,48 @@ function applyCardEffect(d: DuelState, c: CardDef, e: CardEffect): void {
       say(d, 'sys', `你破了${d.name}藏著的【${CONTENT.foeTraps[t.id].name}】。`);
     }
   }
+  if (e.seal) sealFoe(d, e.seal + (d.me.passive?.sealBonus ?? 0));
+  if (e.stun) stunFoe(d);
+  if (e.cleanse) cleanseCurses(d, e.cleanse);
+  if (e.ward) {
+    const p = (d.me.passive ??= { names: [] });
+    p.resist = (p.resist ?? 0) + e.ward;
+  }
   if (e.boostNext) d.me.boost = e.boostNext;
   else if (e.dmg && d.me.boost && c.tag && d.me.boost.tags.includes(c.tag)) d.me.boost = undefined;
+}
+
+/** 會打到人的意圖（點穴封得住的）。 */
+const STRIKES: IntentKind[] = ['attack', 'combo', 'feint', 'drain', 'curse'];
+
+function sealFoe(d: DuelState, n: number): void {
+  d.foe.sealed = (d.foe.sealed ?? 0) + n;
+  if (STRIKES.includes(d.foe.intent.kind)) say(d, 'me', `你點中了${d.name}的穴道，他這一招使不上勁（每一擊 −${d.foe.sealed}）。`);
+  else say(d, 'me', `你點中了${d.name}的穴道。他這回合要是出手，每一擊 −${d.foe.sealed}。`);
+}
+
+function stunFoe(d: DuelState): void {
+  const it = d.foe.intent;
+  if (it.sig) {
+    const half = Math.ceil(((it.next ?? it.value) + d.foe.charge) / 2);
+    d.foe.sealed = (d.foe.sealed ?? 0) + half;
+    say(d, 'me', `【${it.sig}】蓄勢已久，穴道封不住，但你卸掉了一半的力道（每一擊 −${half}）。`);
+    return;
+  }
+  d.foe.stunned = true;
+  say(d, 'me', `你一指點中${d.name}的要穴，他整個人僵在原地。`);
+}
+
+function cleanseCurses(d: DuelState, n: number): void {
+  let left = n;
+  for (const pile of [d.me.discard, d.me.deck, d.me.hand]) {
+    for (let i = pile.length - 1; i >= 0 && left > 0; i--) {
+      if (getCard(pile[i]).kind !== 'curse') continue;
+      pile.splice(i, 1);
+      left--;
+    }
+  }
+  if (left < n) say(d, 'me', `你點開自己身上幾處穴道，把淤住的氣血推散了（移除 ${n - left} 張「傷」「心魔」）。`);
 }
 
 export function playCard(state: DuelState, handIndex: number, rng: Rng): DuelState {
@@ -806,7 +850,7 @@ const VITALS = ['咽喉', '心口', '太陽穴', '後頸', '丹田'];
 type Spot = { kind: 'crit' | 'wrist' | 'knee'; name: string };
 
 export function critChance(d: DuelState, c: CardDef): number {
-  return CRIT.base + (d.foe.exposed > 0 ? CRIT.exposed : 0) + (c.tag === '針' ? CRIT.needle : 0) + (d.seeTraps ? CRIT.sharpEye : 0) + (d.me.passive?.critBonus ?? 0);
+  return CRIT.base + (d.foe.exposed > 0 ? CRIT.exposed : 0) + (c.tag === '針' || c.tag === '指' ? CRIT.needle : 0) + (d.seeTraps ? CRIT.sharpEye : 0) + (d.me.passive?.critBonus ?? 0);
 }
 
 /** 出招前擲一次：打中要害就把這一招的傷害放大。 */
@@ -874,7 +918,7 @@ function foeStrike(d: DuelState, intent: Intent, rng: Rng): void {
   const crit = !trap?.dodge && rng.chance(CRIT.foe) ? rng.pick(MY_VITALS) : undefined;
   for (let i = 0; i < (intent.hits ?? 1); i++) {
     if (d.foe.hp <= 0) return;
-    let dmg = intent.value + d.foe.charge + (d.foe.rage ?? 0);
+    let dmg = Math.max(0, intent.value + d.foe.charge + (d.foe.rage ?? 0) - (d.foe.sealed ?? 0));
     if (trap?.dodge) {
       if (i === 0) say(d, 'foe', `${d.name}${verb}，卻撲了個空。`);
       continue;
@@ -910,12 +954,14 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
   const meStart = d.me.hp;
   let intent = d.foe.intent;
   // 絕技不會臨時變招
-  if (!intent.sig && rng.chance(temper.switch)) {
+  if (!intent.sig && !d.foe.stunned && rng.chance(temper.switch)) {
     intent = pickIntent(d, rng, intent.kind);
     say(d, 'foe', `${d.name}忽然變招！`);
   }
   d.foe.block = 0;
-  switch (intent.kind) {
+  if (d.foe.stunned) {
+    say(d, 'foe', `${d.name}穴道被封，僵了一整個回合，這一招沒能使出來。`);
+  } else switch (intent.kind) {
     case 'attack':
     case 'combo':
     case 'feint':
@@ -978,8 +1024,10 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
     return d;
   }
 
-  // 下一回合
+  // 下一回合：穴道解開
   d.round += 1;
+  d.foe.sealed = 0;
+  d.foe.stunned = false;
   if (d.foe.bleed > 0) {
     const before = d.foe.hp;
     d.foe.hp -= d.foe.bleed;
@@ -1024,9 +1072,11 @@ export function intentText(d: DuelState): { label: string; detail: string } {
     return { label: `蓄勢・${it.sig}`, detail: `下回合要使出【${it.sig}】：約 ${(it.next ?? 0) + charge + it.value}${def.signature?.hits ? ` × ${def.signature.hits}` : ''} 傷。先準備護體或伏招。` };
   }
   if (it.sig) return { label: `絕技・${it.sig}`, detail: def.signature?.tell.replaceAll('{foe}', d.name) ?? '' };
+  if (d.foe.stunned) return { label: `${labels[it.kind]}・被定住`, detail: `${d.name}穴道被封，這回合動不了。` };
+  const sealed = STRIKES.includes(it.kind) ? d.foe.sealed ?? 0 : 0;
   const value =
-    it.kind === 'guard' || it.kind === 'charge' ? `${it.value}` : `${it.value + charge}${it.hits ? ` × ${it.hits}` : ''}`;
-  return { label: `${labels[it.kind]} ${value}`, detail: def.tells[it.kind] };
+    it.kind === 'guard' || it.kind === 'charge' ? `${it.value}` : `${Math.max(0, it.value + charge - sealed)}${it.hits ? ` × ${it.hits}` : ''}`;
+  return { label: `${labels[it.kind]} ${value}${sealed ? '（被點穴）' : ''}`, detail: def.tells[it.kind] };
 }
 
 /**

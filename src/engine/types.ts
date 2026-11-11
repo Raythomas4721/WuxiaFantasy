@@ -293,7 +293,7 @@ export interface RumorDef {
 // ---------- 過招：招式牌（設計文件 §3.11） ----------
 
 /** 招式的路數，連招看的是這個。 */
-export type CardTag = '拳' | '劍' | '槍' | '步' | '針' | '守' | '藥' | '氣';
+export type CardTag = '拳' | '劍' | '槍' | '步' | '針' | '指' | '守' | '藥' | '氣';
 /** attack 攻、guard 守、skill 技、trap 伏招（蓋著，對手做某件事時才發動）、curse 傷與心魔。 */
 export type CardKind = 'attack' | 'guard' | 'skill' | 'trap' | 'curse';
 export type TrapTrigger = 'foeAttack' | 'foeGuard' | 'foeCharge' | 'foeFeint';
@@ -334,6 +334,14 @@ export interface CardEffect {
   /** 伏招用：這一擊傷害減半／完全閃過。 */
   halve?: boolean;
   dodge?: boolean;
+  /** 點穴：對手這一回合的招式，每一擊傷害 −N。 */
+  seal?: number;
+  /** 定身：對手這一回合的招式使不出來（絕技封不住，只減半）。 */
+  stun?: boolean;
+  /** 解穴：從牌堆裡移除 N 張「傷」「心魔」。 */
+  cleanse?: number;
+  /** 護住穴道：之後 N 次點穴、下毒無效。 */
+  ward?: number;
 }
 
 export type Rarity = 'common' | 'uncommon' | 'rare';
@@ -553,6 +561,8 @@ export interface Passive {
   resist?: number;
   /** 每回合開始回 N 氣血（根骨 10）。 */
   regen?: number;
+  /** 點穴多封 N（拂星指心得）。 */
+  sealBonus?: number;
   /** 「傷」「心魔」發作不扣氣血（心性 10）。 */
   curseNoHp?: number;
   /** 爆擊率加成（福緣 10），0.05 = 5%。 */
@@ -618,6 +628,9 @@ export interface DuelState {
     said?: string[];
     /** 連續出手（攻擊類意圖）的回合數，太多就要換氣。 */
     streak?: number;
+    /** 這回合被點了穴：每一擊 −sealed；stunned 是被定住，這一招使不出來。 */
+    sealed?: number;
+    stunned?: boolean;
     /** 第二階段換過的打法。 */
     temper?: 'brute' | 'veteran' | 'guard';
     /** 絕技：下回合要打出來了；上一次打出絕技是第幾回合。 */

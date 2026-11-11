@@ -156,6 +156,7 @@ const WEAPON_WORD: Record<string, { noun: string; plain: string; grit: string }>
   qinghen: { noun: '劍', plain: '劍客', grit: '孤' },
   shoucheng: { noun: '槍', plain: '槍手', grit: '鐵' },
   yeyu: { noun: '針', plain: '暗器手', grit: '冷' },
+  fuxing: { noun: '指', plain: '點穴手', grit: '靈' },
   liuyun: { noun: '影', plain: '飛客', grit: '孤' },
   changquan: { noun: '拳', plain: '拳師', grit: '鐵' },
   shijing: { noun: '拳', plain: '拳師', grit: '鐵' },

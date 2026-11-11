@@ -92,6 +92,7 @@ export const skills: Record<string, SkillDef> = {
   shibi: { id: 'shibi', name: '石壁殘劍', kind: 'martial', desc: '深山石洞裡前人刻下的劍意，不知出自誰手。' },
   qinghen: { id: 'qinghen', name: '青衡十三式', kind: 'martial', desc: '青衡劍府的劍法，十三式環環相扣，講究法度。' },
   yeyu: { id: 'yeyu', name: '夜雨針', kind: 'martial', desc: '血衣樓的暗器手法，針出無聲，中者到天亮才覺得疼。' },
+  fuxing: { id: 'fuxing', name: '拂星指', kind: 'martial', desc: '遊方女醫蘇半夏的點穴手法。指到穴封，本是救人用的。' },
   baicao: { id: 'baicao', name: '百草辨脈術', kind: 'medicine', desc: '辨藥、診脈、施針的醫術根基。' },
 };
 
@@ -190,6 +191,16 @@ export const npcs: Record<string, NpcDef> = {
     codex: false,
   },
   qin_yuan: { id: 'qin_yuan', name: '秦遠', desc: '在酒樓裡結識的游俠。', presence: [], codex: false },
+  su_banxia: {
+    id: 'su_banxia',
+    name: '蘇半夏',
+    title: '拂星手',
+    desc: '背著藥箱四處行醫的女郎中，兩根手指點穴比針還準。她說點穴本是救人的手法，是被人學去害人了。',
+    deathYear: 1280,
+    presence: [{ from: 1228, to: 1280, regions: ['jiangnan', 'xiangyang', 'shu'] }],
+    codex: true,
+    righteous: true,
+  },
   companion: { id: 'companion', name: '兒時玩伴', desc: '', presence: [], codex: false },
   rival: { id: 'rival', name: '宿敵', desc: '', presence: [], codex: false },
 };

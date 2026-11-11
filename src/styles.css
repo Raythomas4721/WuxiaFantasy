@@ -616,6 +616,11 @@ small {
   color: var(--accent);
 }
 
+.duel-intent.intent-stunned,
+.intent-mini.intent-stunned {
+  opacity: 0.6;
+}
+
 .stat-perks {
   margin-top: 0.4rem;
   font-size: 0.8rem;

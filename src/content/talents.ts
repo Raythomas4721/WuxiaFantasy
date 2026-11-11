@@ -97,4 +97,15 @@ export const talents: TalentDef[] = [
   ...pair('yeyu', 4,
     ['yy_yu', '夜雨', '內傷 +2', { bleedBonus: 2 }],
     ['yy_qian', '千針', '〈針〉每一擊傷害 +3、每回合多抽 1 張', { tagDmg: { 針: 3 }, drawPer: 1 }]),
+
+  // 拂星指：封住對手的招，自己不怕點穴
+  ...pair('fuxing', 2,
+    ['fx_li', '指力', '〈指〉每一擊傷害 +2', { tagDmg: { 指: 2 } }],
+    ['fx_hu', '護穴', '前兩次點穴、下毒無效', { resist: 2 }]),
+  ...pair('fuxing', 3,
+    ['fx_shen', '認穴', '點穴多封 2', { sealBonus: 2 }],
+    ['fx_kan', '看穴', '開場時對手露出破綻 2 回合', { openExpose: 2 }]),
+  ...pair('fuxing', 4,
+    ['fx_xing', '星落', '每回合第一張〈指〉傷害 +6', { firstTag: { tag: '指', dmg: 6 } }],
+    ['fx_yi', '醫者', '每回合開始護體 4、回復的氣血 +3', { blockPerRound: 4, healBonus: 3 }]),
 ];

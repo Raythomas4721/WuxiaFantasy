@@ -35,13 +35,13 @@ export const cards: Record<string, CardDef> = {
   tiebushan: card({ id: 'tiebushan', name: '鐵布衫', kind: 'guard', tag: '守', cost: 1, block: 8, flavor: '你運氣一頂，渾身的筋肉繃得像鐵。' }),
   liusanfen: card({ id: 'liusanfen', name: '留三分', kind: 'guard', tag: '守', cost: 1, block: 5, energyNext: 1, flavor: '你出手只用七分力，留著三分等下一招。' }),
   tingshen: card({
-    id: 'tingshen', name: '挺身', kind: 'guard', tag: '守', cost: 1, block: 6, boostNext: { tags: ['拳', '劍', '槍', '針'], dmg: 3 },
+    id: 'tingshen', name: '挺身', kind: 'guard', tag: '守', cost: 1, block: 6, boostNext: { tags: ['拳', '劍', '槍', '針', '指'], dmg: 3 },
     flavor: '你挺身站到前面，一步也不退。',
   }),
   zhouxuan: card({ id: 'zhouxuan', name: '周旋', kind: 'skill', cost: 1, draw: 1, expose: true, flavor: '你一邊遊走一邊說話，{foe}被你繞得心浮氣躁。' }),
   juechu: card({ id: 'juechu', name: '絕處', kind: 'attack', tag: '拳', cost: 1, dmg: 5, desperate: 8, flavor: '退無可退，你反而撲了上去。' }),
   cangfeng: card({
-    id: 'cangfeng', name: '藏鋒', kind: 'skill', tag: '氣', cost: 1, block: 4, boostNext: { tags: ['拳', '劍', '槍', '針'], dmg: 5 },
+    id: 'cangfeng', name: '藏鋒', kind: 'skill', tag: '氣', cost: 1, block: 4, boostNext: { tags: ['拳', '劍', '槍', '針', '指'], dmg: 5 },
     flavor: '你收斂起氣勢，像是怯了。{foe}沒看見你袖子裡握緊的拳頭。',
   }),
   bengong: card({ id: 'bengong', name: '笨功夫', kind: 'attack', tag: '拳', cost: 1, dmg: 7, flavor: '一招練了一萬遍，就不笨了。' }),
@@ -225,6 +225,28 @@ export const cards: Record<string, CardDef> = {
   fengxue: card({ id: 'fengxue', name: '封穴', rarity: 'uncommon', kind: 'skill', tag: '針', cost: 1, expose: true, bleed: 3, flavor: '你的針封住了{foe}的一處要穴。' }),
   yebuxie: card({ id: 'yebuxie', name: '夜雨不歇', rarity: 'rare', kind: 'skill', tag: '針', cost: 2, bleedMult: 3, flavor: '雨下了一整夜。{foe}身上的每一個針眼都在發作。' }),
 
+  // ---- 拂星指：遊方女醫蘇半夏的點穴手法，本是救人用的 ----
+  fx_dian: card({ id: 'fx_dian', name: '點星', kind: 'attack', tag: '指', cost: 1, dmg: 5, seal: 3, flavor: '你並指一點，正中{foe}的肩井，他那條胳膊頓時一麻。' }),
+  fx_fu: card({ id: 'fx_fu', name: '輕拂', kind: 'skill', tag: '指', cost: 0, seal: 2, draw: 1, flavor: '你的指尖從{foe}的腕上輕輕拂過，像拂掉一點灰。' }),
+  fx_luo: card({ id: 'fx_luo', name: '星羅', kind: 'guard', tag: '指', cost: 1, block: 5, seal: 2, flavor: '你一邊格開來招，一邊順手點了{foe}的曲池。' }),
+  fx_jie: card({ id: 'fx_jie', name: '解穴', kind: 'skill', tag: '指', cost: 1, block: 3, cleanse: 1, ward: 1, flavor: '你反手在自己胸前連點三下，淤住的氣血又流動起來。' }),
+  fx_ding: card({
+    id: 'fx_ding', name: '定身', rarity: 'uncommon', kind: 'skill', tag: '指', cost: 2, stun: true, exhaust: true,
+    flavor: '你搶進一步，兩指戳在{foe}的膻中。他張著嘴，一動也不動。',
+  }),
+  fx_qixing: card({
+    id: 'fx_qixing', name: '七星連點', rarity: 'uncommon', kind: 'attack', tag: '指', cost: 2, dmg: 3, hits: 3, seal: 3,
+    flavor: '你的手指快得看不清，{foe}身上七處大穴接連一麻。',
+  }),
+  fx_suo: card({
+    id: 'fx_suo', name: '鎖脈', rarity: 'uncommon', kind: 'trap', tag: '指', cost: 1, trigger: 'foeAttack', halve: true, seal: 2,
+    flavor: '{foe}一出手，你的手指已經搭上他的脈門。這一招的力道，散了一大半。',
+  }),
+  fx_fuxing: card({
+    id: 'fx_fuxing', name: '拂星手', rarity: 'rare', kind: 'attack', tag: '指', cost: 2, dmg: 8, seal: 6, ward: 1,
+    flavor: '你五指一拂，像從夜空裡摘下一把星子。{foe}身上的大穴，一處接一處暗了下去。',
+  }),
+
   // ---- 醫術 ----
   yunqi: card({ id: 'yunqi', name: '運氣療傷', kind: 'skill', tag: '氣', cost: 1, heal: 6, exhaust: true, flavor: '你退開半步，一口真氣在胸口轉了一圈，疼得輕了些。' }),
   jinchuang: card({ id: 'jinchuang', name: '金創藥', kind: 'skill', tag: '藥', cost: 1, heal: 8, exhaust: true, flavor: '你抽空往傷口上抹了一把藥。' }),
@@ -250,6 +272,7 @@ export const skillCards: Record<string, string[]> = {
   shibi: ['wufeng', 'jianyi', 'bihen', 'jingzuo', 'canjian', 'duanjian', 'jianxin', 'kaishan'],
   qinghen: ['qhqi', 'liancheng', 'qhcheng', 'qhshou', 'hanyi', 'qhzhuan', 'qhluo', 'shisan'],
   yeyu: ['yeyuzhen', 'wusheng', 'xiyu', 'mengyu', 'tougu', 'duanchang', 'fengxue', 'yebuxie'],
+  fuxing: ['fx_dian', 'fx_fu', 'fx_luo', 'fx_jie', 'fx_ding', 'fx_qixing', 'fx_suo', 'fx_fuxing'],
 };
 
 /** 獎勵池裡不分門派的奇招（設計文件 v0.5 §5）。 */

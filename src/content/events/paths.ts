@@ -1,7 +1,7 @@
 // 擇路與兩難：少年時選一條練武的路；幾件有真正代價的抉擇，後果會在多年後找上門。
 
 import type { GameEvent } from '../../engine/types';
-import { align, card, chiv, fame, flag, gengu, health, later, mainSkill, money, rel, train, xinxing, xp } from '../dsl';
+import { align, card, chiv, fame, flag, gengu, health, later, mainSkill, meet, money, rel, train, xinxing, xp } from '../dsl';
 
 export const pathEvents: GameEvent[] = [
   // ---------- 擇路 ----------
@@ -42,6 +42,18 @@ export const pathEvents: GameEvent[] = [
           text: '鏢師笑你腳底下太沉，要你在牆頭上來回走，走到不看腳下為止。你摔了一個月，第二個月，你在牆頭上睡了一個午覺。',
           effects: [xp('liuyun', 3), mainSkill('liuyun'), flag('path_steps')],
           recap: { weight: 2, text: '少年時，你跟過路的鏢師學了輕功。' },
+        },
+      },
+      {
+        id: 'finger',
+        text: '跟常來藥鋪的蘇大夫學點穴',
+        requires: { backgrounds: ['physician'] },
+        hidden: true,
+        note: '指：點穴封住對手的招，自己也不怕被點穴、下毒。入門可挑：點星、輕拂、星羅',
+        outcome: {
+          text: '蘇半夏每年春天都來藥鋪補藥材。這一年，她讓你伸出兩根手指，按在銅人的穴位上：「點穴是救人的手法。手要準，心要正。」',
+          effects: [xp('fuxing', 3), mainSkill('fuxing'), meet('su_banxia'), rel('su_banxia', 20), flag('path_finger')],
+          recap: { weight: 2, text: '少年時，你跟遊方的女醫蘇半夏學了點穴。' },
         },
       },
       {
@@ -317,6 +329,84 @@ export const pathEvents: GameEvent[] = [
           effects: [rel('companion', 20), chiv(2), fame(1)],
           recap: { weight: 3, text: '{companion}要還你當年頂罪的情，你只收了一罈酒。' },
         },
+      },
+    ],
+  },
+
+  // ---------- 拂星指：正道也學得到的點穴 ----------
+  {
+    id: 'fuxing_meet',
+    kind: 'normal',
+    title: '路邊的女醫',
+    weight: 8,
+    conditions: { minAge: 10, maxAge: 40, npcPresent: 'su_banxia', minAlignment: -10, notFlags: ['path_finger'] },
+    weightMods: [{ if: { minAlignment: 15 }, mult: 1.5 }, { if: { backgrounds: ['physician'] }, mult: 1.5 }],
+    tags: ['travel', 'medicine'],
+    enterEffects: [meet('su_banxia')],
+    text: '路邊圍了一圈人。一個挑夫直挺挺地站在擔子旁，眼珠還會轉，身子卻一動也不動——有人封了他的穴道，搶了錢就走了。一個背著藥箱的女人擠進人群，兩根手指在挑夫背上連點幾下，挑夫「哎喲」一聲，軟倒在地上。',
+    choices: [
+      {
+        id: 'help',
+        text: '上前幫她扶住挑夫',
+        outcome: {
+          text: '她看了你一眼：「手很穩。」她叫蘇半夏，是個遊方的郎中。臨走前她說：「點穴本是救人的手法，被那些人學去害人了。你要是想學，往後遇見我，再說。」',
+          effects: [rel('su_banxia', 15), xinxing(1), chiv(2), later('fuxing_teach', 1, 4, 10)],
+        },
+      },
+      {
+        id: 'ask',
+        text: '問她這是什麼手法',
+        check: {
+          stats: ['wuxing'],
+          difficulty: 6,
+          success: {
+            text: '她讓你把手伸出來，按著你的指頭在挑夫背上比了一遍：「這是肺俞，這是膏肓。記住了？」你竟然都記住了。她有些意外，多看了你兩眼。',
+            effects: [rel('su_banxia', 10), xp('fuxing', 2), later('fuxing_teach', 1, 4, 10)],
+          },
+          failure: {
+            text: '她說了一串穴道的名字，你一個也沒記住。她笑了笑：「不急。」',
+            effects: [rel('su_banxia', 5), later('fuxing_teach', 2, 5, 10)],
+          },
+        },
+      },
+      {
+        id: 'leave',
+        text: '看了一會兒就走開',
+        outcome: { text: '你擠出人群。身後有人在叫好。', effects: [rel('su_banxia', -5)] },
+      },
+    ],
+  },
+  {
+    id: 'fuxing_teach',
+    kind: 'normal',
+    title: '拂星指',
+    scheduledOnly: true,
+    tags: ['medicine', 'martial'],
+    conditions: { npcAlive: ['su_banxia'] },
+    enterEffects: [meet('su_banxia')],
+    text: [
+      {
+        if: { maxAlignment: -20 },
+        text: '你又遇見了蘇半夏。她替人包紮完傷口，抬頭看見你，手上的動作停了一下：「你身上的血腥氣，比上回重了。」',
+      },
+      { text: '你又遇見了蘇半夏。她正坐在茶棚裡替人扎針，看見你，笑了：「還記得我說過的話嗎？」' },
+    ],
+    choices: [
+      {
+        id: 'learn',
+        text: '請她教你點穴',
+        requires: { minAlignment: -19 },
+        hint: '她不肯教：你做過的事太多了',
+        outcome: {
+          text: '她教了你三個晚上。最後一晚，她讓你點她的手腕，你點中了，她卻說：「力道太重。點穴是讓人停手，不是讓人疼。」她把一本手抄的穴位圖留給了你。',
+          effects: [xp('fuxing', 4), rel('su_banxia', 20), xinxing(1)],
+          recap: { weight: 2, text: '{ageCn}歲那年，遊方的女醫蘇半夏教了你拂星指。' },
+        },
+      },
+      {
+        id: 'later',
+        text: '「現在還不是時候。」',
+        outcome: { text: '她點點頭，背起藥箱走了。', effects: [rel('su_banxia', -5)] },
       },
     ],
   },

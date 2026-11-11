@@ -9,8 +9,9 @@ import type { CardDef, DuelState } from './types';
 export function incoming(d: DuelState): number {
   const it = d.foe.intent;
   if (it.kind === 'guard' || it.kind === 'charge' || it.kind === 'enrage' || it.kind === 'heal') return 0;
+  if (d.foe.stunned) return 0;
   const mult = d.me.exposed > 0 ? 1.5 : 1;
-  return (it.value + d.foe.charge + (d.foe.rage ?? 0)) * (it.hits ?? 1) * mult;
+  return Math.max(0, it.value + d.foe.charge + (d.foe.rage ?? 0) - (d.foe.sealed ?? 0)) * (it.hits ?? 1) * mult;
 }
 
 function trapMatches(d: DuelState, c: CardDef): boolean {
@@ -45,6 +46,11 @@ function value(d: DuelState, idx: number): number {
   if (e.fortify) v += Math.min(e.block ?? 0, 8) * 0.5;
   if (e.selfHp) v -= e.selfHp * (d.me.hp < d.me.max / 2 ? 1.5 : 0.8);
   if (e.breakTrap && hasTrap) v += 6;
+  const hits = d.foe.intent.hits ?? 1;
+  if (e.seal && incoming(d) > 0) v += Math.min(e.seal, incoming(d) / hits) * hits * 1.2;
+  if (e.stun && !d.foe.stunned) v += d.foe.intent.sig ? incoming(d) * 0.6 : incoming(d) * 1.2 + (d.foe.intent.kind === 'heal' ? d.foe.intent.value : 0);
+  if (e.cleanse) v += [...d.me.deck, ...d.me.discard].filter((id) => getCard(id).kind === 'curse').length > 0 ? 4 : 0;
+  if (e.ward) v += 1.5;
   // 墊招：手上有「承」這個路數的牌，先出它
   if (c.tag && d.me.hand.some((id, i) => i !== idx && getCard(id).after?.tags.includes(c.tag!))) v += 3;
   return v / Math.max(1, c.cost);

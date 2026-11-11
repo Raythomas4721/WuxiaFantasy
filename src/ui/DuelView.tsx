@@ -157,7 +157,7 @@ const STRIKES: IntentKind[] = ['attack', 'combo', 'feint', 'drain', 'curse'];
 /** 按「結束回合」之前，先告訴你這樣結束會受多少傷。 */
 function RoundPreviewLine({ d }: { d: DuelState }) {
   const p = previewRound(d);
-  const change = p.mayChange && !d.foe.intent.sig ? '（他有時會臨時變招，實際可能不一樣）' : '';
+  const change = p.mayChange && !d.foe.intent.sig && !d.foe.stunned ? '（他有時會臨時變招，實際可能不一樣）' : '';
   let text: string;
   let tone = '';
   if (p.hidden) {
@@ -346,31 +346,37 @@ function IntentBadge({ d, detail }: { d: DuelState; detail: string }) {
     );
   }
   const strike = ['attack', 'combo', 'feint', 'drain', 'curse'].includes(it.kind);
-  const per = it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) : 0);
-  const big = strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
+  const per = Math.max(0, it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) - (d.foe.sealed ?? 0) : 0));
+  const big = d.foe.stunned ? '定' : strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
   return (
-    <div className={`duel-intent intent-${it.kind} ${it.sig ? 'intent-sig' : ''}`}>
+    <div className={`duel-intent intent-${it.kind} ${it.sig ? 'intent-sig' : ''} ${d.foe.stunned ? 'intent-stunned' : ''}`}>
       <span className="intent-seal">{it.sig ? '絕' : SEAL[it.kind]}</span>
       <span className="intent-num">{it.sig && it.kind === 'charge' ? '蓄' : big}</span>
       <span className="intent-body">
-        <span className="intent-name">{it.sig ? (it.kind === 'charge' ? `蓄勢・${it.sig}` : `絕技・${it.sig}`) : INTENT_NAME[it.kind]}</span>
+        <span className="intent-name">{it.sig ? (it.kind === 'charge' ? `蓄勢・${it.sig}` : `絕技・${it.sig}`) : INTENT_NAME[it.kind]}{sealNote(d)}</span>
         <span className="intent-detail">{detail}</span>
       </span>
     </div>
   );
 }
 
+/** 被點了穴：意圖名稱後面標一下。 */
+function sealNote(d: DuelState): string {
+  if (d.foe.stunned) return '・被定住';
+  return d.foe.sealed ? `・被點穴 −${d.foe.sealed}` : '';
+}
+
 /** 手機上手牌離對手很遠：在手牌正上方放一條精簡的意圖列（桌機用 CSS 藏起來）。 */
 function IntentMini({ d }: { d: DuelState }) {
   const it = d.foe.intent;
   const strike = ['attack', 'combo', 'feint', 'drain', 'curse'].includes(it.kind);
-  const per = it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) : 0);
-  const big = !d.clear ? '' : strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
+  const per = Math.max(0, it.value + (strike ? d.foe.charge + (d.foe.rage ?? 0) - (d.foe.sealed ?? 0) : 0));
+  const big = !d.clear ? '' : d.foe.stunned ? '定' : strike ? `${per}${it.hits ? `×${it.hits}` : ''}` : it.kind === 'guard' ? `${it.value}` : `+${it.value}`;
   return (
-    <div className={`intent-mini intent-${d.clear ? it.kind : 'unknown'} ${d.clear && it.sig ? 'intent-sig' : ''}`} aria-hidden="true">
+    <div className={`intent-mini intent-${d.clear ? it.kind : 'unknown'} ${d.clear && it.sig ? 'intent-sig' : ''} ${d.foe.stunned ? 'intent-stunned' : ''}`} aria-hidden="true">
       <span className="intent-seal">{d.clear ? (it.sig ? '絕' : SEAL[it.kind]) : '？'}</span>
       {big && !(it.sig && it.kind === 'charge') && <span className="intent-num">{big}</span>}
-      <span className="intent-name">{!d.clear ? '看不透' : it.sig ? (it.kind === 'charge' ? `蓄勢・${it.sig}` : `絕技・${it.sig}`) : INTENT_NAME[it.kind]}</span>
+      <span className="intent-name">{!d.clear ? '看不透' : it.sig ? (it.kind === 'charge' ? `蓄勢・${it.sig}` : `絕技・${it.sig}`) : INTENT_NAME[it.kind]}{sealNote(d)}</span>
       <span className="intent-mini-foe">
         {d.name}　{Math.max(0, d.foe.hp)}／{d.foe.max}
         {d.foe.block > 0 && `・護 ${d.foe.block}`}
