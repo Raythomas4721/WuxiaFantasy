@@ -92,8 +92,8 @@ export const endings: EndingDef[] = [
     id: 'zongshi',
     title: '一代宗師',
     priority: 70,
-    conditions: { minMartial: 4, flags: ['has_disciple'] },
-    hint: '武學出神入化，並且後繼有人。',
+    conditions: { minMartial: 5, flags: ['has_disciple'] },
+    hint: '武學登峰造極，並且後繼有人。',
     text: '你的武功到了出神入化的地步，更難得的是，你把它傳了下去。很多年後，有人練著你教的招式，卻已經不知道你的名字。你想，這樣也好。',
   },
   {
@@ -117,7 +117,7 @@ export const endings: EndingDef[] = [
   {
     id: 'zhiji',
     title: '一世知己',
-    priority: 70,
+    priority: 75,
     conditions: {
       any: [
         { any: [{ flags: ['promise_kept_shen'] }, { flags: ['promise_late_shen'] }], minRelation: { shen_guzhou: 60 } },
@@ -150,8 +150,8 @@ export const endings: EndingDef[] = [
     id: 'fujia',
     title: '富甲一方',
     priority: 58,
-    conditions: { minWealth: 1000 },
-    hint: '家產（現金加上田地、鋪面）達到一千文。',
+    conditions: { minWealth: 600 },
+    hint: '家產（現金加上田地、鋪面）達到六百文。',
     text: '亂世裡，你守住了一份家業。鋪子的門板每天早上照常卸下來，夥計們叫你一聲東家。很多人家破人亡的那些年，你家的灶從沒冷過。',
   },
   {
@@ -174,7 +174,7 @@ export const endings: EndingDef[] = [
     id: 'wuming',
     title: '無名俠客',
     priority: 48,
-    conditions: { minChivalry: 25, maxFame: 15 },
+    conditions: { minChivalry: 30, maxFame: 28 },
     hint: '做了很多好事，卻沒有人知道是你。',
     text: '你救過的人，大多不知道你叫什麼。他們只記得那天有個人出了手，然後就走了。你覺得這樣剛剛好。',
   },
@@ -190,8 +190,8 @@ export const endings: EndingDef[] = [
     id: 'pingfan',
     title: '平凡一生',
     priority: 30,
-    conditions: { maxMartial: 1, notFlags: ['died_young'] },
-    hint: '從未真正踏入江湖，安穩地走完一生。',
+    conditions: { notFlags: ['died_young'], maxFame: 28, any: [{ maxMartial: 2 }, { ambitions: ['peace'] }] },
+    hint: '不求聞達，安穩地走完一生。',
     text: '你沒有練成什麼絕世武功，也沒有揚名立萬。你只是在亂世裡好好地活著，吃過的苦、愛過的人，都是真的。',
   },
   {

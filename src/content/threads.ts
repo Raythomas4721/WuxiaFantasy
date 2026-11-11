@@ -65,11 +65,8 @@ export const threads: ThreadDef[] = [
     id: 'shen',
     title: '醉劍',
     priority: 60,
-    conditions: { flagMin: { shen_wine: 1 }, notFlags: ['shen_friend', 'shen_refused'], npcAlive: ['shen_guzhou'], maxAge: 55, maxYear: 1270 },
-    text: [
-      { if: { npcPresent: 'shen_guzhou' }, text: '那個嗜酒如命的劍客還在附近的酒樓出沒。再請他喝一碗？' },
-      { text: '那個嗜酒如命的劍客，聽說常在江南、蜀中一帶的酒樓喝酒。' },
-    ],
+    conditions: { any: [{ scheduled: ['shen_wine_2'] }, { scheduled: ['shen_wine_3'] }], notFlags: ['shen_friend'] },
+    text: '那個嗜酒如命的劍客說過，下回還要找你喝酒。',
     advances: ['shen_wine_2', 'shen_wine_3'],
   },
   {
@@ -112,16 +109,37 @@ export const threads: ThreadDef[] = [
     text: '你和秦遠拜過把子。江湖險惡，不知道他過得好不好。',
     advances: ['sworn_help'],
   },
+  {
+    id: 'partner',
+    title: '合夥',
+    priority: 45,
+    conditions: { scheduled: ['partner_return'] },
+    text: '你入了老許的夥。再過幾年，就知道這筆錢是賺是賠。',
+    advances: ['partner_return'],
+  },
+  {
+    id: 'hoard',
+    title: '一倉糧',
+    priority: 45,
+    conditions: { scheduled: ['famine_sale'] },
+    text: '豐年囤下的那一倉糧還鎖在倉裡，等著荒年。',
+    advances: ['famine_sale'],
+  },
+  {
+    id: 'escort',
+    title: '鏢旗',
+    priority: 40,
+    conditions: { sects: ['changfeng'], flagMin: { escort_success: 1 }, notFlags: ['chief_escort'], minAge: 22 },
+    text: '老總鏢頭的腿傷一年比一年重。鏢局上下都在猜，那面鏢旗往後要交到誰手上。',
+    advances: ['escort_chief'],
+  },
   // ---- 錯過就沒有的機緣 ----
   {
     id: 'yaogu',
     title: '藥谷之約',
     priority: 65,
     conditions: { scheduled: ['yaogu_retry'], hasSect: false, maxAge: 35 },
-    text: [
-      { if: { regions: ['shu'] }, text: '濟世藥谷的林鶴年說過：過兩年再來。' },
-      { text: '濟世藥谷的林鶴年說過：過兩年再來。可藥谷在蜀中，你得先回到那裡。' },
-    ],
+    text: '濟世藥谷三年收一次人。過兩年，你還可以再去考一次。',
     advances: ['yaogu_retry'],
   },
   {
@@ -129,10 +147,7 @@ export const threads: ThreadDef[] = [
     title: '百衲會',
     priority: 35,
     conditions: { flags: ['helped_baina'], hasSect: false, maxAge: 40, maxYear: 1274, notFired: ['baina_join'] },
-    text: [
-      { if: { npcPresent: 'ge_baina' }, text: '葛百衲說過，百衲會的門永遠為你開著。' },
-      { text: '葛百衲說過，百衲會的門永遠為你開著。他們在襄陽落腳。' },
-    ],
+    text: '葛百衲說過，百衲會的門永遠為你開著。哪天他會派人來找你。',
     advances: ['baina_join'],
   },
   {
@@ -165,7 +180,7 @@ export const threads: ThreadDef[] = [
     },
     text: [
       { if: { regions: ['xiangyang'] }, text: '鐵槍韓守義正在襄陽城裡招募義軍。' },
-      { text: '聽說襄陽有個叫韓守義的人在招募義軍。要守國門，得先到襄陽去。' },
+      { text: '聽說襄陽有個叫韓守義的人在招募義軍，他的人四處在找想守國門的人。' },
     ],
     advances: ['xiangyang_militia'],
   },

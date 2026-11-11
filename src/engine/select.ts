@@ -11,6 +11,8 @@ const RECENT_TAG_MULT = 0.5;
 /** 遊歷指定了目的地：當地的事件 ×3，名俠相遇 ×2。 */
 const DEST_MULT = 3;
 const DEST_NPC_MULT = 2;
+/** 推進「心事」的事件：權重 ×3，免得伏筆埋了卻一直等不到。 */
+const THREAD_MULT = 3;
 
 const EVENTS_BY_ID = new Map(CONTENT.events.map((e) => [e.id, e]));
 
@@ -31,8 +33,14 @@ export function eventAllowed(s: GameState, e: GameEvent): boolean {
   return checkCondition(s, e.conditions);
 }
 
-function eventWeight(s: GameState, e: GameEvent): number {
+/** 進行中的心事會推進的事件。 */
+function threadEvents(s: GameState): Set<string> {
+  return new Set(CONTENT.threads.filter((t) => checkCondition(s, t.conditions)).flatMap((t) => t.advances));
+}
+
+function eventWeight(s: GameState, e: GameEvent, pulled: Set<string>): number {
   let w = e.weight ?? DEFAULT_WEIGHT;
+  if (pulled.has(e.id)) w *= THREAD_MULT;
   for (const m of e.weightMods ?? []) if (checkCondition(s, m.if)) w *= m.mult;
   const focus = CONTENT.focuses.find((f) => f.id === s.focus);
   const tags = e.tags ?? [];
@@ -85,9 +93,10 @@ export function selectEvent(s: GameState, rng: Rng): GameEvent | null {
     return getEvent(dueIndex.x.event);
   }
 
+  const pulled = threadEvents(s);
   const pool: { item: GameEvent | null; weight: number }[] = CONTENT.events
     .filter((e) => e.kind === 'normal' && !e.scheduledOnly && eventAllowed(s, e))
-    .map((e) => ({ item: e, weight: eventWeight(s, e) }));
+    .map((e) => ({ item: e, weight: eventWeight(s, e, pulled) }));
   if (pool.length === 0) return null;
   if (s.player.age >= 7) pool.push({ item: null, weight: QUIET_WEIGHT });
   return rng.weighted(pool) ?? null;

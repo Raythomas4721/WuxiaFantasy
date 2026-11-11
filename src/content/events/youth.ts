@@ -160,15 +160,15 @@ export const youthEvents: GameEvent[] = [
         requires: { minMoney: 5 },
         outcome: {
           text: '那人抬起頭看了你一眼，眼神清得一點都不像喝醉了。「我叫沈孤舟，」他說，「欠你一碗。」',
-          effects: [money(-5), add('shen_wine'), rel('shen_guzhou', 15), meet('shen_guzhou')],
+          effects: [money(-5), add('shen_wine'), rel('shen_guzhou', 15), meet('shen_guzhou'), later('shen_wine_2', 2, 4, 8)],
         },
       },
       {
         id: 'ask',
         text: '走過去問他腰上那把劍是不是真的',
         outcome: {
-          text: '他斜眼瞧你，用兩根手指夾住筷子，在你面前輕輕一劃。桌上的酒碗整整齊齊地裂成了兩半。掌櫃不再要錢了。',
-          effects: [danshi(1), rel('shen_guzhou', 5), meet('shen_guzhou')],
+          text: '他斜眼瞧你，用兩根手指夾住筷子，在你面前輕輕一劃。桌上的酒碗整整齊齊地裂成了兩半。掌櫃不再要錢了。他打了個酒嗝：「有膽子問，下回請我喝酒。」',
+          effects: [danshi(1), add('shen_wine'), rel('shen_guzhou', 5), meet('shen_guzhou'), later('shen_wine_2', 2, 4, 8)],
         },
       },
       {
@@ -185,10 +185,10 @@ export const youthEvents: GameEvent[] = [
     id: 'shen_wine_2',
     kind: 'normal',
     title: '再遇醉劍',
-    weight: 14,
-    conditions: { minAge: 15, maxAge: 50, npcPresent: 'shen_guzhou', flagMin: { shen_wine: 1 }, flagMax: { shen_wine: 1 } },
+    scheduledOnly: true,
+    conditions: { maxAge: 55, npcAlive: ['shen_guzhou'], flagMin: { shen_wine: 1 }, flagMax: { shen_wine: 1 } },
     tags: ['tavern', 'travel'],
-    text: '又是一家酒肆，又是那個趴在桌上的身影。沈孤舟遠遠看見你，舉起空碗晃了晃：「上回欠你一碗，今天換你請。」',
+    text: '又是一家酒肆，又是那個趴在桌上的身影。沈孤舟遠遠看見你，舉起空碗晃了晃：「找了你好幾個鎮子。上回那一碗，今天換你請。」',
     choices: [
       {
         id: 'drink',
@@ -199,11 +199,11 @@ export const youthEvents: GameEvent[] = [
           difficulty: 6,
           success: {
             text: '酒過三巡，他用筷子在桌上比劃了一招劍式。你看得入神，回去之後竟然比劃出了七八分模樣。',
-            effects: [money(-10), add('shen_wine'), rel('shen_guzhou', 20), xp('hanjiang', 2)],
+            effects: [money(-10), add('shen_wine'), rel('shen_guzhou', 20), xp('hanjiang', 2), later('shen_wine_3', 2, 4, 8)],
           },
           failure: {
             text: '酒過三巡，他用筷子比劃了一招劍式。你只看見筷子的影子一閃，什麼都沒看清。他也不在意，倒頭就睡。',
-            effects: [money(-10), add('shen_wine'), rel('shen_guzhou', 20)],
+            effects: [money(-10), add('shen_wine'), rel('shen_guzhou', 20), later('shen_wine_3', 2, 4, 8)],
           },
         },
       },
@@ -212,7 +212,7 @@ export const youthEvents: GameEvent[] = [
         text: '問他為什麼總是一個人喝悶酒',
         outcome: {
           text: '他沉默了很久，只說了一句：「劍練到最後，身邊就沒人了。」',
-          effects: [add('shen_wine'), rel('shen_guzhou', 10), xinxing(1)],
+          effects: [add('shen_wine'), rel('shen_guzhou', 10), xinxing(1), later('shen_wine_3', 2, 4, 8)],
         },
       },
       {
@@ -229,8 +229,8 @@ export const youthEvents: GameEvent[] = [
     id: 'shen_wine_3',
     kind: 'normal',
     title: '三碗酒',
-    weight: 16,
-    conditions: { minAge: 16, maxAge: 55, npcPresent: 'shen_guzhou', flagMin: { shen_wine: 2 } },
+    scheduledOnly: true,
+    conditions: { maxAge: 60, npcAlive: ['shen_guzhou'], flagMin: { shen_wine: 2 } },
     tags: ['tavern', 'travel', 'martial'],
     text: '第三次遇見沈孤舟，是在一個下雨的夜裡。他沒有喝醉，坐在屋簷下擦劍。「三碗酒了，」他說，「我沈孤舟從不收徒弟，但從不欠人情。」',
     choices: [
@@ -546,7 +546,7 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'hesitate',
         text: '打聽清楚再說',
-        outcome: { text: '你在谷口站了半天，終究沒有進去。', effects: [flag('yaogu_hesitated')] },
+        outcome: { text: '你在谷口站了半天，終究沒有進去。守谷的弟子在背後說：「三年後還收。」', effects: [flag('yaogu_hesitated'), later('yaogu_retry', 2, 4)] },
       },
     ],
   },
@@ -555,9 +555,12 @@ export const youthEvents: GameEvent[] = [
     kind: 'normal',
     title: '再赴藥谷',
     scheduledOnly: true,
-    conditions: { regions: ['shu'], hasSect: false, maxAge: 35 },
+    conditions: { hasSect: false, maxAge: 35 },
     tags: ['medicine'],
-    text: '幾年過去，你又站在了藥谷的谷口。草棚還是那個草棚，林鶴年也還記得你。',
+    text: [
+      { if: { regions: ['shu'] }, text: '幾年過去，你又站在了藥谷的谷口。草棚還是那個草棚，林鶴年也還記得你。' },
+      { text: '算算日子，藥谷又要收人了。你一路翻山進了蜀中，又站在了藥谷的谷口。草棚還是那個草棚，林鶴年也還記得你。' },
+    ],
     choices: [
       {
         id: 'retry',
@@ -570,7 +573,7 @@ export const youthEvents: GameEvent[] = [
           skill: 'baicao',
           success: {
             text: '這一回，你三個都答對了。林鶴年捋著鬍子：「我就知道你會回來。」',
-            effects: [join('yaogu'), master('lin_henian'), rel('lin_henian', 25), xp('baicao', 4), item('yaowang_notes')],
+            effects: [goTo('shu'), join('yaogu'), master('lin_henian'), rel('lin_henian', 25), xp('baicao', 4), item('yaowang_notes')],
             recap: { weight: 3, text: '{ageCn}歲那年，你第二次叩開濟世藥谷的大門，終於成了藥王林鶴年的弟子。' },
           },
           failure: {
@@ -632,16 +635,16 @@ export const youthEvents: GameEvent[] = [
     kind: 'normal',
     title: '入會',
     weight: 14,
-    conditions: { minAge: 13, maxAge: 40, flags: ['helped_baina'], hasSect: false, npcPresent: 'ge_baina' },
+    conditions: { minAge: 13, maxAge: 40, flags: ['helped_baina'], hasSect: false, npcAlive: ['ge_baina'] },
     tags: ['social'],
-    text: '葛百衲找到你：「百衲會不是乞丐窩。亂世裡，沒人管的人，得自己管自己。你願不願意來？」',
+    text: '一個小乞丐塞給你一張油紙，上面畫著一件百衲衣。順著紙上的記號，你在襄陽城外的破廟裡見到了葛百衲：「百衲會不是乞丐窩。亂世裡，沒人管的人，得自己管自己。你願不願意來？」',
     choices: [
       {
         id: 'join',
         text: '入會',
         outcome: {
           text: '你接過一件百衲衣。葛百衲說：「每一塊補丁，都是一個人的命。」',
-          effects: [join('baina'), master('ge_baina'), xp('shijing', 3), rel('ge_baina', 20)],
+          effects: [goTo('xiangyang'), join('baina'), master('ge_baina'), xp('shijing', 3), rel('ge_baina', 20)],
           recap: { weight: 2, text: '{ageCn}歲那年，你穿上百衲衣，入了葛百衲的百衲會。' },
         },
       },

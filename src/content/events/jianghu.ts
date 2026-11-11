@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, align, chiv, danshi, die, fame, flag, health, item, join, leaveSect, master, meet, money, rel, wuxing, xinxing, xp,
+  add, align, chiv, danshi, die, fame, flag, health, item, join, later, leaveSect, master, meet, money, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const jianghuEvents: GameEvent[] = [
@@ -41,12 +41,12 @@ export const jianghuEvents: GameEvent[] = [
           {
             if: { hasSect: true },
             text: '你接過令牌，第二天就不辭而別。從此師門的名冊上，劃掉了你的名字。',
-            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), flag('broke_with_sect'), item('xueyi_ling')],
+            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), flag('broke_with_sect'), item('xueyi_ling'), later('xueyi_exposed', 3, 8, 12)],
             recap: { weight: 4, text: '{ageCn}歲那年，你背棄師門，接下了血衣樓的令牌。' },
           },
           {
             text: '令牌是冰的。無面客站起身：「從今天起，你沒有名字了。」',
-            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), item('xueyi_ling')],
+            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), item('xueyi_ling'), later('xueyi_exposed', 3, 8, 12)],
             recap: { weight: 4, text: '{ageCn}歲那年，你接下了血衣樓的令牌。' },
           },
         ],

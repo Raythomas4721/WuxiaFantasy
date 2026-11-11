@@ -11,17 +11,30 @@ export const historyEvents: GameEvent[] = [
     kind: 'normal',
     title: '鐵槍韓守義',
     weight: 14,
-    conditions: { minAge: 16, maxAge: 55, npcPresent: 'han_shouyi', hasSect: false },
+    conditions: {
+      minAge: 16,
+      maxAge: 55,
+      hasSect: false,
+      any: [{ npcPresent: 'han_shouyi' }, { ambitions: ['nation'], npcAlive: ['han_shouyi'], minYear: 1250 }],
+    },
     tags: ['war', 'social'],
     enterEffects: [meet('han_shouyi')],
-    text: '城門口豎起了一桿大旗，上面寫著一個「義」字。旗下站著一個鐵塔似的漢子，手裡一桿黑沉沉的鐵槍。他對圍觀的人說：「朝廷的兵守城牆，咱們守的是城裡的人。」他叫韓守義。',
+    text: [
+      {
+        if: { regions: ['xiangyang'] },
+        text: '城門口豎起了一桿大旗，上面寫著一個「義」字。旗下站著一個鐵塔似的漢子，手裡一桿黑沉沉的鐵槍。他對圍觀的人說：「朝廷的兵守城牆，咱們守的是城裡的人。」他叫韓守義。',
+      },
+      {
+        text: '鎮上來了一隊從襄陽南下募兵的人，領頭的是個鐵塔似的漢子，手裡一桿黑沉沉的鐵槍。他站在茶館門口說：「朝廷的兵守城牆，咱們守的是城裡的人。想來的，跟我回襄陽。」他叫韓守義。',
+      },
+    ],
     choices: [
       {
         id: 'enlist',
         text: '投軍',
         outcome: {
           text: '韓守義拍了拍你的肩膀，差點把你拍趴下：「好！明天開始，跟我學槍。」',
-          effects: [join('yijun'), rel('han_shouyi', 20), xp('shoucheng', 3), flag('joined_yijun')],
+          effects: [goTo('xiangyang'), join('yijun'), rel('han_shouyi', 20), xp('shoucheng', 3), flag('joined_yijun')],
           recap: { weight: 2, text: '{ageCn}歲那年，你投入了鐵槍韓守義的襄陽義軍。' },
         },
       },

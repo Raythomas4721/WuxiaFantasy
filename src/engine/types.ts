@@ -490,7 +490,8 @@ export interface Content {
   items: Record<string, ItemDef>;
   market: MarketItemDef[];
   /** 戰亂毀掉產業：某一年，某地區的產業全沒了。 */
-  propertyRisks: { year: number; region: string; text: string }[];
+  /** 戰亂毀掉產業；kinds 沒寫就是全部（田地搬不走，有些戰亂只燒得掉鋪面）。 */
+  propertyRisks: { year: number; region: string; text: string; kinds?: PropertyKind[] }[];
   backgrounds: Record<string, BackgroundDef>;
   regions: Record<string, RegionDef>;
   traits: Record<string, TraitDef>;

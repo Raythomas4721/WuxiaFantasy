@@ -69,7 +69,10 @@ export const market: MarketItemDef[] = [
 
 export const propertyRisks = [
   { year: 1273, region: 'xiangyang', text: '襄陽城破。你在襄陽的產業，連同那條街，都在大火裡燒成了白地。' },
-  { year: 1276, region: 'jiangnan', text: '元軍南下，江南兵荒馬亂。你在江南的產業被亂兵搶的搶、燒的燒，什麼也沒剩下。' },
+  {
+    year: 1276, region: 'jiangnan', kinds: ['shop' as const],
+    text: '元軍南下，江南兵荒馬亂。你在江南的鋪子被亂兵搶的搶、燒的燒，什麼也沒剩下。田地搬不走，換了朝廷，地契照樣算數。',
+  },
 ];
 
 export const items: Record<string, ItemDef> = {

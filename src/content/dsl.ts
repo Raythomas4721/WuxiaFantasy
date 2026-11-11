@@ -41,5 +41,7 @@ export const next = (event: string): GameEffect => ({ type: 'chain', event });
 /** 牌庫：加入一張牌；給了 remove 就換掉那一張。 */
 export const card = (add: string, remove?: string): GameEffect => ({ type: 'card', add, remove });
 export const meet = (npc: string): GameEffect => ({ type: 'meet', npc });
+/** 產業：田地、鋪面。 */
+export const property = (kind: 'land' | 'shop', delta = 1): GameEffect => ({ type: 'property', kind, delta });
 export const resetStreak = (): GameEffect => ({ type: 'resetStreak' });
 export const die = (cause: string): GameEffect => ({ type: 'die', cause });

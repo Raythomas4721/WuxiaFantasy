@@ -81,10 +81,13 @@ describe('心事', () => {
     const s = living(20, 'work');
     s.player.birthYear = 1230;
     s.prevYear = 1249;
+    s.flags.seek_sword = true;
+    const sword = CONTENT.threads.find((t) => t.id === 'seek_sword')!;
+    expect(threadFocuses(s, sword)).toEqual(expect.arrayContaining(['travel']));
+    // 醉劍會自己找上門（排程事件），選什麼方針都一樣，不標示
     s.flags.shen_wine = 1;
+    s.scheduled = [{ event: 'shen_wine_2', due: 1252, expire: 1260 }];
     const shen = CONTENT.threads.find((t) => t.id === 'shen')!;
-    expect(threadFocuses(s, shen)).toEqual(expect.arrayContaining(['travel', 'social']));
-    s.player.region = 'xiangyang';
     expect(threadFocuses(s, shen)).toEqual([]);
   });
 });

@@ -879,7 +879,7 @@ function loseProperties(s: GameState): void {
   for (const risk of CONTENT.propertyRisks) {
     if (risk.year <= s.prevYear || risk.year > year) continue;
     const before = s.player.properties ?? [];
-    const after = before.filter((x) => x.region !== risk.region);
+    const after = before.filter((x) => x.region !== risk.region || (risk.kinds && !risk.kinds.includes(x.kind)));
     if (after.length === before.length) continue;
     s.player.properties = after;
     s.notices = [...(s.notices ?? []), risk.text];
