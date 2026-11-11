@@ -6,7 +6,7 @@ import { CONTENT } from '../content';
 import { levelFromXp, skillLevel } from './conditions';
 import { REALM, baseCardId, cardSkill, getCard, legacyDeck, mainSkill, upgradeCount } from './duel';
 import type { Rng } from './rng';
-import { getTalent, perk, talentChoices } from './talents';
+import { getTalent, perk, perk2, talentChoices } from './talents';
 import { LEVEL_NAMES } from './describe';
 import type { DeckTask, GameState } from './types';
 
@@ -157,7 +157,7 @@ export function rewardOptions(
 /** 戰後選牌：精英的獎勵多半是武學的牌；首領給的牌已經升級過一次。就地修改。 */
 export function pushDuelReward(s: GameState, rng: Rng, foeName: string, tier?: 'minor' | 'elite' | 'boss'): void {
   const boost = tier === 'boss' ? DECK.bossSkillBoost : tier === 'elite' ? DECK.eliteSkillBoost : 1;
-  let options = rewardOptions(s, rng, DECK.rewardOptions, boost, tier ?? 'minor');
+  let options = rewardOptions(s, rng, DECK.rewardOptions + (perk2(s, 'fuyuan') ? 1 : 0), boost, tier ?? 'minor');
   if (tier === 'boss') options = options.map((id) => `${id}+`);
   if (options.length === 0) return;
   pushTask(s, {

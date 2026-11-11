@@ -551,6 +551,12 @@ export interface Passive {
   desperateBonus?: number;
   /** 前 N 次點穴、下毒無效（心性）。 */
   resist?: number;
+  /** 每回合開始回 N 氣血（根骨 10）。 */
+  regen?: number;
+  /** 「傷」「心魔」發作不扣氣血（心性 10）。 */
+  curseNoHp?: number;
+  /** 爆擊率加成（福緣 10），0.05 = 5%。 */
+  critBonus?: number;
 }
 
 /** 武學心得（v0.5 培育）：某門武學到了某個境界，二選一。 */

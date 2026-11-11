@@ -608,6 +608,32 @@ small {
   font-variant-numeric: tabular-nums;
 }
 
+.stat.on .stat-value {
+  color: var(--gold);
+}
+
+.stat.on2 .stat-value {
+  color: var(--accent);
+}
+
+.stat-perks {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+
+.stat-perks summary {
+  cursor: pointer;
+  color: var(--ink-3);
+}
+
+.stat-perks ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1em;
+  display: grid;
+  gap: 0.25rem;
+}
+
 .status-row {
   display: flex;
   justify-content: space-between;
@@ -1754,6 +1780,10 @@ small {
 
 .stat-alloc-list li.on .stat-alloc-perk {
   color: var(--gold);
+}
+
+.stat-alloc-list li.on2 {
+  border-color: var(--accent);
 }
 
 @media (max-width: 520px) {

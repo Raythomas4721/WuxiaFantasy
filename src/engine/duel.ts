@@ -7,7 +7,7 @@
 import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, npcAlive, skillLevel } from './conditions';
 import { Rng } from './rng';
-import { growthPassive, talentHp } from './talents';
+import { allyRelation, growthPassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
 import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
 import { allies } from '../content/allies';
@@ -293,7 +293,7 @@ function drawCards(d: DuelState, n: number, rng: Rng): void {
     const c = getCard(id);
     if (c.kind === 'curse') {
       if (c.onDraw?.energy) d.me.energy = Math.max(0, d.me.energy - c.onDraw.energy);
-      if (c.onDraw?.hp) d.me.hp -= c.onDraw.hp;
+      if (c.onDraw?.hp && !d.me.passive?.curseNoHp) d.me.hp -= c.onDraw.hp;
       d.log.push({ who: 'sys', text: `【${c.name}】${c.flavor}（${cardText(c).replace(/^抽到時發作：|，然後補抽一張$/g, '')}）` });
       burned.push(id);
       i--;
@@ -644,7 +644,7 @@ function pickAlly(d: DuelState, def: OpponentDef, s: GameState): void {
     .filter((a) => (a.who === 'companion' ? true : npcAlive(s, a.who)))
     .map((a) => {
       const rel = s.relations[a.who] ?? 0;
-      const ok = rel >= a.minRelation || (a.who === 'companion' && Boolean(s.flags.took_blame));
+      const ok = rel >= allyRelation(s, a.minRelation) || (a.who === 'companion' && Boolean(s.flags.took_blame));
       return { a, rel, ok };
     })
     .filter((x) => x.ok)
@@ -806,7 +806,7 @@ const VITALS = ['咽喉', '心口', '太陽穴', '後頸', '丹田'];
 type Spot = { kind: 'crit' | 'wrist' | 'knee'; name: string };
 
 export function critChance(d: DuelState, c: CardDef): number {
-  return CRIT.base + (d.foe.exposed > 0 ? CRIT.exposed : 0) + (c.tag === '針' ? CRIT.needle : 0) + (d.seeTraps ? CRIT.sharpEye : 0);
+  return CRIT.base + (d.foe.exposed > 0 ? CRIT.exposed : 0) + (c.tag === '針' ? CRIT.needle : 0) + (d.seeTraps ? CRIT.sharpEye : 0) + (d.me.passive?.critBonus ?? 0);
 }
 
 /** 出招前擲一次：打中要害就把這一招的傷害放大。 */
@@ -988,6 +988,11 @@ export function endRound(state: DuelState, rng: Rng): DuelState {
     checkPhase(d);
     checkOver(d);
     if (d.over) return d;
+  }
+  const regen = Math.min(d.me.passive?.regen ?? 0, d.me.max - d.me.hp);
+  if (regen > 0) {
+    d.me.hp += regen;
+    say(d, 'sys', `你調勻呼吸，回了 ${regen} 氣血。`);
   }
   d.me.energy = (d.me.energyMax ?? DUEL.energy) + d.me.energyNext;
   d.me.energyNext = 0;

@@ -7,7 +7,7 @@ import { DUEL, REALM, mainSkill } from '../engine/duel';
 import { chooseMainSkill } from '../engine/game';
 import { activeThreads, ambitionView } from '../engine/threads';
 import { DeckList } from './DeckPanel';
-import { getTalent, talentHp } from '../engine/talents';
+import { STAT_PERK2_AT, STAT_PERKS, STAT_PERK_AT, getTalent, talentHp } from '../engine/talents';
 import type { GameState } from '../engine/types';
 import { ThreadList } from './FocusView';
 
@@ -56,12 +56,22 @@ export function StatusPanel({ state, act }: { state: GameState; act?: (fn: () =>
       <section className="status-block">
         <div className="stat-grid">
           {STAT_ORDER.map((k) => (
-            <div key={k} className="stat">
+            <div key={k} className={`stat${p.stats[k] >= STAT_PERK2_AT ? ' on2' : p.stats[k] >= STAT_PERK_AT ? ' on' : ''}`}>
               <span className="stat-name">{STAT_NAMES[k]}</span>
               <span className="stat-value">{p.stats[k]}</span>
             </div>
           ))}
         </div>
+        <details className="stat-perks">
+          <summary>屬性效果（{STAT_PERK_AT} 點、{STAT_PERK2_AT} 點各有一層，最高 15）</summary>
+          <ul>
+            {STAT_ORDER.map((k) => (
+              <li key={k}>
+                <b>{STAT_NAMES[k]}</b> {STAT_PERKS[k]}
+              </li>
+            ))}
+          </ul>
+        </details>
       </section>
 
       <section className="status-block">

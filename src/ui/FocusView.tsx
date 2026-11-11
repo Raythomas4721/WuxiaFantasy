@@ -8,7 +8,7 @@ import { LIFE_STAGES, chapterTitle, stageIndex } from '../engine/stages';
 import { chineseNumber } from '../engine/text';
 import { activeThreads, ambitionView, type ThreadView } from '../engine/threads';
 import { STAT_NAMES, STAT_ORDER } from '../engine/describe';
-import { STAT_MAX, STAT_PERKS, STAT_PERK_AT } from '../engine/talents';
+import { STAT_MAX, STAT_PERK2_AT, STAT_PERKS, STAT_PERK_AT } from '../engine/talents';
 import type { FocusDef, GameState, NodeKind } from '../engine/types';
 
 const MAX_THREADS = 4;
@@ -157,7 +157,7 @@ function StatAllocator({ state, act }: Props) {
       </h3>
       <ul className="stat-alloc-list">
         {STAT_ORDER.map((k) => (
-          <li key={k} className={st[k] >= STAT_PERK_AT ? 'on' : ''}>
+          <li key={k} className={st[k] >= STAT_PERK2_AT ? 'on on2' : st[k] >= STAT_PERK_AT ? 'on' : ''}>
             <span className="stat-alloc-name">
               {STAT_NAMES[k]} <b>{st[k]}</b>
             </span>
