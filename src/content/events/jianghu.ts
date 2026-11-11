@@ -6,6 +6,59 @@ import {
 } from '../dsl';
 
 export const jianghuEvents: GameEvent[] = [
+  {
+    id: 'wumian_witness',
+    kind: 'normal',
+    title: '白面具',
+    weight: 5,
+    weightMods: [{ if: { flags: ['world_xueyi_rampant'] }, mult: 2 }, { if: { flags: ['world_xueyi_quiet'] }, mult: 0.4 }],
+    conditions: { minAge: 16, maxAge: 50, minYear: 1245, minAlignment: 0, not: { sects: ['xueyi'] }, notFired: ['xueyi_invite'] },
+    tags: ['feud', 'tavern', 'travel'],
+    enterEffects: [meet('wumian')],
+    text: '你在客棧借宿的那一夜，隔壁住著一位赴宴歸來的掌門。三更時分，你被一聲極輕的悶響驚醒。推開窗，對面的屋簷上站著一個人，月光照在他臉上：那是一張沒有五官的白面具。他朝你這邊偏了偏頭，像是在記住你。',
+    choices: [
+      {
+        id: 'chase',
+        text: '翻上屋頂追他',
+        check: {
+          stats: ['danshi', 'gengu'],
+          difficulty: 7,
+          success: {
+            text: '你追了三條街，一把扯下他的一截袖子。他回頭看了你一眼，消失在夜色裡。那截黑袖子的裡襯，縫著一道血紅的布條。',
+            effects: [fame(4), chiv(3), rel('wumian', -30), flag('wumian_marked')],
+            recap: { weight: 3, text: '{ageCn}歲那年，你在客棧的屋頂上追過血衣樓的無面客，扯下了他一截袖子。' },
+          },
+          failure: {
+            text: '你剛翻上屋簷，一根細針擦著你的耳朵釘進了瓦裡。等你回過神，屋頂上已經空無一人。',
+            effects: [health(-15), rel('wumian', -10)],
+          },
+        },
+      },
+      {
+        id: 'save',
+        text: '先去隔壁救人',
+        check: {
+          stats: ['xinxing'],
+          difficulty: 6,
+          skill: 'baicao',
+          success: {
+            text: '掌門的胸口插著一根細如牛毛的針。你按住傷口，喊醒了整間客棧。天亮時他還活著，握著你的手，說不出話。',
+            effects: [chiv(6), fame(3), align(3)],
+            recap: { weight: 2, text: '{ageCn}歲那年，你從血衣樓的針下救回了一位掌門。' },
+          },
+          failure: {
+            text: '你趕到時，掌門已經沒了氣息。床頭放著一件疊得整整齊齊的血衣。',
+            effects: [xinxing(1)],
+          },
+        },
+      },
+      {
+        id: 'hide',
+        text: '關上窗，當作什麼也沒看見',
+        outcome: { text: '你一夜沒睡。第二天，整條街都在傳，那位掌門死在了自己的床上。', effects: [flag('ignored_wumian')] },
+      },
+    ],
+  },
   // ---- 血衣樓 ----
   {
     id: 'xueyi_invite',

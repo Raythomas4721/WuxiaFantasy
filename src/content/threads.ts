@@ -133,6 +133,14 @@ export const threads: ThreadDef[] = [
     text: '老總鏢頭的腿傷一年比一年重。鏢局上下都在猜，那面鏢旗往後要交到誰手上。',
     advances: ['escort_chief'],
   },
+  {
+    id: 'wumian',
+    title: '白面具',
+    priority: 60,
+    conditions: { flags: ['wumian_marked'], notFlags: ['wumian_defeated'], notFired: ['b_xueyi_doom'] },
+    text: '你扯下過無面客的一截袖子。血衣樓的人，從不忘記。',
+    advances: ['b_xueyi_doom'],
+  },
   // ---- 錯過就沒有的機緣 ----
   {
     id: 'yaogu',

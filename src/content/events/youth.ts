@@ -594,8 +594,8 @@ export const youthEvents: GameEvent[] = [
     id: 'baina_meet',
     kind: 'normal',
     title: '百衲翁',
-    weight: 9,
-    conditions: { minAge: 12, maxAge: 35, npcPresent: 'ge_baina' },
+    weight: 13,
+    conditions: { minAge: 12, maxAge: 40, npcPresent: 'ge_baina' },
     tags: ['social', 'village'],
     text: '城隍廟前，幾個官差正在驅趕乞丐。一個穿著百衲衣的老乞丐被推倒在地，碗裡的銅錢滾了一地。',
     choices: [

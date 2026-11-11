@@ -145,7 +145,7 @@ function effectText(e: CardEffect): string[] {
   if (e.breakGuard) out.push('打掉護體');
   if (e.breakTrap) out.push('破除一張暗招');
   if (e.seal) out.push(`點穴：對手這一招每一擊 −${e.seal}`);
-  if (e.stun) out.push('定身：對手這一招使不出來（絕技只減半）');
+  if (e.stun) out.push('對手這一招使不出來（絕技只減半）');
   if (e.cleanse) out.push(`解掉牌堆裡 ${e.cleanse} 張「傷」「心魔」`);
   if (e.ward) out.push(e.ward > 1 ? `之後 ${e.ward} 次點穴、下毒無效` : '下一次點穴、下毒無效');
   if (e.boostNext) {

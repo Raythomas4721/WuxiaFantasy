@@ -163,7 +163,7 @@ export const npcs: Record<string, NpcDef> = {
     title: '百衲翁',
     desc: '百衲會首領，穿著一身百衲衣的老乞丐。襄陽城裡一半的流民都聽他的。',
     deathYear: 1274,
-    presence: [{ from: 1235, to: 1274, regions: ['xiangyang'] }],
+    presence: [{ from: 1235, to: 1274, regions: ['xiangyang', 'jiangnan'] }],
     codex: true,
   },
   wumian: {

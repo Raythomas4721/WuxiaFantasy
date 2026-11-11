@@ -611,8 +611,16 @@ export const nodeEvents: GameEvent[] = [
     node: { tier: 'boss', stage: 4 },
     title: '血衣樓之禍',
     priority: 15,
-    conditions: { any: [{ flags: ['joined_xueyi'] }, { flags: ['exposed_xueyi'] }, { flags: ['silenced_witness'] }, { items: ['xueyi_ling'] }] },
-    text: '那天夜裡，你家的燈全熄了。院子中央站著一個人，臉上是一張沒有五官的白面具。血衣樓的事，從來沒有了結的時候——今天，他是來收帳的。',
+    conditions: {
+      any: [{ flags: ['joined_xueyi'] }, { flags: ['exposed_xueyi'] }, { flags: ['silenced_witness'] }, { flags: ['wumian_marked'] }, { items: ['xueyi_ling'] }],
+    },
+    text: [
+      {
+        if: { flags: ['wumian_marked'], notFlags: ['joined_xueyi'] },
+        text: '那天夜裡，你家的燈全熄了。院子中央站著一個人，臉上是一張沒有五官的白面具，左邊的袖子短了一截。「當年屋頂上，你扯走了我的東西。」他的聲音很輕，「我來拿回來。」',
+      },
+      { text: '那天夜裡，你家的燈全熄了。院子中央站著一個人，臉上是一張沒有五官的白面具。血衣樓的事，從來沒有了結的時候——今天，他是來收帳的。' },
+    ],
     choices: [
       {
         id: 'fight',
