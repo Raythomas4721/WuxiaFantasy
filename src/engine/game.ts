@@ -11,6 +11,7 @@ import { applyEffects, killPlayer, switchMainSkill, withReputation } from './eff
 import { MARKET } from '../content/market';
 import { createDuel, endRound, fighterFor, healthAfter, mainSkill, opponentLevel, playCard, yieldDuel } from './duel';
 import { DECK, pushDuelReward, pushTask, startingDeck, upgradableIndexes } from './deck';
+import { playSimpleRound } from './duelAI';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
 import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
@@ -814,6 +815,26 @@ export function duelYield(state: GameState): GameState {
   return duelStep(state, (d) => yieldDuel(d));
 }
 
+/** 速戰速決最多替你打幾回合。 */
+const QUICK_ROUNDS = 60;
+
+/** 速戰速決：只有不比你強的小戰可以（精英、首領、生死之戰都得自己打）。 */
+export function canQuickDuel(s: GameState): boolean {
+  const d = s.duel;
+  if (s.phase !== 'duel' || !d || d.over || d.lethal || !s.current) return false;
+  return getEvent(s.current.eventId).node?.tier === 'minor' && d.level <= mainSkill(s).level;
+}
+
+/** 速戰速決：照直覺把這一場打完（和自動遊玩同一套打法），停在結局畫面。 */
+export function duelQuick(state: GameState): GameState {
+  if (!canQuickDuel(state)) throw new Error('這一場不能速戰速決');
+  return duelStep(state, (d, rng) => {
+    let now = d;
+    for (let i = 0; i < QUICK_ROUNDS && !now.over; i++) now = playSimpleRound(now, rng);
+    return now.over ? now : { ...now, over: 'lose' };
+  });
+}
+
 /** 過招結束後收招：損失的氣血換算成健康，再走事件的成功或失敗結果。 */
 export function finishDuel(state: GameState): GameState {
   if (state.phase !== 'duel' || !state.duel?.over || !state.current) throw new Error('過招還沒結束');
@@ -871,7 +892,7 @@ export function finishDuel(state: GameState): GameState {
 export function timeStep(s: GameState): number {
   const age = s.player.age;
   if (s.flags.retired || s.flags.returned_home) return 5;
-  if (age < 6) return 3;
+  if (age < 6) return 2;
   if (age === 6) return 1;
   if (age < 13) return 2;
   if (age < 19) return 1;

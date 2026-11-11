@@ -5,7 +5,7 @@ import { DUEL, canPlay, cardSkill, cardText, getCard, intentText, mainSkill, pre
 import { DuelStage, type Weapon } from './DuelStage';
 import { setSfxEnabled, sfx, sfxEnabled } from './sfx';
 import { Tips, type TipDef } from './Tips';
-import { duelEndRound, duelPlay, duelYield, finishDuel } from '../engine/game';
+import { canQuickDuel, duelEndRound, duelPlay, duelQuick, duelYield, finishDuel } from '../engine/game';
 import type { CardDef, CardKind, DuelState, GameState, IntentKind, TrapTrigger } from '../engine/types';
 
 /** 小人手上拿什麼：看主修的武學。 */
@@ -101,7 +101,7 @@ export function DuelView({ state, act }: Props) {
       ) : (
         <>
           <IntentMini d={d} />
-          <Tips tips={duelTips(d)} />
+          <Tips tips={duelTips(d, canQuickDuel(state))} />
           {press.peek !== undefined && d.me.hand[press.peek] && (
             <CardPeek d={d} index={press.peek} onClose={press.close} />
           )}
@@ -133,6 +133,15 @@ export function DuelView({ state, act }: Props) {
               ))}
               <span className="muted">手牌 {d.me.hand.length}／{d.me.handMax ?? DUEL.handMax}</span>
             </span>
+            {canQuickDuel(state) && (
+              <button
+                className="btn btn-ghost btn-small"
+                title="照直覺把這一場打完，直接看結果"
+                onClick={() => act(() => duelQuick(state))}
+              >
+                速戰速決
+              </button>
+            )}
             <button
               className="btn btn-ghost btn-small"
               title={d.lethal ? '保住性命，但傷得更重' : undefined}
@@ -238,7 +247,7 @@ function PileView({ d, pile, onPick }: { d: DuelState; pile: Pile; onPick: (p?: 
 }
 
 /** 過招的指點：由上往下，挑第一則符合、還沒看過的。 */
-function duelTips(d: DuelState): TipDef[] {
+function duelTips(d: DuelState, quick: boolean): TipDef[] {
   const hand = d.me.hand.map((id) => getCard(id));
   const strike = STRIKES.includes(d.foe.intent.kind);
   const combo = hand.find((c) => c.after && hand.some((o) => o !== c && o.tag && c.after!.tags.includes(o.tag)));
@@ -292,6 +301,11 @@ function duelTips(d: DuelState): TipDef[] {
       id: 'duel-combo',
       when: Boolean(combo),
       text: combo ? `「${combo.name}」接在〈${combo.after!.tags.join('、')}〉之後出會更強：先出那一路的牌，再出它。` : '',
+    },
+    {
+      id: 'duel-quick',
+      when: quick && d.round >= 2,
+      text: '不比你強的小戰可以按「速戰速決」：照直覺把這一場打完，直接看結果。贏面大，但通常會比自己出牌多受一點傷。',
     },
     {
       id: 'duel-foe-block',

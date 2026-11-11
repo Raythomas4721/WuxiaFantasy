@@ -162,8 +162,16 @@ export const childhoodEvents: GameEvent[] = [
     priority: 3,
     conditions: { minAge: 3, maxAge: 8 },
     tags: ['social'],
-    vars: { toy: ['竹蜻蜓', '泥娃娃', '小木馬', '撥浪鼓', '剛撿到的漂亮石子'] },
-    text: '隔壁搬來一戶人家，家裡的孩子叫{companion}，比你大半歲，{companionTrait}。第一次見面，{companion}就搶走了你手裡的{toy}。',
+    vars: {
+      toy: ['竹蜻蜓', '泥娃娃', '小木馬', '撥浪鼓', '剛撿到的漂亮石子'],
+      scene: [
+        '隔壁搬來一戶人家，家裡的孩子叫{companion}，比你大半歲，{companionTrait}。第一次見面，{companion}就搶走了你手裡的{toy}。',
+        '廟會上人擠人，你被擠到了戲台底下。那裡已經蹲著一個孩子，叫{companion}，{companionTrait}。{companion}看了你一眼，伸手就拿走了你手裡的{toy}。',
+        '{mother}帶你去河邊洗衣裳。洗衣的人裡有一個也帶著孩子，叫{companion}，比你大半歲，{companionTrait}。大人們還在說話，{companion}已經把你的{toy}搶了過去。',
+        '村口的大樹下，總有個孩子一個人蹲著看螞蟻。大人說那是新搬來那戶人家的，叫{companion}，{companionTrait}。你湊過去看，{companion}頭也不抬，一把抓走了你手裡的{toy}。',
+      ],
+    },
+    text: '{scene}',
     choices: [
       {
         id: 'fight',
@@ -574,6 +582,426 @@ export const childhoodEvents: GameEvent[] = [
         outcome: {
           text: '你在家裡關了兩個月。等門再打開時，巷子裡少了好幾戶人家。',
           effects: [xinxing(1), flag('plague_hid')],
+        },
+      },
+    ],
+  },
+  // ---- 幼年（七歲以前）----
+  {
+    id: 'kid_lost',
+    kind: 'normal',
+    title: '走失',
+    weight: 10,
+    conditions: { minAge: 2, maxAge: 6 },
+    tags: ['family'],
+    vars: { fair: ['元宵的燈會', '三月的廟會', '趕集的日子', '端午的龍舟會'] },
+    text: '{fair}上，你鬆開了大人的手，去追一隻滾遠的燈籠。等你抱著燈籠回過頭，四周全是不認得的腿。',
+    choices: [
+      {
+        id: 'wait',
+        text: '站在原地不動，等大人回來找',
+        outcome: {
+          text: '你抱著燈籠站了很久，腿都麻了，就是不肯挪一步。{mother}找到你的時候，哭得比你還厲害。',
+          effects: [xinxing(1)],
+        },
+      },
+      {
+        id: 'walk',
+        text: '自己認路走回家',
+        check: {
+          stats: ['wuxing', 'fuyuan'],
+          difficulty: 5,
+          success: {
+            text: '你記得來的時候經過一座石橋、一棵歪脖子樹。天黑前，你自己走到了家門口。全家人都嚇傻了。',
+            effects: [danshi(1), wuxing(1)],
+            recap: { weight: 1, text: '很小的時候，你在人堆裡走丟了，自己認路走回了家。' },
+          },
+          failure: {
+            text: '你越走越遠，最後蹲在一座不認得的橋上哭。一個挑擔子的貨郎把你送了回去。',
+            effects: [danshi(1), health(-5)],
+          },
+        },
+      },
+      {
+        id: 'candy',
+        text: '跟著捏糖人的老頭走',
+        outcome: {
+          text: '老頭捏了一隻糖老虎給你，一路問你家在哪裡，把你送到了巷口。他走的時候，你才想起忘了問他叫什麼。',
+          effects: [fuyuan(1), meili(1)],
+        },
+      },
+    ],
+  },
+  {
+    id: 'kid_stories',
+    kind: 'normal',
+    title: '夏夜',
+    weight: 10,
+    conditions: { minAge: 2, maxAge: 6 },
+    tags: ['family'],
+    text: '夏天的夜裡熱得睡不著，巷子裡的孩子都搬了竹蓆到曬穀場上乘涼。隔壁的老奶奶搖著蒲扇問：「今天想聽哪一段？」',
+    choices: [
+      {
+        id: 'hero',
+        text: '「要聽大俠的！」',
+        outcome: {
+          text: '她講了一個使劍的人，一個人守住一座橋的故事。你聽得忘了打蚊子。第二天，你撿了根樹枝，在院子裡比劃了一整天。',
+          effects: [danshi(1), flag('saw_martial')],
+        },
+      },
+      {
+        id: 'healer',
+        text: '「要聽神醫的！」',
+        outcome: {
+          text: '她講了一個走方郎中用一根針救活死人的故事。你聽完，把院子裡的草一棵一棵拔起來聞，被{mother}打了手心。',
+          effects: [xinxing(1), xp('baicao', 1)],
+        },
+      },
+      {
+        id: 'ghost',
+        text: '「要聽鬼故事！」',
+        outcome: {
+          text: '別的孩子都鑽進了大人懷裡，只有你睜大眼睛聽到最後，還追問：「然後呢？」老奶奶笑得直搖頭，說這孩子膽子是鐵打的。',
+          effects: [danshi(1), fuyuan(1)],
+        },
+      },
+      {
+        id: 'sleep',
+        text: '還沒聽完就睡著了',
+        outcome: { text: '你在蒲扇的風裡睡著了。那是你這輩子睡得最沉的幾個夜晚。', effects: [health(5), xinxing(1)] },
+      },
+    ],
+  },
+  // ---- 童年（七到十二歲）----
+  {
+    id: 'kid_kite',
+    kind: 'normal',
+    title: '紙鳶',
+    weight: 11,
+    conditions: { minAge: 7, maxAge: 12 },
+    tags: ['social', 'village'],
+    text: '清明前後，你和{companion}糊了一隻紙鳶，放得比誰都高。一陣怪風吹來，線斷了，紙鳶掛在了祠堂的屋脊上。看祠堂的老頭出了名的兇。',
+    choices: [
+      {
+        id: 'climb',
+        text: '爬上去拿',
+        check: {
+          stats: ['gengu', 'danshi'],
+          difficulty: 5,
+          success: {
+            text: '你踩著牆邊的老樹翻上了屋頂，拿到紙鳶，還順便看了一眼全村的屋頂。{companion}在底下看得嘴都合不上。',
+            effects: [danshi(1), gengu(1), rel('companion', 8)],
+          },
+          failure: {
+            text: '瓦片滑了，你連人帶紙鳶摔進了草垛。看祠堂的老頭提著掃帚追了你們半條街。',
+            effects: [health(-8), danshi(1), rel('companion', 8)],
+          },
+        },
+      },
+      {
+        id: 'pole',
+        text: '找兩根竹竿接起來勾',
+        outcome: {
+          text: '你把兩根晾衣竿用草繩綁在一起，試到第七次，把紙鳶勾了下來。{companion}說，你這腦袋不去讀書可惜了。',
+          effects: [wuxing(1), rel('companion', 5)],
+        },
+      },
+      {
+        id: 'ask',
+        text: '硬著頭皮去敲祠堂的門',
+        outcome: {
+          text: '老頭瞪了你半天，一聲不吭地搬來梯子，把紙鳶拿下來還給你，還塞了你們一人一塊麥芽糖。原來他只是長得兇。',
+          effects: [meili(1), xinxing(1)],
+        },
+      },
+    ],
+  },
+  {
+    id: 'kid_dog',
+    kind: 'normal',
+    title: '黃狗',
+    weight: 10,
+    conditions: { minAge: 7, maxAge: 12 },
+    tags: ['village', 'medicine', 'work'],
+    text: '柴堆後面躲著一條瘦得皮包骨的黃狗，後腿上有一道很深的口子，像是被人用鋤頭砍的。牠看見你，往後縮了縮，喉嚨裡嗚嗚地響。',
+    choices: [
+      {
+        id: 'keep',
+        text: '偷偷拿飯餵牠，養在柴房',
+        outcome: {
+          text: '你每天把自己的飯省下半碗。過了一個月，牠的腿好了，從此你走到哪裡，牠就跟到哪裡。',
+          effects: [xinxing(1), fuyuan(1), flag('kid_dog')],
+          recap: { weight: 1, text: '{ageCn}歲那年，你撿了一條受傷的黃狗，把自己的飯省下來餵牠。' },
+        },
+      },
+      {
+        id: 'heal',
+        text: '找草藥替牠包紮，等牠好了就放走',
+        outcome: {
+          text: '你嚼爛了止血的草葉，敷在傷口上。牠疼得直抖，卻沒有咬你。傷好的那天，牠在村口回頭看了你很久。',
+          effects: [xp('baicao', 1), chiv(2)],
+        },
+      },
+      {
+        id: 'away',
+        text: '怕牠咬人，拿棍子把牠趕走',
+        outcome: { text: '牠一瘸一拐地走了。那天晚上下了很大的雨。', effects: [danshi(1)] },
+      },
+    ],
+  },
+  {
+    id: 'kid_ruler',
+    kind: 'normal',
+    title: '戒尺',
+    weight: 14,
+    conditions: { minAge: 7, maxAge: 12, focus: ['kid_study'] },
+    tags: ['study'],
+    text: '先生的硯台不知被誰打翻了，墨汁潑了半本書。先生氣得鬍子都在抖，戒尺往桌上一拍，指著你：「昨天最後一個走的，是不是你？」不是你。可是你知道是誰。',
+    choices: [
+      {
+        id: 'take',
+        text: '伸出手，替那個人挨這幾下',
+        outcome: {
+          text: '你挨了十下戒尺，手腫了三天。放學後，打翻硯台的那個孩子追上來，把他最寶貝的一顆彈珠塞進了你手裡。',
+          effects: [xinxing(1), chiv(3), meili(1), health(-3)],
+        },
+      },
+      {
+        id: 'argue',
+        text: '「不是我。先生可以看看我的袖口，一點墨都沒有。」',
+        check: {
+          stats: ['wuxing'],
+          difficulty: 5,
+          success: {
+            text: '先生愣了一下，真的把每個人的袖口都看了一遍。事情查清楚了。那天以後，先生講到難的地方，總會先問你一句。',
+            effects: [wuxing(1), danshi(1)],
+          },
+          failure: {
+            text: '先生說你頂嘴，多打了五下。你咬著牙沒哭，心裡把那幾句話又想了一遍，覺得自己沒說錯。',
+            effects: [danshi(1), health(-5)],
+          },
+        },
+      },
+      {
+        id: 'tell',
+        text: '把真正打翻硯台的人說出來',
+        outcome: {
+          text: '那個孩子挨了打，從此見了你就繞路走。先生倒是誇了你一句誠實。',
+          effects: [xinxing(1), meili(-1), wuxing(1)],
+        },
+      },
+    ],
+  },
+  {
+    id: 'kid_peddler',
+    kind: 'normal',
+    title: '貨郎',
+    weight: 10,
+    conditions: { minAge: 7, maxAge: 12 },
+    tags: ['village', 'social', 'work'],
+    vars: { thing: ['一面磨得發亮的小銅鏡', '一把牛角小刀', '一本缺了封皮的畫冊', '一只會叫的陶哨'] },
+    text: '搖著撥浪鼓的貨郎又來了，擔子一放下，全村的孩子都圍了上去。你一眼就看中了{thing}，可是你口袋裡一文錢也沒有。',
+    choices: [
+      {
+        id: 'work',
+        text: '問貨郎：「我幫你挑一天擔子，換不換？」',
+        outcome: {
+          text: '你跟著他走了三個村子，肩膀磨破了皮。傍晚他把東西遞給你，又多給了兩文錢：「小小年紀，知道東西要拿力氣換，難得。」',
+          effects: [gengu(1), xinxing(1), money(2)],
+        },
+      },
+      {
+        id: 'bargain',
+        text: '拿自己攢的寶貝跟他換',
+        check: {
+          stats: ['meili'],
+          difficulty: 5,
+          success: {
+            text: '你把攢了一年的彈珠、蟬蛻全擺了出來，說得天花亂墜。貨郎被你逗笑了，東西給了你，寶貝一樣也沒收。',
+            effects: [meili(1), fuyuan(1)],
+          },
+          failure: { text: '貨郎看了看你那堆寶貝，搖搖頭，挑起擔子走了。你追著看了很遠。', effects: [xinxing(1)] },
+        },
+      },
+      {
+        id: 'steal',
+        text: '趁他不注意，摸走',
+        check: {
+          stats: ['danshi', 'fuyuan'],
+          difficulty: 6,
+          success: {
+            text: '你得手了。可是那東西藏在枕頭底下，你一次也不敢拿出來玩。',
+            effects: [danshi(1), chiv(-3)],
+          },
+          failure: {
+            text: '貨郎一把抓住了你的手腕。他沒有打你，只是把你送回了家。那天晚上，你跪到了半夜。',
+            effects: [chiv(-2), xinxing(1), health(-3)],
+          },
+        },
+      },
+    ],
+  },
+  // ---- 出身不同的童年 ----
+  {
+    id: 'kid_famine',
+    kind: 'normal',
+    title: '荒年',
+    weight: 14,
+    conditions: { minAge: 7, maxAge: 12, backgrounds: ['farmer'] },
+    tags: ['village', 'work', 'family'],
+    text: '這一年先是不下雨，後來又鬧蝗蟲。田裡收上來的穀子，交完租就不剩多少了。入冬以後，家裡的粥一天比一天稀，稀得照得見人影。',
+    choices: [
+      {
+        id: 'forage',
+        text: '天天上山挖野菜、掏鳥蛋',
+        outcome: {
+          text: '你認得了哪種草能吃、哪種吃了會拉肚子，手上全是被荊棘劃的口子。靠著你背回來的那些東西，一家人撐到了開春。',
+          effects: [gengu(1), xinxing(1), health(-5)],
+          recap: { weight: 2, text: '{ageCn}歲那年鬧荒，你天天上山挖野菜，一家人撐到了開春。' },
+        },
+      },
+      {
+        id: 'share',
+        text: '把自己那碗粥，分一半給{companion}',
+        outcome: {
+          text: '{companion}家裡已經斷了三天的糧。你把碗推過去，說自己吃過了。那年冬天你瘦得只剩一把骨頭，{companion}一輩子都記得那半碗粥。',
+          effects: [chiv(4), rel('companion', 20), health(-10)],
+          recap: { weight: 2, text: '{ageCn}歲那年鬧荒，你把自己的半碗粥分給了{companion}。' },
+        },
+      },
+      {
+        id: 'steal',
+        text: '半夜去挖地主家地裡的芋頭',
+        check: {
+          stats: ['danshi', 'fuyuan'],
+          difficulty: 5,
+          success: {
+            text: '你背回了半筐芋頭。{father}看著那筐芋頭，一句話也沒說，只是把最大的那個放進了你的碗裡。',
+            effects: [danshi(1), health(5)],
+          },
+          failure: {
+            text: '看田的狗追了你二里地，你摔進了溝裡，芋頭一個也沒帶回來。',
+            effects: [danshi(1), health(-10)],
+          },
+        },
+      },
+    ],
+  },
+  {
+    id: 'kid_ledger',
+    kind: 'normal',
+    title: '少了一箱',
+    weight: 14,
+    conditions: { minAge: 7, maxAge: 12, backgrounds: ['merchant'] },
+    tags: ['work', 'village', 'study'],
+    text: '你跟著夥計到碼頭點貨。船上卸下來四十箱瓷器，帳本上記的卻是四十一箱。管事的老夥計笑呵呵地說：「小東家數錯了吧？」你又數了一遍。沒有數錯。',
+    choices: [
+      {
+        id: 'speak',
+        text: '當著所有人的面說出來',
+        outcome: {
+          text: '碼頭上一下子安靜了。老夥計的臉漲得通紅。那箱瓷器當天晚上就「找到」了，他卻從此沒再對你笑過。',
+          effects: [danshi(1), wuxing(1), meili(-1)],
+        },
+      },
+      {
+        id: 'father',
+        text: '什麼也不說，回家悄悄告訴{father}',
+        outcome: {
+          text: '{father}聽完，摸了摸你的頭：「看得見，還沉得住氣。這比會算帳要緊。」過了半個月，那個老夥計自己辭了工。',
+          effects: [xinxing(1), wuxing(1)],
+          recap: { weight: 1, text: '{ageCn}歲那年，你在碼頭上數出帳本少了一箱貨。' },
+        },
+      },
+      {
+        id: 'trace',
+        text: '自己順著車轍去找那一箱',
+        check: {
+          stats: ['wuxing', 'danshi'],
+          difficulty: 5,
+          success: {
+            text: '你順著車轍找到了一間柴房，那箱瓷器就藏在稻草底下。{father}賞了你一串錢，說這是你這輩子賺的第一筆。',
+            effects: [wuxing(1), danshi(1), money(15), flag('keen_eye')],
+          },
+          failure: { text: '車轍到了大路上就亂了。你白白曬了一下午。', effects: [gengu(1)] },
+        },
+      },
+    ],
+  },
+  // ---- 出生地不同的童年 ----
+  {
+    id: 'kid_wall',
+    kind: 'normal',
+    title: '城牆上',
+    weight: 13,
+    conditions: { minAge: 7, maxAge: 12, regions: ['xiangyang'] },
+    tags: ['martial', 'village', 'social'],
+    text: '襄陽的孩子都愛往城牆上跑。這天你溜上城頭，一個缺了兩根手指的老兵正靠著垛口擦槍。他看了你一眼，沒有趕你：「小鬼，知道城外是哪裡嗎？」',
+    choices: [
+      {
+        id: 'spear',
+        text: '「教我使槍！」',
+        outcome: {
+          text: '他把一根削尖的木棍塞到你手裡，教你怎麼站、怎麼刺。「守城的槍沒有花樣，就一條：別退。」你在城頭上刺了一個下午的風。',
+          effects: [xp('shoucheng', 1), gengu(1), flag('saw_martial')],
+          recap: { weight: 1, text: '{ageCn}歲那年，襄陽城頭的一個老兵教你刺了一下午的槍。' },
+        },
+      },
+      {
+        id: 'listen',
+        text: '坐下來聽他講城外的事',
+        outcome: {
+          text: '他指著北邊，一座山一座山地講給你聽，哪裡打過仗，哪裡埋著他的弟兄。太陽下山的時候，你覺得那片地方離你好近。',
+          effects: [xinxing(1), wuxing(1), flag('war_seen')],
+        },
+      },
+      {
+        id: 'run',
+        text: '吐吐舌頭，跑了',
+        outcome: { text: '你一溜煙跑下了城牆。背後傳來他的笑聲。', effects: [danshi(1)] },
+      },
+    ],
+  },
+  {
+    id: 'kid_flood',
+    kind: 'normal',
+    title: '大水',
+    weight: 13,
+    conditions: { minAge: 7, maxAge: 12, regions: ['jiangnan'] },
+    tags: ['village', 'work', 'family'],
+    text: '梅雨下了整整四十天，河水漫過了堤，一夜之間街上就能行船了。你家搬到了閣樓上。窗外，鄰居家的雞籠、木盆、門板，一樣一樣地漂過去。',
+    choices: [
+      {
+        id: 'boat',
+        text: '撐著木盆出去，幫鄰居撈東西',
+        check: {
+          stats: ['gengu', 'danshi'],
+          difficulty: 5,
+          success: {
+            text: '你撐著一只大木盆，來來回回撈了一整天，連隔壁阿婆的貓都救了回來。水退以後，半條街的人都認得你了。',
+            effects: [danshi(1), chiv(4), meili(1)],
+            recap: { weight: 1, text: '{ageCn}歲那年發大水，你撐著一只木盆，替半條街的人撈東西。' },
+          },
+          failure: {
+            text: '木盆翻了，你嗆了好幾口水，是鄰居把你拉上來的。你發了兩天的燒。',
+            effects: [health(-10), chiv(3)],
+          },
+        },
+      },
+      {
+        id: 'fish',
+        text: '在窗口垂一根線釣魚',
+        outcome: {
+          text: '田裡的魚全游到街上來了。你從閣樓的窗口釣了三天，一家人頓頓有魚吃。大人說，這孩子天塌下來也餓不死。',
+          effects: [fuyuan(1), xinxing(1)],
+        },
+      },
+      {
+        id: 'read',
+        text: '反正出不了門，把家裡的書翻出來看',
+        outcome: {
+          text: '家裡只有三本書，你翻來覆去看了一個月，連哪一頁有蟲蛀的洞都記得。',
+          effects: [wuxing(1)],
         },
       },
     ],
