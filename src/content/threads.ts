@@ -149,6 +149,30 @@ export const threads: ThreadDef[] = [
     text: '陸平在長風鏢局當鏢師。他說過，以後有事，到鏢局找他。',
     advances: ['escort_invite'],
   },
+  {
+    id: 'baina_mantle',
+    title: '百衲衣',
+    priority: 50,
+    conditions: { minAge: 25, sects: ['baina'], npcAlive: ['ge_baina'], minYear: 1262, flagMin: { sect_merit: 1 }, notFired: ['baina_mantle'] },
+    text: '葛百衲的拐杖從一根換成了兩根。會裡的人都在看，那件百衲衣往後要交給誰。',
+    advances: ['baina_mantle'],
+  },
+  {
+    id: 'jianfu_question',
+    title: '劍閣',
+    priority: 40,
+    conditions: { sects: ['qinghen'], scheduled: ['qinghen_question'], npcAlive: ['xie_lingshuang'] },
+    text: '掌門謝凌霜看過你練劍，什麼也沒說。聽師兄講，十三式練到火候了，她會親自問你一句話。',
+    advances: ['qinghen_question'],
+  },
+  {
+    id: 'family_home',
+    title: '家',
+    priority: 45,
+    conditions: { scheduled: ['family_return'] },
+    text: '你答應過{spouse}：年底之前，一定回家。',
+    advances: ['family_return'],
+  },
   // ---- 錯過就沒有的機緣 ----
   {
     id: 'yaogu',

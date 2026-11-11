@@ -1,7 +1,7 @@
 // 宋蒙戰爭的史實大事。大勢不可改變，玩家只能決定自己身在何處、做了什麼。
 
 import type { GameEvent } from '../../engine/types';
-import { add, align, card, chiv, die, fame, flag, goTo, health, join, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
+import { add, align, card, chiv, die, fame, flag, goTo, health, join, later, meet, money, rel, wuxing, xinxing, xp } from '../dsl';
 
 const HAN_DEAD = flag('dead_han_shouyi');
 
@@ -34,7 +34,10 @@ export const historyEvents: GameEvent[] = [
         text: '投軍',
         outcome: {
           text: '韓守義拍了拍你的肩膀，差點把你拍趴下：「好！明天開始，跟我學槍。」',
-          effects: [goTo('xiangyang'), join('yijun'), rel('han_shouyi', 20), xp('shoucheng', 3), flag('joined_yijun')],
+          effects: [
+            goTo('xiangyang'), join('yijun'), rel('han_shouyi', 20), xp('shoucheng', 3), flag('joined_yijun'),
+            later('yijun_watch', 1, 2, 8), later('yijun_squad', 3, 5, 10),
+          ],
           recap: { weight: 2, text: '{ageCn}歲那年，你投入了鐵槍韓守義的襄陽義軍。' },
         },
       },

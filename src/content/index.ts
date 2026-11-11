@@ -7,11 +7,13 @@ import { items, market, propertyRisks } from './market';
 import { adultEvents } from './events/adult';
 import { childhoodEvents } from './events/childhood';
 import { historyEvents } from './events/history';
+import { familyEvents } from './events/family';
 import { fortuneEvents } from './events/fortune';
 import { jianghuEvents } from './events/jianghu';
 import { lunwuEvents } from './events/lunwu';
 import { nodeEvents } from './events/nodes';
 import { pathEvents } from './events/paths';
+import { sectEvents } from './events/sects';
 import { nodeWeights } from './nodes';
 import { youthEvents } from './events/youth';
 import { names } from './names';
@@ -44,6 +46,6 @@ export const CONTENT: Content = {
   eraLines,
   deathCauses,
   rumors,
-  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents, ...nodeEvents, ...pathEvents],
+  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents, ...nodeEvents, ...pathEvents, ...sectEvents, ...familyEvents],
   names,
 };

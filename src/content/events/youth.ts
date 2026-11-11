@@ -680,7 +680,10 @@ export const youthEvents: GameEvent[] = [
         text: '入會',
         outcome: {
           text: '你接過一件百衲衣。葛百衲說：「每一塊補丁，都是一個人的命。」',
-          effects: [goTo('xiangyang'), join('baina'), master('ge_baina'), xp('shijing', 3), rel('ge_baina', 20)],
+          effects: [
+            goTo('xiangyang'), join('baina'), master('ge_baina'), xp('shijing', 3), rel('ge_baina', 20),
+            later('baina_ears', 1, 3, 8), later('baina_refugees', 4, 7, 10),
+          ],
           recap: { weight: 2, text: '{ageCn}歲那年，你穿上百衲衣，入了葛百衲的百衲會。' },
         },
       },

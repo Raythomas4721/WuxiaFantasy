@@ -3,7 +3,7 @@
 
 import type { Condition, GameEvent, Outcome } from '../../engine/types';
 import {
-  add, chiv, fame, flag, goTo, item, join, meet, next, rel, wuxing, xinxing, xp,
+  add, chiv, fame, flag, goTo, item, join, later, meet, next, rel, wuxing, xinxing, xp,
 } from '../dsl';
 
 const FIRST: Condition = { maxYear: 1250 };
@@ -261,7 +261,10 @@ export const lunwuEvents: GameEvent[] = [
           opponent: 'jianfu_examiner',
           success: {
             text: '考官收劍，點了點頭。三天後，你換上了劍府的青衫。入門那天，掌門謝凌霜從你們面前走過，只說了一句：「劍府的劍，不為自己出。」',
-            effects: [join('qinghen'), goTo('qingming'), xp('qinghen', 4), meet('xie_lingshuang'), rel('xie_lingshuang', 10)],
+            effects: [
+              join('qinghen'), goTo('qingming'), xp('qinghen', 4), meet('xie_lingshuang'), rel('xie_lingshuang', 10),
+              later('qinghen_junior', 1, 3, 8), later('qinghen_elders', 4, 7, 10), later('qinghen_question', 8, 12, 15),
+            ],
             recap: { weight: 4, text: '{ageCn}歲那年，你考進了青衡劍府。' },
           },
           failure: { text: '考官搖搖頭：「底子不差，火候不夠。三年後再來。」', effects: [flag('jianfu_failed'), wuxing(1)] },

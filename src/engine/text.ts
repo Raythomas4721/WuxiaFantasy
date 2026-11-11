@@ -47,7 +47,7 @@ export function pickText(spec: TextSpec, state: GameState): string {
 /** 所有事件都能使用的內建變數名稱（內容檢查用）。 */
 export const TEMPLATE_KEYS = [
   'name', 'surname', 'companion', 'companionTrait', 'rival', 'age', 'ageCn', 'year', 'yearName', 'region', 'place', 'sect',
-  'father', 'mother',
+  'father', 'mother', 'spouse',
 ];
 
 export function templateVars(state: GameState): Record<string, string> {
@@ -69,6 +69,8 @@ export function templateVars(state: GameState): Record<string, string> {
     // 童年的家人：生前就過世的那位，換成把你拉扯大的另一位。
     father: state.flags.father_dead ? '母親' : '父親',
     mother: state.flags.mother_dead ? '父親' : '母親',
+    // 另一半：和玩伴成親的是玩伴，其他人不寫名字。
+    spouse: state.flags.married_companion ? state.companion.name : '家裡那口子',
   };
 }
 

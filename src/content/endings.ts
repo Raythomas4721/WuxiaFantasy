@@ -163,6 +163,14 @@ export const endings: EndingDef[] = [
     text: '長風鏢局的鏢旗插遍了半個天下。路上的山賊遠遠看見那面旗，就知道這一趟不好惹——那是你的旗。',
   },
   {
+    id: 'baina',
+    title: '百衲傳衣',
+    priority: 73,
+    conditions: { flags: ['baina_chief'] },
+    hint: '從葛百衲手裡接過那件百衲衣。',
+    text: '那件百衲衣在你身上又多了很多塊補丁。改朝換代那幾年，城裡餓死的人少了一半，沒有人知道為什麼，只有穿百衲衣的人知道。你走的那天，滿城的乞丐都沒有出去討飯。',
+  },
+  {
     id: 'daxia',
     title: '江湖大俠',
     priority: 50,
