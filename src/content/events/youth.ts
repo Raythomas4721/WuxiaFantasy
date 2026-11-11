@@ -853,7 +853,7 @@ export const youthEvents: GameEvent[] = [
           opponent: 'scar_young',
           success: {
             text: '你守在門口，第一個衝進來的人被你一扁擔砸在肩上。疤臉看了你一眼，罵了一聲，帶人轉去了別家。',
-            effects: [fame(5), chiv(5), align(3), flag('drove_bandits')],
+            effects: [fame(5), chiv(5), align(3), flag('drove_bandits'), later('scar_return', 1, 3, 6)],
             recap: { weight: 2, text: '{ageCn}歲那年潰兵進村，你一根扁擔守住了家門。' },
           },
           failure: {
@@ -871,7 +871,7 @@ export const youthEvents: GameEvent[] = [
           difficulty: 5,
           success: {
             text: '你帶著二十幾口人在山洞裡躲了兩夜。回來時房子燒了一半，但人都在。',
-            effects: [chiv(5), meili(1), fame(3)],
+            effects: [chiv(5), meili(1), fame(3), later('scar_return', 2, 4, 6)],
           },
           failure: [
             {
@@ -882,7 +882,7 @@ export const youthEvents: GameEvent[] = [
             },
             {
               text: '逃得太急，家裡值錢的東西全被搶光了。',
-              effects: [money(-40), health(-10)],
+              effects: [money(-40), health(-10), later('scar_return', 2, 4, 6)],
             },
           ],
         },
@@ -892,7 +892,7 @@ export const youthEvents: GameEvent[] = [
         text: '把家裡的錢糧都交出去',
         outcome: {
           text: '疤臉掂了掂錢袋，滿意地走了。你看著空蕩蕩的米缸，第一次明白什麼叫亂世。',
-          effects: [money(-60), xinxing(1), fame(-1)],
+          effects: [money(-60), xinxing(1), fame(-1), flag('paid_bandits'), later('scar_return', 1, 3, 6)],
         },
       },
       {
@@ -902,6 +902,48 @@ export const youthEvents: GameEvent[] = [
           text: '疤臉咧嘴一笑，丟給你一小袋碎銀，帶人往村東去了。那天夜裡村東起了火。後來村裡的人見了你，都把門關上。',
           effects: [money(30), align(-15), chiv(-10), flag('guided_bandits')],
           recap: { weight: 3, text: '{ageCn}歲那年潰兵進村，你給疤臉指了村東大戶的路，保住了自己的家。' },
+        },
+      },
+    ],
+  },
+  {
+    // 潰兵過境之後：不管當年怎麼應付，疤臉都會回來。這一次你不在家。
+    id: 'scar_return',
+    kind: 'normal',
+    title: '疤臉回來了',
+    scheduledOnly: true,
+    tags: ['feud', 'war'],
+    conditions: { notFlags: ['father_dead', 'blood_feud'] },
+    text: [
+      {
+        if: { flags: ['drove_bandits'] },
+        text: '那年你出門在外。疤臉沒有忘記村口那一扁擔，他帶著人回來了，專挑你不在的時候。等你趕回家，門口只剩一地狼藉——父親擋在門口，再也沒有起來。',
+      },
+      {
+        if: { flags: ['paid_bandits'] },
+        text: '那年你出門在外。疤臉又來了：上一回嘗到了甜頭，這一回家裡已經拿不出東西給他。等你趕回家，父親倒在空蕩蕩的米缸旁邊。',
+      },
+      { text: '那年你出門在外。燒過一次的村子，疤臉又來了一次。等你趕回家，鄉親說，父親是為了護著別人家的孩子，倒在了村口。' },
+    ],
+    choices: [
+      {
+        id: 'vow',
+        text: '跪在墳前立誓：此仇必報',
+        note: '志向改為「報仇雪恨」。疤臉多年後會再出現',
+        outcome: {
+          text: '你把父親那把舊柴刀從灶台邊拿起來。刀柄磨得發亮，是他的手握了幾十年握出來的。',
+          effects: [flag('father_dead'), flag('blood_feud'), item('father_relic'), ambition('revenge'), danshi(1), later('revenge_chance', 5, 12, 20)],
+          recap: { weight: 5, text: '{ageCn}歲那年，疤臉回頭血洗了你家。你在父親墳前立誓，此仇必報。' },
+        },
+      },
+      {
+        id: 'bury',
+        text: '把父親葬了，把這筆帳記在心裡',
+        note: '志向不變。疤臉多年後會再出現',
+        outcome: {
+          text: '你守了七天的靈。第八天，你把那把舊柴刀用布包好，帶在身上，什麼也沒說。',
+          effects: [flag('father_dead'), flag('blood_feud'), item('father_relic'), xinxing(1), later('revenge_chance', 5, 12, 20)],
+          recap: { weight: 5, text: '{ageCn}歲那年，疤臉回頭血洗了你家，父親死在他的刀下。' },
         },
       },
     ],

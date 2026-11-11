@@ -44,10 +44,15 @@ export function perk2(s: GameState, stat: StatName): number {
   return v >= STAT_PERK2_AT ? v - STAT_PERK2_AT + 1 : 0;
 }
 
-/** 故人出手相助要的交情：魅力 10 起降 15，之後每點再降 3（最低 10）。 */
+/** 正道中人：江湖朋友更肯出手相助。 */
+export const RIGHTEOUS_AT = 20;
+
+/** 故人出手相助要的交情：魅力 10 起降 15，之後每點再降 3；正道中人再降 10（最低 10）。 */
 export function allyRelation(s: GameState, base: number): number {
   const k = perk2(s, 'meili');
-  return k ? Math.max(10, base - 15 - (k - 1) * 3) : base;
+  const charm = k ? 15 + (k - 1) * 3 : 0;
+  const righteous = s.player.alignment >= RIGHTEOUS_AT ? 10 : 0;
+  return charm + righteous ? Math.max(10, base - charm - righteous) : base;
 }
 
 /** 把 add 疊進 p：數值相加，路數加成合併，第一張的加成同路數相加、不同路數取大的。 */
@@ -111,5 +116,6 @@ export function growthPassive(s: GameState, p: Passive): void {
 
 /** 心得加的氣血上限（算氣血時用）。 */
 export function talentHp(s: GameState): number {
-  return (s.player.talents ?? []).reduce((n, id) => n + (BY_ID.get(id)?.effect.maxHp ?? 0), 0);
+  const gear = (s.player.items ?? []).reduce((n, id) => n + (CONTENT.items[id]?.passive?.effect.maxHp ?? 0), 0);
+  return gear + (s.player.talents ?? []).reduce((n, id) => n + (BY_ID.get(id)?.effect.maxHp ?? 0), 0);
 }

@@ -188,7 +188,7 @@ export function applyEffects(s: GameState, effects: GameEffect[] | undefined, rn
 
 /**
  * 江湖觀感（設計文件 v0.4 §3.10）：
- * - 看得見的善行：名望和俠義都上升、又沒有明寫正邪時，正邪上升俠義的一半。
+ * - 善行：俠義上升、又沒有明寫正邪時，正邪跟著上升。名望也上升（看得見的善行）是俠義的一半，沒人看見是三分之一。
  * - 惡名也是名：正邪一次大降 10 以上時，名望上升降幅的四分之一。
  */
 export function withReputation(effects: GameEffect[] | undefined): GameEffect[] {
@@ -199,6 +199,6 @@ export function withReputation(effects: GameEffect[] | undefined): GameEffect[] 
   if (alignment <= -10) return [...list, { type: 'fame', delta: Math.floor(-alignment / 4) }];
   if (list.some((e) => e.type === 'alignment')) return list;
   const chivalry = sum('chivalry');
-  if (sum('fame') <= 0 || chivalry <= 0) return list;
-  return [...list, { type: 'alignment', delta: Math.ceil(chivalry / 2) }];
+  if (chivalry <= 0) return list;
+  return [...list, { type: 'alignment', delta: Math.ceil(chivalry / (sum('fame') > 0 ? 2 : 3)) }];
 }

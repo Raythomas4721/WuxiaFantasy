@@ -44,6 +44,7 @@ export function MarketPanel({ state, act }: Props) {
         逛市集
         <span className="muted small">
           　身上 {state.player.money} 文・這回合還能買 {left} 樣
+          {offers.some((o) => o.enabled) && `・${offers.filter((o) => o.enabled).length} 樣買得起`}
         </span>
       </summary>
       <ul className="market-list">

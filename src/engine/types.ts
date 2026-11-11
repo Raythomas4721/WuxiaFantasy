@@ -457,6 +457,8 @@ export interface ItemDef {
   /** 結局回顧用的一句話；權重越高越優先。 */
   ending: string;
   weight: number;
+  /** 帶在身上，過招時的效果（市集買的兵器、護具）。 */
+  passive?: { text: string; effect: Omit<Passive, 'names'> };
 }
 
 /** 市集的貨物。 */

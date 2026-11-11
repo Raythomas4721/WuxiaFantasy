@@ -7,7 +7,7 @@
 import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, npcAlive, skillLevel } from './conditions';
 import { Rng } from './rng';
-import { allyRelation, growthPassive, talentHp } from './talents';
+import { allyRelation, growthPassive, mergePassive, talentHp } from './talents';
 import { encounterOpenings } from '../content/encounters';
 import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
 import { allies } from '../content/allies';
@@ -534,6 +534,12 @@ export function passivesFor(s: GameState, def: OpponentDef): Passive {
   if (items.includes('xueyi_ling')) {
     p.names.push('血衣令：內傷 +1');
     p.bleedBonus = (p.bleedBonus ?? 0) + 1;
+  }
+  for (const id of items) {
+    const gear = CONTENT.items[id]?.passive;
+    if (!gear) continue;
+    p.names.push(`${CONTENT.items[id].name}：${gear.text}`);
+    mergePassive(p, gear.effect);
   }
   growthPassive(s, p);
   return p;

@@ -124,7 +124,7 @@ export function StatusPanel({ state, act }: { state: GameState; act?: (fn: () =>
               <li key={it.id}>
                 <details>
                   <summary>{it.name}</summary>
-                  <p className="muted small">{it.desc}</p>
+                  <p className="muted small">{it.desc}{it.passive && `（過招：${it.passive.text}）`}</p>
                 </details>
               </li>
             ))}
