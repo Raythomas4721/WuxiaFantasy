@@ -98,6 +98,28 @@ export const talents: TalentDef[] = [
     ['yy_yu', '夜雨', '內傷 +2', { bleedBonus: 2 }],
     ['yy_qian', '千針', '〈針〉每一擊傷害 +3、每回合多抽 1 張', { tagDmg: { 針: 3 }, drawPer: 1 }]),
 
+  // 洗塵功：打不倒
+  ...pair('xichen', 2,
+    ['xc_gu', '筋骨', '氣血上限 +10', { maxHp: 10 }],
+    ['xc_xi', '調息', '每回合開始回 2 氣血', { regen: 2 }]),
+  ...pair('xichen', 3,
+    ['xc_ding', '入定', '每回合開始護體 4', { blockPerRound: 4 }],
+    ['xc_shui', '心如止水', '前兩次點穴、下毒無效；回復的氣血 +2', { resist: 2, healBonus: 2 }]),
+  ...pair('xichen', 4,
+    ['xc_chen', '不染塵', '回合結束時保留一半護體；打完多回復 6 點健康', { retainBlock: 0.5, healAfter: 6 }],
+    ['xc_zhong', '暮鼓晨鐘', '〈氣〉每一擊傷害 +3、每回合多抽 1 張', { tagDmg: { 氣: 3 }, drawPer: 1 }]),
+
+  // 渡江篙：借力
+  ...pair('dujiang', 2,
+    ['dj_li', '借力', '自己的伏招發動時，對手失 5 氣血', { trapDmg: 5 }],
+    ['dj_wen', '船頭站得穩', '守招的護體 +3', { guardBonus: 3 }]),
+  ...pair('dujiang', 3,
+    ['dj_kuai', '快篙', '第一回合內力 +1、多抽 1 張', { firstRoundEnergy: 1, firstRoundDraw: 1 }],
+    ['dj_shui', '識水性', '開場時對手露出破綻 2 回合', { openExpose: 2 }]),
+  ...pair('dujiang', 4,
+    ['dj_lang', '逐浪', '每回合多抽 1 張、手牌上限 +1', { drawPer: 1, handMax: 1 }],
+    ['dj_zhong', '篙重千鈞', '〈槍〉每一擊傷害 +3', { tagDmg: { 槍: 3 } }]),
+
   // 拂星指：封住對手的招，自己不怕點穴
   ...pair('fuxing', 2,
     ['fx_li', '指力', '〈指〉每一擊傷害 +2', { tagDmg: { 指: 2 } }],

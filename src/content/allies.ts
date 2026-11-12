@@ -54,6 +54,18 @@ export const allies: AllyDef[] = [
     line: '一支白翎箭釘在{foe}腳前。巴特爾騎在馬上，遠遠朝你舉了舉弓。',
   },
   {
+    who: 'wuyan',
+    minRelation: 40,
+    kind: 'heal',
+    line: '一隻乾瘦的手按在你的背心，一股暖流從頭頂洗到了腳底。啞鐘和尚站在你身後，還是一個字也沒說。',
+  },
+  {
+    who: 'ruan_qinggao',
+    minRelation: 40,
+    kind: 'guard',
+    line: '一根竹篙從旁邊伸過來，把{foe}的兵刃輕輕撥開。阮青篙站到你前面：「水上的規矩，船上的人不能少。」',
+  },
+  {
     who: 'companion',
     minRelation: 50,
     kind: 'guard',

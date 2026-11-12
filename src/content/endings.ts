@@ -2,6 +2,9 @@
 
 import type { AmbitionDef, EndingDef, RumorDef } from '../engine/types';
 
+/** 這場仗裡真的出過力的人（崖山人人都會聽到，光是去了不算一生的歸宿）。 */
+const FOUGHT_THE_WAR = ['defended_city', 'diaoyu_defender', 'joined_resistance', 'joined_yijun', 'burned_trebuchets', 'night_raid', 'ran_blockade', 'ran_blockade_failed', 'held_temple_gate', 'saved_temple_people'].map((f) => ({ flags: [f] }));
+
 export const endings: EndingDef[] = [
   {
     id: 'tiegu',
@@ -41,6 +44,25 @@ export const endings: EndingDef[] = [
         text: '血衣樓的帳冊上，有一半的名字是你劃掉的。你死的那天，江湖上很多人鬆了一口氣，也有很多人不敢相信你真的死了。',
       },
       { text: '你的名字被說書人拿來嚇唬不睡覺的孩子。你死的那天，江湖上很多人鬆了一口氣，也有很多人不敢相信你真的死了。' },
+    ],
+  },
+  {
+    id: 'yashan',
+    title: '崖山之後',
+    // 崖山人人都會聽到，所以排在各條路自己的結局後面：一生沒有別的歸宿的人，才以這一仗作結
+    priority: 56,
+    conditions: { any: [{ flags: ['at_yashan'], any: FOUGHT_THE_WAR }, { flags: ['ferried_refugees'], any: FOUGHT_THE_WAR }] },
+    hint: '最後一仗，在很南很南的海上。',
+    text: [
+      {
+        if: { flags: ['defended_city'] },
+        text: '你守過襄陽，也到過崖山。兩座城，一座在江邊，一座在海上，你都沒有守住。晚年有後生問你值不值得，你想了很久，說：守不住的城，也要有人守過，後來的人才知道那裡曾經是一座城。',
+      },
+      {
+        if: { flags: ['ferried_refugees'], notFlags: ['at_yashan'] },
+        text: '最後的朝廷沉在了海裡。你沒有上船去打那一仗，卻在海邊來回了一趟又一趟，接走了能接的人。晚年有人問你那一年在做什麼，你說，撐船。',
+      },
+      { text: '你這一生沒有守過哪座城，卻趕上了最後一仗。那天海上的霧，你記了一輩子。晚年你住在海邊，每逢起霧的日子，都會朝海上倒一碗酒。打魚的人問你祭誰，你說，祭很多人。' },
     ],
   },
   {
@@ -138,6 +160,39 @@ export const endings: EndingDef[] = [
         text: '黑風寨的規矩是你立的：十抽三，收了錢就保人過山。亂世裡，這條山道竟成了最太平的一段路。你死後，商隊過山時還是會在寨門口放下三成的貨。沒有人收，也沒有人敢不放。',
       },
       { text: '你在山上坐了半輩子的交椅。山下換了幾任縣官，沒有一個敢上山。你有時候會想起當年揭下告示的那個人：他上山，本來是要除掉一個山大王的。' },
+    ],
+  },
+  {
+    id: 'baidu',
+    title: '擺渡人',
+    priority: 76,
+    // 真的走水上這條路的人：衝過水寨，或練了渡江篙又在海邊渡過人
+    conditions: { any: [{ flags: ['ran_blockade'] }, { flags: ['ferried_refugees'], minSkill: { dujiang: 2 } }] },
+    hint: '有些仗不是用刀打的，是一船一船撐出來的。',
+    text: [
+      {
+        if: { flags: ['ferried_refugees', 'ran_blockade'] },
+        text: '襄陽的水門、崖山的海邊，你的船都到過。這一生你殺的人不多，渡的人卻數不清。很多年後，南邊的漁村裡還有人家供著一根竹篙，說是祖上逃難時，一個不肯留名字的撐船人留下的。',
+      },
+      {
+        if: { flags: ['ran_blockade'] },
+        text: '那一夜衝進襄陽的船裡，有一條是你站的船頭。城後來還是破了，可城裡的人多吃了半年的鹽。晚年你在江邊擺渡，船錢收得很便宜，遇上逃難的，一文也不收。',
+      },
+      { text: '最後的朝廷沉在了海裡，你卻在海邊來回了一趟又一趟。這一生你殺的人不多，渡的人卻數不清。有人問你叫什麼，你說，撐船的。' },
+    ],
+  },
+  {
+    id: 'zhongsheng',
+    title: '啞鐘',
+    priority: 71,
+    conditions: { minSkill: { xichen: 3 }, any: [{ flags: ['wuyan_spoke'] }, { flags: ['wuyan_gone'] }] },
+    hint: '有一口鐘，四十年沒有響過。',
+    text: [
+      {
+        if: { flags: ['wuyan_gone'] },
+        text: '老和尚沒有再回來。你在苦竹寺住了下來，每天清晨用掌心去推那口沒有鐘槌的鐘。推了很多年，鐘還是不響。可山下的人都說，自從你來了，夜裡睡得安穩了。',
+      },
+      { text: '無言師父圓寂的那天，把推鐘的活交給了你。你推了很多年，鐘還是不響，只是微微一晃。後來你也不大說話了。有人上山問你洗塵功練到頭是什麼，你指了指溪水裡那塊沒有稜角的石頭。' },
     ],
   },
   {
@@ -339,6 +394,11 @@ export const rumors: RumorDef[] = [
   { id: 'r_war_begin', conditions: { minYear: 1235, maxYear: 1238 }, text: '蒙古人翻臉了，說朝廷背盟，大軍分幾路南下。' },
   { id: 'r_plague', conditions: { minYear: 1237, maxYear: 1241, not: { regions: ['shu'] } }, text: '川蜀大疫。聽說有個叫濟世藥谷的地方開谷救人，谷主林鶴年三天三夜沒合眼。' },
   { id: 'r_mengong', conditions: { minYear: 1239, maxYear: 1242 }, text: '聽說孟珙將軍收復了襄陽。' },
+  { id: 'r_wuyan', conditions: { minYear: 1240, maxYear: 1270 }, text: '聽說山裡有座苦竹寺，寺裡的鐘四十年沒響過。敲鐘的和尚不說話，卻沒有人打得倒他。' },
+  { id: 'r_ruan', conditions: { minYear: 1255, maxYear: 1272 }, text: '漢水上有個撐船的女人，一根竹篙能把人點進水裡。過江的客人都說，坐她的船比走橋還穩。' },
+  { id: 'r_he', conditions: { minYear: 1261, maxYear: 1273 }, text: '蒙古軍的前鋒換了人，是個槍上繫紅纓的降將。城頭的老兵聽見他的名字，都不說話了。' },
+  { id: 'r_pao', conditions: { minYear: 1272, maxYear: 1273 }, text: '聽說蒙古人從西域請來了造砲的匠人。那種砲打出來的石頭，落地能砸進土裡七尺。' },
+  { id: 'r_fleet', conditions: { minYear: 1277, maxYear: 1278 }, text: '小皇帝的船隊一路往南退，聽說已經退到了海邊。再退，就是海了。' },
   { id: 'r_escort', conditions: { minYear: 1240, maxYear: 1265 }, text: '長風鏢局又接了一趟去川蜀的鏢。鏢頭說，這年頭路上的潰兵比山賊還多。' },
   { id: 'r_shen', conditions: { minYear: 1241, maxYear: 1262 }, text: '江湖上傳說，有個醉醺醺的劍客一劍斬斷了十八個水寇的船槳。' },
   { id: 'r_qingming', conditions: { minYear: 1242, maxYear: 1248 }, text: '青冥山上，各派的年輕人又在比武了。聽說青衡劍府的大弟子奪了魁。' },

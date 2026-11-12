@@ -23,6 +23,11 @@ export const GENERIC_REMATCH: Record<RematchKind, string> = {
 };
 
 export const REMATCH: Record<string, Record<RematchKind, string>> = {
+  he_yunqi: {
+    won: '上回你削了我的纓。今天，我是來還的。',
+    lost: '十年還沒到，你就又來了。',
+    fled: '上回你走了。我說過，槍不追逃兵。',
+  },
   scar: {
     won: '上回讓你撿了便宜。今天，連本帶利一起討回來！',
     lost: '還敢來？上回沒要你的命，是老子心軟。',
@@ -68,6 +73,18 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     combo: ['這是練家子，撤、撤！'],
     gloat: ['老子在死人堆裡爬出來的，你算什麼！'],
     defeat: ['別打了……我們只是想回家……'],
+  },
+  water_fort: {
+    half: ['有船衝寨！放箭！'],
+    combo: ['攔住那條頭船！'],
+    gloat: ['沉了它！'],
+    defeat: ['鐵索……鐵索斷了！'],
+  },
+  he_yunqi: {
+    broken: ['好。守軍裡還有會用槍的。'],
+    combo: ['這幾下，是韓守義教的？'],
+    gloat: ['回去。再練十年。'],
+    defeat: ['……這條纓，總算有人削斷了。'],
   },
   garrison: {
     half: ['這夥賊人有章法！'],

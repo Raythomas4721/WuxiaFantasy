@@ -37,6 +37,7 @@ export const historyEvents: GameEvent[] = [
           effects: [
             goTo('xiangyang'), join('yijun'), rel('han_shouyi', 20), xp('shoucheng', 3), flag('joined_yijun'),
             later('yijun_watch', 1, 2, 8), later('yijun_squad', 3, 5, 10),
+            later('ruan_meet', 2, 5, 14), later('he_meet', 4, 9, 25),
           ],
           recap: { weight: 2, text: '{ageCn}歲那年，你投入了鐵槍韓守義的襄陽義軍。' },
         },
@@ -110,7 +111,10 @@ export const historyEvents: GameEvent[] = [
           martial: true,
           success: {
             text: '你在城頭守了一年又一年，打退了不知多少次攻城。有一天韓守義走過來，拍著你的肩膀說：「好樣的。」',
-            effects: [flag('defended_city'), fame(5), chiv(5), align(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2), card('juma+')],
+            effects: [
+              flag('defended_city'), fame(5), chiv(5), align(5), rel('han_shouyi', 15), meet('han_shouyi'), xp('shoucheng', 2), card('juma+'),
+              later('he_meet', 1, 2, 4),
+            ],
             recap: { weight: 3, text: '襄陽被圍的那幾年，你一直守在城頭。' },
           },
           failure: {

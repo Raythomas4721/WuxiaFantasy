@@ -247,6 +247,47 @@ export const cards: Record<string, CardDef> = {
     flavor: '你五指一拂，像從夜空裡摘下一把星子。{foe}身上的大穴，一處接一處暗了下去。',
   }),
 
+  // ---- 洗塵功：啞鐘和尚的內功，打不倒（回氣血、護體、護穴） ----
+  xc_tuna: card({ id: 'xc_tuna', name: '吐納', kind: 'skill', tag: '氣', cost: 0, heal: 2, block: 2, flavor: '你長長吐出一口濁氣，胸口鬆了一些。' }),
+  xc_tuizhong: card({ id: 'xc_tuizhong', name: '推鐘', kind: 'attack', tag: '氣', cost: 1, dmg: 4, block: 4, flavor: '你像推那口啞鐘一樣，掌心貼上{foe}的胸口，緩緩一送。' }),
+  xc_jingzuo: card({ id: 'xc_jingzuo', name: '靜坐', kind: 'guard', tag: '氣', cost: 1, block: 6, heal: 2, flavor: '你沉下肩，呼吸慢得像睡著了。{foe}的招式落在你身上，像落在一袋濕沙上。' }),
+  xc_xichen: card({ id: 'xc_xichen', name: '洗塵', kind: 'skill', tag: '氣', cost: 1, heal: 4, cleanse: 1, ward: 1, flavor: '一口真氣從頭頂洗到腳底，淤住的地方一處一處通了。' }),
+  xc_budong: card({ id: 'xc_budong', name: '不動', rarity: 'uncommon', kind: 'guard', tag: '氣', cost: 2, block: 12, heal: 3, fortify: true, flavor: '你站在那裡，像寺門口那塊四十年沒挪過的石頭。（護體留到下回合）' }),
+  xc_huanqi: card({
+    id: 'xc_huanqi', name: '還氣', rarity: 'uncommon', kind: 'trap', tag: '氣', cost: 1, trigger: 'foeAttack', halve: true, heal: 4,
+    flavor: '{foe}這一下打實了，你卻借著這股勁，把岔掉的那口氣順了回來。',
+  }),
+  xc_zhongsheng: card({
+    id: 'xc_zhongsheng', name: '鐘聲', rarity: 'uncommon', kind: 'attack', tag: '氣', cost: 2, dmg: 4, dmgFromBlock: 1,
+    flavor: '鐘不響，只是一晃。你守住了多少，這一掌就有多重。',
+  }),
+  xc_wuyan: card({
+    id: 'xc_wuyan', name: '無言', rarity: 'rare', kind: 'skill', tag: '氣', cost: 2, heal: 10, block: 10, energyNext: 1, exhaust: true,
+    flavor: '你什麼也沒做，只是站著。{foe}忽然覺得，自己打的是一座山。',
+  }),
+
+  // ---- 渡江篙：船家女阮青篙的篙法，借對手的力（讀招、伏招、抽牌） ----
+  dj_dian: card({
+    id: 'dj_dian', name: '點篙', kind: 'attack', tag: '槍', cost: 1, dmg: 5, vsIntent: { kinds: ['attack', 'combo'], dmg: 3 },
+    flavor: '{foe}撲過來，你的篙尖已經點在他胸口。是他自己撞上來的。',
+  }),
+  dj_cheng: card({ id: 'dj_cheng', name: '撐篙', kind: 'guard', tag: '步', cost: 1, block: 5, draw: 1, flavor: '你一篙點地，人已經盪開了一丈。' }),
+  dj_heng: card({ id: 'dj_heng', name: '橫篙', kind: 'guard', tag: '槍', cost: 1, block: 6, boostNext: { tags: ['槍'], dmg: 3 }, flavor: '你把篙一橫，像船頭擋住一道浪。' }),
+  dj_jieshui: card({ id: 'dj_jieshui', name: '借水', kind: 'skill', tag: '步', cost: 0, block: 2, draw: 1, flavor: '你的腳下像踩著船板，{foe}進一步，你就順著退半步。' }),
+  dj_shunshui: card({
+    id: 'dj_shunshui', name: '順水推舟', rarity: 'uncommon', kind: 'trap', tag: '槍', cost: 1, trigger: 'foeAttack', halve: true, dmg: 8,
+    flavor: '{foe}的力道使老了。你的篙輕輕一帶，他整個人就朝前栽了出去。',
+  }),
+  dj_talang: card({ id: 'dj_talang', name: '踏浪', rarity: 'uncommon', kind: 'guard', tag: '步', cost: 1, block: 4, draw: 1, energyNext: 1, flavor: '你踩著{foe}的兵刃借了一下力，落地時已經在他身後。' }),
+  dj_fanchuan: card({
+    id: 'dj_fanchuan', name: '翻船', rarity: 'uncommon', kind: 'attack', tag: '槍', cost: 2, dmg: 8, breakGuard: true, vsIntent: { kinds: ['guard', 'charge'], dmg: 6 },
+    flavor: '你的篙插進{foe}腳下一撬。站得再穩的人，也經不起船翻。',
+  }),
+  dj_yigao: card({
+    id: 'dj_yigao', name: '一篙渡江', rarity: 'rare', kind: 'attack', tag: '槍', cost: 2, dmg: 6, hits: 2, vsIntent: { kinds: ['attack', 'combo', 'feint'], dmg: 6 },
+    flavor: '一篙到底，船已過江。{foe}的招式還在半路上。',
+  }),
+
   // ---- 醫術 ----
   yunqi: card({ id: 'yunqi', name: '運氣療傷', kind: 'skill', tag: '氣', cost: 1, heal: 6, exhaust: true, flavor: '你退開半步，一口真氣在胸口轉了一圈，疼得輕了些。' }),
   jinchuang: card({ id: 'jinchuang', name: '金創藥', kind: 'skill', tag: '藥', cost: 1, heal: 8, exhaust: true, flavor: '你抽空往傷口上抹了一把藥。' }),
@@ -256,6 +297,10 @@ export const cards: Record<string, CardDef> = {
   demon: card({ id: 'demon', name: '心魔', kind: 'curse', cost: 0, onDraw: { hp: 3 }, flavor: '你的心裡忽然一亂，一口真氣走岔了。' }),
 
   // ---- 特殊牌 ----
+  duanying: card({
+    id: 'duanying', name: '斷纓', rarity: 'rare', kind: 'attack', tag: '槍', cost: 2, dmg: 14, pierce: true, breakGuard: true,
+    flavor: '賀雲旗的那一槍。槍尖從紅纓裡穿出來，{foe}只看見一點紅。',
+  }),
   dudiao: card({
     id: 'dudiao', name: '獨釣寒江', rarity: 'rare', kind: 'attack', tag: '劍', cost: 3, dmg: 24, exhaust: true,
     flavor: '沈孤舟信裡的那一式。天地間只剩一江寒水，和你的一劍。',
@@ -273,6 +318,8 @@ export const skillCards: Record<string, string[]> = {
   qinghen: ['qhqi', 'liancheng', 'qhcheng', 'qhshou', 'hanyi', 'qhzhuan', 'qhluo', 'shisan'],
   yeyu: ['yeyuzhen', 'wusheng', 'xiyu', 'mengyu', 'tougu', 'duanchang', 'fengxue', 'yebuxie'],
   fuxing: ['fx_dian', 'fx_fu', 'fx_luo', 'fx_jie', 'fx_ding', 'fx_qixing', 'fx_suo', 'fx_fuxing'],
+  xichen: ['xc_tuna', 'xc_tuizhong', 'xc_jingzuo', 'xc_xichen', 'xc_budong', 'xc_huanqi', 'xc_zhongsheng', 'xc_wuyan'],
+  dujiang: ['dj_dian', 'dj_cheng', 'dj_heng', 'dj_jieshui', 'dj_shunshui', 'dj_talang', 'dj_fanchuan', 'dj_yigao'],
 };
 
 /** 獎勵池裡不分門派的奇招（設計文件 v0.5 §5）。 */
@@ -452,6 +499,17 @@ export const opponents: Record<string, OpponentDef> = {
   garrison: {
     id: 'garrison', name: '州裡調來的官兵', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'], specials: { drain: 1 },
     tells: tells({ guard: '官兵們把盾牌一面挨一面排開，一步一步往上推。', attack: '都頭舉起了令旗，弓手拉滿了弦。', charge: '山腳的戰鼓越敲越急。' }),
+  },
+  water_fort: {
+    id: 'water_fort', name: '水寨的守軍', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', hpMult: 0.9, traps: ['yuanbing'], specials: { curse: 1 },
+    tells: tells({ guard: '橫江的鐵索後面，一排火把亮了起來。', attack: '箭樓上的弓手拉滿了弦。', curse: '有人從寨牆上潑下了一桶火油。' }),
+  },
+  he_yunqi: {
+    id: 'he_yunqi', name: '斷纓槍賀雲旗', who: 'he_yunqi',
+    signature: { name: '斷纓', tell: '{foe}把槍收到腰後，槍上的紅纓垂了下來，一動也不動。', mult: 1.45 },
+    level: { relative: 0, min: 3, max: 5 }, wuxing: 9, temper: 'veteran', hpMult: 0.95, traps: ['huishen'],
+    phase2: { line: '這一槍，是我當年教給大宋的。', temper: 'brute', specials: { enrage: 1.5 } },
+    tells: tells({ attack: '他的槍尖畫了一個很小的圈。', feint: '他單手持槍，另一隻手還挽著韁繩，像是根本沒把你放在眼裡。', guard: '他把槍橫在馬鞍上，等你先出手。' }),
   },
   // ---- 精英 ----
   bandit_chief: {
