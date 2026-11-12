@@ -94,7 +94,7 @@ export function validateContent(content: Content): ValidationReport {
       }
     }
     // 組合式小戰的素材（content/encounters.ts）由引擎放進 vars
-    const encounterKeys = e.encounter ? ['scene', 'opening', 'foe', 'openingId', 'fight', 'avoid', 'avoided', 'win', 'lose'] : [];
+    const encounterKeys = e.encounter ? ['title', 'scene', 'opening', 'foe', 'openingId', 'fight', 'avoid', 'avoided', 'win', 'lose'] : [];
     const allowed = new Set([...TEMPLATE_KEYS, ...Object.keys(e.vars ?? {}), ...encounterKeys]);
     for (const key of unknownPlaceholders(strings, allowed)) errors.push(`${w}：文字引用了未定義的變數 {${key}}`);
 

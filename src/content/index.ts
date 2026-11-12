@@ -12,6 +12,7 @@ import { fortuneEvents } from './events/fortune';
 import { jianghuEvents } from './events/jianghu';
 import { lunwuEvents } from './events/lunwu';
 import { nodeEvents } from './events/nodes';
+import { outlawEvents } from './events/outlaw';
 import { pathEvents } from './events/paths';
 import { sectEvents } from './events/sects';
 import { nodeWeights } from './nodes';
@@ -46,6 +47,6 @@ export const CONTENT: Content = {
   eraLines,
   deathCauses,
   rumors,
-  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents, ...nodeEvents, ...pathEvents, ...sectEvents, ...familyEvents],
+  events: [...childhoodEvents, ...youthEvents, ...adultEvents, ...jianghuEvents, ...lunwuEvents, ...fortuneEvents, ...historyEvents, ...nodeEvents, ...pathEvents, ...sectEvents, ...familyEvents, ...outlawEvents],
   names,
 };

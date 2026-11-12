@@ -69,6 +69,47 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     gloat: ['老子在死人堆裡爬出來的，你算什麼！'],
     defeat: ['別打了……我們只是想回家……'],
   },
+  garrison: {
+    half: ['這夥賊人有章法！'],
+    combo: ['頂住！盾牌頂住！'],
+    gloat: ['放下兵器，饒你不死！'],
+    defeat: ['鳴金！退下山去！'],
+  },
+  horse_thieves: {
+    half: ['這人扎手！'],
+    broken: ['我的馬！'],
+    gloat: ['靴子留下，人可以走。'],
+    defeat: ['撤！風緊！'],
+  },
+  debt_collectors: {
+    half: ['欠債還錢，天經地義！'],
+    combo: ['等等……你到底是不是姓賈的？'],
+    gloat: ['下個月，連本帶利。'],
+    defeat: ['認錯人了，認錯人了！'],
+  },
+  fake_monks: {
+    half: ['施主，你這是造孽！'],
+    broken: ['我的木魚！'],
+    gloat: ['善哉，善哉。'],
+    defeat: ['貧僧……貧僧不幹了！'],
+  },
+  tomb_robbers: {
+    half: ['這人比墓裡的還難纏！'],
+    gloat: ['坑是現成的。'],
+    defeat: ['東西都給你，別報官！'],
+  },
+  hired_blades: {
+    half: ['雇主沒說你這麼能打。'],
+    combo: ['這價錢開低了！'],
+    gloat: ['別怪我，拿錢辦事。'],
+    defeat: ['定金還你，這單不接了。'],
+  },
+  young_bravos: {
+    half: ['好厲害！再來！'],
+    broken: ['師兄，他破了我的招！'],
+    gloat: ['前輩……您是不是讓著我們？'],
+    defeat: ['受教了！十年後再來討教！'],
+  },
   thugs: {
     half: ['你知道這條街是誰罩的嗎？'],
     broken: ['哎喲我的娘！'],

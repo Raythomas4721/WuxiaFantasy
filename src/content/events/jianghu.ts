@@ -62,10 +62,10 @@ export const jianghuEvents: GameEvent[] = [
   // ---- 血衣樓 ----
   {
     id: 'xueyi_invite',
-    kind: 'normal',
+    // 走到這一步的人一定會等到他：不靠抽
+    kind: 'forced',
     title: '無面客',
-    weight: 30,
-    weightMods: [{ if: { flags: ['world_xueyi_rampant'] }, mult: 2 }, { if: { flags: ['world_xueyi_quiet'] }, mult: 0.4 }],
+    priority: 3,
     conditions: {
       minAge: 18,
       maxAge: 50,
@@ -73,7 +73,7 @@ export const jianghuEvents: GameEvent[] = [
       notFlags: ['broke_with_xueyi'],
       not: { sects: ['xueyi'] },
       any: [
-        { maxAlignment: -30 },
+        { maxAlignment: -20 },
         { flags: ['blood_feud'], notFlags: ['revenge_done', 'feud_resolved'], maxHealth: 40 },
       ],
     },
@@ -94,12 +94,12 @@ export const jianghuEvents: GameEvent[] = [
           {
             if: { hasSect: true },
             text: '你接過令牌，第二天就不辭而別。從此師門的名冊上，劃掉了你的名字。',
-            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), flag('broke_with_sect'), item('xueyi_ling'), later('xueyi_exposed', 3, 8, 12)],
+            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), flag('broke_with_sect'), item('xueyi_ling'), flag('joined_xueyi'), later('xueyi_contract', 1, 2, 6), later('xueyi_rival', 3, 6, 10), later('xueyi_exposed', 3, 8, 12)],
             recap: { weight: 4, text: '{ageCn}歲那年，你背棄師門，接下了血衣樓的令牌。' },
           },
           {
             text: '令牌是冰的。無面客站起身：「從今天起，你沒有名字了。」',
-            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), item('xueyi_ling'), later('xueyi_exposed', 3, 8, 12)],
+            effects: [join('xueyi'), master('wumian'), xp('yeyu', 3), align(-15), rel('wumian', 20), item('xueyi_ling'), flag('joined_xueyi'), later('xueyi_contract', 1, 2, 6), later('xueyi_rival', 3, 6, 10), later('xueyi_exposed', 3, 8, 12)],
             recap: { weight: 4, text: '{ageCn}歲那年，你接下了血衣樓的令牌。' },
           },
         ],
@@ -160,7 +160,7 @@ export const jianghuEvents: GameEvent[] = [
           opponent: 'bodyguard',
           success: {
             text: '你回來的時候，天還沒亮。令牌底下多了一包銀子。你洗了很久的手。',
-            effects: [money(120), align(-12), fame(4), xp('yeyu', 2), add('xueyi_kills')],
+            effects: [money(120), align(-12), fame(4), xp('yeyu', 2), add('xueyi_kills'), later('xueyi_contract', 2, 4, 8)],
           },
           failure: {
             text: '目標身邊有護衛。你帶著一身傷逃了回來，無面客看著你，什麼也沒說。',

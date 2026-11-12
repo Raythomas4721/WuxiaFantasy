@@ -2,7 +2,7 @@
 // 這些事件不會被一般抽選選到，只由 game.ts 依關卡種類挑出來。
 
 import type { GameEvent } from '../../engine/types';
-import { align, chiv, fame, flag, money, rel, xinxing } from '../dsl';
+import { align, chiv, fame, flag, later, money, rel, xinxing } from '../dsl';
 
 const AVOID = '繞開，不惹這個麻煩';
 
@@ -285,7 +285,7 @@ export const nodeEvents: GameEvent[] = [
           opponent: 'bandit_chief',
           success: {
             text: '寨主的鬼頭刀落在地上。你把他綁下山，交給了官府。村民們放了一整夜的鞭炮。',
-            effects: [money(50), fame(3), chiv(3)],
+            effects: [money(50), fame(3), chiv(3), later('blackwind_seat', 1, 2, 5)],
             recap: { weight: 2, text: '{ageCn}歲那年，你單槍匹馬上了黑風寨。' },
           },
           failure: { text: '你被寨主一刀劈下了山崖，掛在樹上才撿回一條命。', effects: [] },

@@ -425,6 +425,34 @@ export const opponents: Record<string, OpponentDef> = {
     id: 'mongol_scout', name: '蒙古遊騎', level: { relative: -1, min: 1, max: 5 }, wuxing: 5, temper: 'brute', traps: ['huishen'],
     tells: tells({ attack: '他在馬上彎弓搭箭。', combo: '他撥馬繞著你轉，箭一支接一支。', guard: '他撥馬拉開了距離。' }),
   },
+  horse_thieves: {
+    id: 'horse_thieves', name: '馬賊', level: { relative: -1, min: 1, max: 4 }, wuxing: 4, temper: 'brute', traps: ['huishen'],
+    tells: tells({ attack: '領頭的馬賊把套索掄成了一個圈。', combo: '馬賊們繞著你打轉，一個接一個衝過來。' }),
+  },
+  debt_collectors: {
+    id: 'debt_collectors', name: '賭坊的打手', level: { relative: -1, min: 1, max: 4 }, wuxing: 3, temper: 'brute',
+    tells: tells({ attack: '帶頭的捲起袖子，露出一條刺滿骰子的胳膊。', charge: '他們把巷子兩頭都堵上了。' }),
+  },
+  fake_monks: {
+    id: 'fake_monks', name: '假和尚', level: { relative: -1, min: 0, max: 3 }, wuxing: 5, temper: 'veteran', traps: ['weiou'],
+    tells: tells({ feint: '他一手敲木魚，一手伸進了僧袍裡。', guard: '幾個假和尚把禪杖一橫，嘴裡還在唸經。' }),
+  },
+  tomb_robbers: {
+    id: 'tomb_robbers', name: '盜墓賊', level: { relative: -1, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { curse: 1 }, traps: ['fanshou'],
+    tells: tells({ attack: '他掄起那把還沾著濕土的鐵鏟。', feint: '他往你臉上揚了一把土。' }),
+  },
+  hired_blades: {
+    id: 'hired_blades', name: '收錢的刀手', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'veteran', hpMult: 0.9, traps: ['fanshou'],
+    tells: tells({ attack: '他的刀很短，握得很低，一看就是做慣了這種事的。', feint: '兩個刀手一左一右，誰也不先動。' }),
+  },
+  young_bravos: {
+    id: 'young_bravos', name: '初出江湖的少年', level: { relative: -1, min: 2, max: 5 }, wuxing: 7, temper: 'brute', hpMult: 0.9,
+    tells: tells({ attack: '少年的起手式端端正正，像是照著劍譜擺出來的。', combo: '兩個少年一個攻上一個攻下，配合得倒是很熟。' }),
+  },
+  garrison: {
+    id: 'garrison', name: '州裡調來的官兵', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'], specials: { drain: 1 },
+    tells: tells({ guard: '官兵們把盾牌一面挨一面排開，一步一步往上推。', attack: '都頭舉起了令旗，弓手拉滿了弦。', charge: '山腳的戰鼓越敲越急。' }),
+  },
   // ---- 精英 ----
   bandit_chief: {
     id: 'bandit_chief', name: '黑風寨的寨主', signature: { name: '鬼頭刀・橫掃', tell: '{foe}把鬼頭刀往後一拖，刀背貼著地，像在攢一股勁。', mult: 1.3 }, level: { relative: 0, min: 1, max: 5 }, wuxing: 6, temper: 'veteran', specials: { enrage: 1.5 }, hpMult: 0.75, traps: ['fanshou'],

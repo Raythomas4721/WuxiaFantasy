@@ -852,7 +852,10 @@ export interface GameState {
   statPoints?: number;
   /** 已經給過屬性點的最後一章（LIFE_STAGES 的索引）。 */
   pointStage?: number;
-  current?: { eventId: string; text: string; vars?: Record<string, string> };
+  /** title：這一次的標題（組合式小戰依地點取名）；沒有就用事件的標題。 */
+  current?: { eventId: string; text: string; vars?: Record<string, string>; title?: string };
+  /** 最近遇過的小戰對手、用過的素材句子：下一次盡量不重複。 */
+  recent?: { foes: string[]; vars: string[] };
   duel?: DuelState;
   /** 結果畫面之後，同一年接著發生的事件。 */
   chain?: string;

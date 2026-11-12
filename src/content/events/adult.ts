@@ -410,7 +410,7 @@ export const adultEvents: GameEvent[] = [
         text: '點頭成家',
         outcome: {
           text: '成親那天，鞭炮一直放到了巷口。夜裡，你看著紅燭，忽然覺得這輩子有了著落。',
-          effects: [flag('married'), xinxing(1), money(-10), later('family_child', 1, 4, 8), later('family_farewell', 3, 7, 12)],
+          effects: [flag('married'), xinxing(1), money(-10), later('family_child', 1, 4, 8), later('family_farewell', 3, 7, 12), later('family_threat', 5, 10, 16)],
           recap: { weight: 2, text: '{ageCn}歲那年，你成了家。' },
         },
       },
@@ -421,7 +421,7 @@ export const adultEvents: GameEvent[] = [
         hidden: true,
         outcome: {
           text: '你去找{companion}。對方聽完你的話，愣了很久，然後笑著哭了：「我等這句話，等了好多年。」',
-          effects: [flag('married'), flag('married_companion'), rel('companion', 30), later('family_child', 1, 4, 8), later('family_farewell', 3, 7, 12)],
+          effects: [flag('married'), flag('married_companion'), rel('companion', 30), later('family_child', 1, 4, 8), later('family_farewell', 3, 7, 12), later('family_threat', 5, 10, 16)],
           recap: { weight: 3, text: '{ageCn}歲那年，你和青梅竹馬的{companion}成了親。' },
         },
       },

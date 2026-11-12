@@ -26,7 +26,7 @@ export const familyEvents: GameEvent[] = [
         text: '「江湖路遠，別等我。」',
         outcome: {
           text: '你說得很硬，怕說軟了就走不了。{spouse}把鞋塞進你的包袱：「等不等，是我的事。」',
-          effects: [danshi(1)],
+          effects: [danshi(1), later('family_return', 1, 3, 8)],
         },
       },
       {
@@ -46,7 +46,10 @@ export const familyEvents: GameEvent[] = [
     scheduledOnly: true,
     conditions: { flags: ['married'], notFlags: ['spouse_passed'] },
     tags: ['family'],
-    text: '你答應過年底之前回來。這一年的最後一場雪下起來的時候，你離家還有三百里，手上的事還沒有了結。',
+    text: [
+      { if: { flags: ['promise_home'] }, text: '你答應過年底之前回來。這一年的最後一場雪下起來的時候，你離家還有三百里，手上的事還沒有了結。' },
+      { text: '你說過「別等我」。這一年的最後一場雪下起來的時候，你離家還有三百里，手上的事還沒有了結，夜裡卻怎麼也睡不著。' },
+    ],
     choices: [
       {
         id: 'rush',
@@ -124,7 +127,10 @@ export const familyEvents: GameEvent[] = [
       maxAge: 60,
       flags: ['married'],
       notFlags: ['spouse_passed'],
-      any: [{ minFame: 30 }, { maxAlignment: -20 }, { flags: ['xueyi_enemy'] }, { flags: ['blood_feud'] }],
+      any: [
+        { minFame: 22 }, { maxAlignment: -15 }, { flags: ['xueyi_enemy'] }, { flags: ['hunted_by_xueyi'] }, { flags: ['blood_feud'] },
+        { flags: ['bandit_lord'] }, { sects: ['xueyi'] },
+      ],
     },
     tags: ['family', 'feud'],
     text: '你回家時，大門上釘著一把短刀，刀上穿著一張紙，只有四個字：「你有家人。」{spouse}把刀拔下來藏在灶膛裡，怕你看見。你還是看見了。',

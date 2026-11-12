@@ -201,7 +201,7 @@ function EventView({ state, act }: { state: GameState; act: (fn: () => GameState
   return (
     <article className="panel">
       <h2 className="panel-title">
-        {e?.title}
+        {state.current?.title ?? e?.title}
         {e?.node && <span className={`node-badge tier-${e.node.tier}`}>{TIER_LABEL[e.node.tier]}</span>}
       </h2>
       <div className="story">

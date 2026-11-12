@@ -349,10 +349,33 @@ export function dueBoss(s: GameState, rng?: Rng): GameEvent | undefined {
 }
 
 function pickEncounter(s: GameState, tier: 'minor' | 'elite', rng: Rng): GameEvent | undefined {
-  const pool = CONTENT.events
-    .filter((e) => e.kind === 'node' && e.node?.tier === tier && eventAllowed(s, e))
+  const all = CONTENT.events.filter((e) => e.kind === 'node' && e.node?.tier === tier && eventAllowed(s, e));
+  // 剛打過的對手不要馬上再來一次（組合式小戰自己會換對手）
+  const last = s.recent?.foes.slice(-RECENT_FOES) ?? [];
+  const fresh = all.filter((e) => e.encounter || !last.includes(fixedFoe(e) ?? ''));
+  const pool = (fresh.length > 0 ? fresh : all)
     .map((e) => ({ item: e, weight: (e.weightMods ?? []).reduce((w, m) => (checkCondition(s, m.if) ? w * m.mult : w), 1) }));
   return rng.weighted(pool) ?? undefined;
+}
+
+/** 小戰不重複：記住最近幾個對手、最近用過的素材句子。 */
+const RECENT_FOES = 2;
+const RECENT_VARS = 24;
+
+/** 固定寫死對手的關卡事件，對手是誰。 */
+function fixedFoe(e: GameEvent): string | undefined {
+  return e.choices.find((c) => c.duel)?.duel?.opponent;
+}
+
+function remember(s: GameState, key: 'foes' | 'vars', value: string, keep: number): void {
+  const r = (s.recent ??= { foes: [], vars: [] });
+  r[key] = [...r[key].filter((x) => x !== value), value].slice(-keep);
+}
+
+/** 從素材池裡抽一個，最近用過的先不抽（全都用過了才重複）。 */
+function pickFresh<T>(rng: Rng, pool: T[], used: string[], key: (x: T) => string): T {
+  const fresh = pool.filter((x) => !used.includes(key(x)));
+  return rng.pick(fresh.length > 0 ? fresh : pool);
 }
 
 /** 照方針擲出的關卡：小戰、精英先打，打完同一段日子再接劇情；歇、悟、武館直接生效。 */
@@ -444,7 +467,11 @@ function presentEvent(s: GameState, rng: Rng, next?: GameEvent): void {
   s.fired[e.id] = { count: (prev?.count ?? 0) + 1, lastYear: currentYear(s) };
   applyEffects(s, e.enterEffects, rng);
   const vars = rollVars(s, e, rng);
-  s.current = { eventId: e.id, text: renderText(e.text, s, vars), vars };
+  s.current = { eventId: e.id, text: renderText(e.text, s, vars), vars, title: e.encounter ? vars?.title : undefined };
+  if (e.node) {
+    const foe = e.encounter ? vars?.foe : fixedFoe(e);
+    if (foe) remember(s, 'foes', foe, RECENT_FOES + 2);
+  }
   s.phase = 'event';
 }
 
@@ -462,11 +489,14 @@ export function opponentOf(s: GameState, duel: { opponent: string }): string {
 /** 組合式小戰：地點 × 對手 × 開場狀況。 */
 function rollEncounter(s: GameState, rng: Rng): Record<string, string> {
   const ok = <T extends { conditions?: Condition }>(xs: T[]) => xs.filter((x) => checkCondition(s, x.conditions));
-  const place = rng.pick(ok(encounterPlaces));
-  const foe = rng.pick(ok(encounterFoes));
+  const usedVars = s.recent?.vars ?? [];
+  const place = pickFresh(rng, ok(encounterPlaces), usedVars, (x) => x.scene);
+  const foe = pickFresh(rng, ok(encounterFoes), s.recent?.foes.slice(-(RECENT_FOES + 2)) ?? [], (x) => x.opponent);
+  remember(s, 'vars', place.scene, RECENT_VARS);
   const opening = rng.weighted(encounterOpenings.map((o) => ({ item: o, weight: o.weight })))!;
   const text = opening.text.replaceAll('{who}', foe.who).replaceAll('{demand}', foe.demand);
   return {
+    title: place.name,
     scene: place.scene,
     opening: text,
     foe: foe.opponent,
@@ -486,7 +516,10 @@ function rollVars(s: GameState, e: GameEvent, rng: Rng): Record<string, string> 
   const out: Record<string, string> = {};
   for (const [key, spec] of Object.entries(e.vars)) {
     const pool = varPool(s, spec);
-    if (pool.length > 0) out[key] = rng.pick(pool);
+    if (pool.length === 0) continue;
+    // 可以重複發生的事，開場的句子不要跟最近幾次一樣
+    out[key] = e.repeatable ? pickFresh(rng, pool, s.recent?.vars ?? [], (x) => x) : rng.pick(pool);
+    if (e.repeatable && pool.length > 1) remember(s, 'vars', out[key], RECENT_VARS);
   }
   return out;
 }
@@ -741,13 +774,13 @@ function applyChoiceOutcome(
     turn: s.turn,
     age: s.player.age,
     year: currentYear(s),
-    title: e.title,
+    title: s.current?.title ?? e.title,
     choice: fill(choice.text, s, vars),
     text,
     recap: outcome.recap ? { weight: outcome.recap.weight, text: fill(outcome.recap.text, s, vars) } : undefined,
   });
   pushTags(s, e.tags ?? []);
-  setResult(s, rng, { title: e.title, text, check });
+  setResult(s, rng, { title: s.current?.title ?? e.title, text, check });
   s.current = undefined;
   // 過招的結果由 finishDuel 先記下這一場，再看名號
   if (!afterDuel) noteEpithet(s);
