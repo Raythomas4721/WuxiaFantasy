@@ -8,10 +8,15 @@ import { allies } from '../content/allies';
 import { encounterFoes } from '../content/encounters';
 
 /** 引擎自己設定的旗標。 */
-const ENGINE_SCHEDULED = ['school_traitor', 'found_school', 'school_gate', 'school_challenge', 'school_war', 'school_heir'];
+const ENGINE_SCHEDULED = [
+  'school_traitor', 'found_school', 'school_gate', 'school_challenge', 'school_war', 'school_heir',
+  'rank_duel',
+];
 const ENGINE_FLAGS = [
   // 自創武學、開宗立派（engine/school.ts）
   'own_art', 'founded_sect', 'school_fame', 'school_star', 'school_has_heir', 'school_has_spotlight', 'heir_name', 'rule_open', 'rule_strict', 'rule_city',
+  'school_trouble', 'school_has_loyal', 'school_ranked', 'traitor_out', 'stars_beaten', 'spot_gifted', 'spot_seen',
+  'due_school_lazy', 'due_school_brawl', 'due_school_slander', 'due_school_peek', 'due_school_traitor', 'due_school_surpass', 'due_school_usurp',
   'hidden_illness', 'weak_body', 'omen', 'fortune_decline', 'fortune_rise', 'father_dead', 'mother_dead', 'dead', 'died_young'];
 
 /** 知名武俠作品的專有名稱，遊戲內容不得出現。 */

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { CONTENT } from '../src/content';
-import { DISCIPLE_TRAITS } from '../src/content/school';
+import { DISCIPLE_CHARACTERS } from '../src/content/school';
 import { autoDeckTask, playLife } from '../src/engine/autoplay';
 import { checkCondition } from '../src/engine/conditions';
 import { passivesFor } from '../src/engine/duel';
 import { chooseOption, newGame } from '../src/engine/game';
 import { Rng } from '../src/engine/rng';
 import {
-  SCHOOL, cleanName, foundSchool, giveName, rankings, recruitDisciple, schoolFame, tickSchool,
+  STARS, birthOf, characterOf, cleanName, foundSchool, giveName, playerPower, rankings, recruitDisciple, schoolFame, seesThrough,
+  setDiscipleStatus, shownCharacter, tickSchool, tickStars,
 } from '../src/engine/school';
 import { renderText } from '../src/engine/text';
 import type { Disciple, GameState } from '../src/engine/types';
@@ -29,7 +30,7 @@ function founder(rule: 'open' | 'strict' | 'city' = 'open'): GameState {
 }
 
 const disciple = (over: Partial<Disciple>): Disciple => ({
-  id: 'x', name: '某甲', gengu: 5, trait: 'honest', origin: '', seen: true, joined: 1270, years: 0, status: 'training', ...over,
+  id: 'x', name: '某甲', gengu: 5, birth: 'poor', character: 'ordinary', origin: '', seen: true, joined: 1270, years: 0, progress: 0, status: 'training', ...over,
 });
 
 describe('自創武學', () => {
@@ -72,21 +73,47 @@ describe('開宗立派與弟子', () => {
     expect(s.flags.has_disciple).toBe(true);
   });
 
-  it('反骨藏著：悟性不夠看不穿', () => {
-    expect(DISCIPLE_TRAITS.rebel.hidden).toBeDefined();
+  it('根骨、出身、品性分開抽：藏著的品性看起來是另一個樣子，要對的屬性才看得穿', () => {
     const s = founder('open');
     const task = s.deckTasks![1];
     if (task.kind !== 'recruit') throw new Error('應該是收徒');
-    for (const c of task.candidates) expect(c.seen).toBe(!DISCIPLE_TRAITS[c.trait].hidden || s.player.stats.wuxing >= SCHOOL.seeThroughWuxing);
+    for (const c of task.candidates) {
+      expect(c.birth).toBeDefined();
+      expect(c.character).toBeDefined();
+      expect(c.seen).toBe(seesThrough(s, characterOf(c)));
+    }
+    const liar = disciple({ character: 'liar', seen: false });
+    expect(shownCharacter(liar).name).toBe('能說會道');
+    const traitor = disciple({ character: 'treacherous', seen: false });
+    expect(shownCharacter(traitor).name).toBe('勤奮好學');
+    s.player.stats.wuxing = 5;
+    s.player.stats.meili = 10;
+    expect(seesThrough(s, DISCIPLE_CHARACTERS.liar)).toBe(true);
+    expect(seesThrough(s, DISCIPLE_CHARACTERS.treacherous)).toBe(false);
   });
 
-  it('根骨好的出師快、聲勢漲得多；大富大貴年年孝敬；反骨學了幾年會叛逃', () => {
+  it('根骨奇佳卻不學無術：學得比根骨平平的還慢；舊存檔的弟子換算得過來', () => {
     const s = founder();
     s.school!.disciples = [
-      disciple({ id: 'a', gengu: 10, trait: 'gifted' }),
-      disciple({ id: 'b', gengu: 3, trait: 'honest' }),
-      disciple({ id: 'c', gengu: 4, trait: 'rich' }),
-      disciple({ id: 'd', gengu: 7, trait: 'rebel' }),
+      disciple({ id: 'a', gengu: 10, character: 'lazy' }),
+      disciple({ id: 'b', gengu: 5, character: 'respectful' }),
+    ];
+    s.flags.school_trouble = 99; // 先不讓它惹事
+    tickSchool(s, 6, new Rng(3));
+    const [a, b] = s.school!.disciples;
+    expect(b.status).toBe('graduated');
+    expect(a.status).toBe('training');
+    const old = disciple({ birth: undefined, character: undefined, trait: 'rebel' });
+    expect(characterOf(old).id).toBe('treacherous');
+    expect(birthOf(old).id).toBe('orphan');
+  });
+
+  it('根骨好的出師快、聲勢漲得多；大富大貴年年孝敬', () => {
+    const s = founder();
+    s.school!.disciples = [
+      disciple({ id: 'a', gengu: 10 }),
+      disciple({ id: 'b', gengu: 3 }),
+      disciple({ id: 'c', gengu: 4, birth: 'rich' }),
     ];
     const money = s.player.money;
     const fame = schoolFame(s);
@@ -97,9 +124,33 @@ describe('開宗立派與弟子', () => {
     expect(s.flags.school_star).toBe(true);
     expect(s.player.money).toBe(money + 30);
     expect(schoolFame(s)).toBeGreaterThan(fame + 10);
-    expect(s.scheduled.some((x) => x.event === 'school_traitor')).toBe(true);
-    expect(s.school!.spotlight).toBe('d');
-    expect(renderText(CONTENT.events.find((e) => e.id === 'school_traitor')!.text, s)).toContain('某甲');
+  });
+
+  it('品性惹事：一次一件，一生有上限', () => {
+    const s = founder();
+    s.school!.disciples = [disciple({ id: 'a', character: 'violent' }), disciple({ id: 'b', character: 'lazy' })];
+    tickSchool(s, 2, new Rng(4));
+    const troubles = ['school_brawl', 'school_lazy'].filter((id) => s.flags[`due_${id}`]);
+    expect(troubles).toHaveLength(1);
+    expect(renderText(CONTENT.events.find((e) => e.id === troubles[0])!.text, s)).toContain('某甲');
+  });
+
+  it('欺師滅祖：偷學、叛逃，幾年後回來奪位；叛徒在風雲榜上一年比一年高', () => {
+    const s = founder();
+    s.school!.disciples = [disciple({ id: 't', name: '某乙', gengu: 8, character: 'treacherous', seen: false })];
+    tickSchool(s, 1, new Rng(5));
+    expect(s.flags.due_school_peek).toBe(true);
+    s.flags.due_school_peek = false;
+    tickSchool(s, 3, new Rng(5));
+    expect(s.flags.due_school_traitor).toBe(true);
+    s.school!.spotlight = 't';
+    setDiscipleStatus(s, 'betrayed');
+    const before = rankings(s).rows.find((r) => r.kind === 'traitor')!.power;
+    s.player.age += 4;
+    const after = rankings(s).rows.find((r) => r.kind === 'traitor')!.power;
+    expect(after).toBeGreaterThan(before);
+    tickSchool(s, 0, new Rng(5));
+    expect(s.flags.due_school_usurp).toBe(true);
   });
 
   it('開宗就排好開山門、踢館、國難與傳人；聲勢夠了才是「開宗立派」結局', () => {
@@ -113,6 +164,32 @@ describe('開宗立派與弟子', () => {
 });
 
 describe('風雲榜', () => {
+  it('出師的弟子上榜；超過師父時排好「青出於藍」', () => {
+    const s = founder();
+    s.player.fame = 0;
+    s.school!.disciples = [disciple({ id: 'a', name: '某丙', gengu: 10, joined: 1250, status: 'graduated' })];
+    expect(rankings(s).rows.some((r) => r.kind === 'disciple' && r.name === '某丙')).toBe(true);
+    tickSchool(s, 1, new Rng(6));
+    expect(s.flags.due_school_surpass).toBe(true);
+  });
+
+  it('江湖新秀會冒出來；你排第一時更常有人出來，名次接近的會下帖挑戰', () => {
+    const s = founder();
+    s.player.skills.changquan = 400;
+    s.player.fame = 90;
+    let spawned = 0;
+    for (let i = 0; i < 20; i++) {
+      tickStars(s, 3, new Rng(100 + i));
+      spawned = s.stars!.length;
+    }
+    expect(spawned).toBeGreaterThan(0);
+    expect(s.stars!.length).toBeLessThanOrEqual(STARS.max);
+    for (const st of s.stars!) expect(st.power).toBeLessThanOrEqual(STARS.cap);
+    // 新人跟你差不多強：榜首不會一直是你
+    expect(Math.max(...s.stars!.map((x) => x.power))).toBeGreaterThan(playerPower(s) - 20);
+    expect(s.scheduled.some((x) => x.event === 'rank_duel')).toBe(true);
+  });
+
   it('名俠都在榜上；你的名次隨武學與名望往上爬', () => {
     const s = founder();
     s.player.fame = 0;

@@ -73,7 +73,7 @@ export function DeckTaskPanel({ state, act }: Props) {
           {
             id: 'school-recruit',
             when: task.kind === 'recruit',
-            text: '根骨越好學得越快，出師時門派的聲勢漲得越多。特質也要看：大富大貴年年有孝敬，能說會道替你招人，朝三暮四可能哪天就走了。有些人心裡藏著東西，悟性夠高才看得穿。',
+            text: '根骨決定學得快慢，品性決定他會不會給你惹麻煩，兩件事不相干：根骨奇佳的人，也可能不學無術。有些品性是藏著的，看起來是另一個樣子：魅力或心性夠高看得穿顛倒黑白，悟性夠高看得穿心術不正。',
           },
           { id: 'deck-remove', when: task.kind === 'remove', text: '刪掉一張牌：牌庫越精，好牌就越常抽到。' },
         ]}

@@ -47,7 +47,7 @@ export function pickText(spec: TextSpec, state: GameState): string {
 /** 所有事件都能使用的內建變數名稱（內容檢查用）。 */
 export const TEMPLATE_KEYS = [
   'name', 'surname', 'companion', 'companionTrait', 'rival', 'age', 'ageCn', 'year', 'yearName', 'region', 'place', 'sect',
-  'father', 'mother', 'spouse', 'art', 'school', 'disciple', 'heir', 'renown',
+  'father', 'mother', 'spouse', 'art', 'school', 'disciple', 'heir', 'renown', 'victim', 'star', 'ranked',
 ];
 
 export function templateVars(state: GameState): Record<string, string> {
@@ -76,6 +76,13 @@ export function templateVars(state: GameState): Record<string, string> {
     school: state.school?.name || '你的門派',
     disciple: state.school?.disciples.find((d) => d.id === state.school!.spotlight)?.name ?? '那個弟子',
     heir: String(state.flags.heir_name ?? '那個弟子'),
+    victim: state.school?.disciples.find((d) => d.id === state.school!.victim)?.name ?? '他的師弟',
+    star: (() => {
+      const st = state.stars?.find((x) => x.id === state.starSpot);
+      return st ? `「${st.title}」${st.name}` : '一個後生';
+    })(),
+    // 門下上了風雲榜的人數
+    ranked: `${chineseNumber(Number(state.flags.school_ranked ?? 0))}個人`,
     // 江湖上怎麼叫你：有名號用名號
     renown: p.epithet?.name ? `「${p.epithet.name}」` : `一個姓${p.surname}的人`,
   };

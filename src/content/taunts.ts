@@ -74,6 +74,19 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     gloat: ['老子在死人堆裡爬出來的，你算什麼！'],
     defeat: ['別打了……我們只是想回家……'],
   },
+  usurper: {
+    half: ['師父，你慢了。'],
+    broken: ['這一招……你沒教過我。'],
+    combo: ['原來你一直留了一手！'],
+    gloat: ['你老了，這個位子該換人了。'],
+    defeat: ['師父……'],
+  },
+  rising_star: {
+    half: ['好！這才像話！'],
+    broken: ['前輩這一下，我記住了。'],
+    gloat: ['風雲榜上，該換人了。'],
+    defeat: ['受教了。十年後再來。'],
+  },
   traitor_disciple: {
     half: ['師父，這一招你沒教過我吧？'],
     broken: ['你還是比我快……'],

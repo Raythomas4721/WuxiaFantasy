@@ -113,7 +113,13 @@ export type GameEffect =
   /** 這件事說的那個弟子（school.spotlight）怎麼了。 */
   | { type: 'disciple'; status: DiscipleStatus }
   /** 挑出這件事要說的那個弟子：傳人人選、最出色的、隨便一個還在學的。 */
-  | { type: 'spotlight'; pick: 'heir' | 'star' | 'any' };
+  | { type: 'spotlight'; pick: 'heir' | 'star' | 'any' | 'traitor' }
+  /** 這件事說的那個弟子：品性被看穿、改好了、這件事處理過了。 */
+  | { type: 'discipleFix'; fix: 'reveal' | 'reform' | 'handled' }
+  /** 被誣賴的那個弟子（school.victim）怎麼了。 */
+  | { type: 'victim'; status: DiscipleStatus }
+  /** 跟風雲榜上的新面孔（starSpot）打完了。 */
+  | { type: 'star'; result: 'win' | 'lose' | 'decline' };
 
 /** 門規：不問出身、寧缺毋濫、城在人在。 */
 export type SchoolRule = 'open' | 'strict' | 'city';
@@ -124,7 +130,20 @@ export interface Disciple {
   name: string;
   /** 根骨 1–10。 */
   gengu: number;
-  trait: string;
+  /** 出身（content/school.ts 的 DISCIPLE_BIRTHS）。 */
+  birth?: string;
+  /** 品性（DISCIPLE_CHARACTERS）。 */
+  character?: string;
+  /** 舊存檔：只有一個特質，讀的時候換算成出身與品性。 */
+  trait?: string;
+  /** 學到哪裡了（換算成年）：品性、出身會讓它比年數快或慢。 */
+  progress?: number;
+  /** 心術不正走到第幾步：1 偷學、2 叛逃、3 回來。 */
+  stage?: number;
+  /** 品性惹的事已經處理過了。 */
+  handled?: boolean;
+  /** 叛出師門那一年。 */
+  leftYear?: number;
   /** 來歷：拜師那天你看到的樣子。 */
   origin: string;
   /** 藏著的特質（反骨）有沒有被你看穿。 */
@@ -144,8 +163,21 @@ export interface SchoolState {
   disciples: Disciple[];
   /** 這件事說的是哪個弟子。 */
   spotlight?: string;
+  /** 被誣賴的那個弟子。 */
+  victim?: string;
   /** 已經用過的弟子名字（不重複）。 */
   nextId: number;
+}
+
+export interface RisingStar {
+  id: string;
+  name: string;
+  title: string;
+  power: number;
+  /** 成名那一年。 */
+  since: number;
+  /** 跟你打過了：贏了 win、輸了 lose、你推了 decline。 */
+  fought?: 'win' | 'lose' | 'decline';
 }
 
 export interface OwnArt {
@@ -912,6 +944,11 @@ export interface GameState {
   current?: { eventId: string; text: string; vars?: Record<string, string>; title?: string };
   /** 自己開的門派。 */
   school?: SchoolState;
+  /** 風雲榜上冒出來的新面孔；starSpot 是正在找你挑戰的那個。 */
+  stars?: RisingStar[];
+  /** 用過的新人稱號（不重複）。 */
+  retiredTitles?: string[];
+  starSpot?: string;
   /** 最近遇過的小戰對手、用過的素材句子：下一次盡量不重複。 */
   recent?: { foes: string[]; vars: string[] };
   duel?: DuelState;

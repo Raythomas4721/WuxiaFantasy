@@ -51,4 +51,7 @@ export const createArt = (): GameEffect => ({ type: 'createArt' });
 export const foundSchool = (rule: 'open' | 'strict' | 'city'): GameEffect => ({ type: 'foundSchool', rule });
 export const recruit = (): GameEffect => ({ type: 'recruit' });
 export const disciple = (status: 'betrayed' | 'left' | 'dead' | 'heir' | 'caught' | 'reformed'): GameEffect => ({ type: 'disciple', status });
-export const spotlight = (pick: 'heir' | 'star' | 'any'): GameEffect => ({ type: 'spotlight', pick });
+export const spotlight = (pick: 'heir' | 'star' | 'any' | 'traitor'): GameEffect => ({ type: 'spotlight', pick });
+export const discipleFix = (fix: 'reveal' | 'reform' | 'handled'): GameEffect => ({ type: 'discipleFix', fix });
+export const victim = (status: 'left' | 'training'): GameEffect => ({ type: 'victim', status });
+export const starResult = (result: 'win' | 'lose' | 'decline'): GameEffect => ({ type: 'star', result });

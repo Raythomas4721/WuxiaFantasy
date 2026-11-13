@@ -2,7 +2,9 @@ import { CONTENT } from '../content';
 import { currentYear, levelFromXp, xpForLevel } from './conditions';
 import { LEVEL_NAMES } from './describe';
 import { addToDeck, noteSkillGain } from './deck';
-import { createArt, foundSchool, openGate, pickSpotlight, setDiscipleStatus } from './school';
+import {
+  createArt, fixDisciple, foundSchool, openGate, pickSpotlight, setDiscipleStatus, setVictimStatus, settleStar,
+} from './school';
 import type { Rng } from './rng';
 import type { GameEffect, GameState } from './types';
 
@@ -199,6 +201,15 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       break;
     case 'spotlight':
       pickSpotlight(s, e.pick, rng);
+      break;
+    case 'discipleFix':
+      fixDisciple(s, e.fix);
+      break;
+    case 'victim':
+      setVictimStatus(s, e.status);
+      break;
+    case 'star':
+      settleStar(s, e.result);
       break;
   }
 }

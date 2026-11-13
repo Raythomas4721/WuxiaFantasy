@@ -530,6 +530,20 @@ export const opponents: Record<string, OpponentDef> = {
     id: 'garrison', name: '州裡調來的官兵', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'], specials: { drain: 1 },
     tells: tells({ guard: '官兵們把盾牌一面挨一面排開，一步一步往上推。', attack: '都頭舉起了令旗，弓手拉滿了弦。', charge: '山腳的戰鼓越敲越急。' }),
   },
+  usurper: {
+    id: 'usurper', name: '欺師滅祖的逆徒', who: 'usurper',
+    signature: { name: '逆練', tell: '{foe}擺出的起手式，是你親手教他的第一招。', mult: 1.5 },
+    level: { relative: 1, min: 3, max: 5 }, wuxing: 10, temper: 'veteran', lethal: true, hpMult: 0.95, traps: ['fanshou', 'huijian'], specials: { drain: 1 },
+    phase2: { line: '師父，你教我的，我都還給你。', temper: 'brute', specials: { enrage: 1.5, drain: 1 } },
+    tells: tells({ feint: '他的虛招，是你的虛招。你知道他要往哪裡走，他也知道你知道。', attack: '他出手比你快了半分。是你教他要快的。', guard: '他守得滴水不漏，像當年你教他時那樣。' }),
+  },
+  rising_star: {
+    id: 'rising_star', name: '風雲榜上的新秀',
+    signature: { name: '成名一擊', tell: '{foe}深吸了一口氣。看熱鬧的人都安靜了：江湖上傳的，就是這一招。', mult: 1.35 },
+    level: { relative: 0, min: 2, max: 5 }, wuxing: 8, temper: 'veteran', hpMult: 0.95, traps: ['huishen'],
+    phase2: { line: '原來前輩的名頭，不是說書人吹出來的。', temper: 'brute', specials: { enrage: 1 } },
+    tells: tells({ attack: '他出手又快又狠，一點也不留餘地。', feint: '他的招式花樣很多，有一半是做給看熱鬧的人看的。' }),
+  },
   traitor_disciple: {
     id: 'traitor_disciple', name: '叛出門牆的弟子', level: { relative: -1, min: 2, max: 5 }, wuxing: 8, temper: 'veteran', hpMult: 0.85, traps: ['fanshou'],
     tells: tells({ feint: '他使的是你教的招，你一眼就看得出下一招是什麼。可他也知道你看得出來。', attack: '他咬著牙撲了上來，像當年第一次跟你過招那樣。' }),

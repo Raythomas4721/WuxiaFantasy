@@ -1,100 +1,157 @@
-// 自創武學與開宗立派的資料：弟子的特質、門規、取名的素材、自創絕招、江湖上關於你的傳聞。
+// 自創武學與開宗立派的資料：弟子的出身與品性、門規、取名的素材、自創絕招、江湖上關於你的傳聞。
 // 規則在 engine/school.ts。數值改了要跑 npm run simulate。
 
 import type { Condition } from '../engine/types';
 
-export interface DiscipleTrait {
+/** 出身：看得到。影響學得快慢、入門的禮、門派的進帳。 */
+export interface DiscipleBirth {
   id: string;
   name: string;
-  /** 收徒時看到的說明。 */
   desc: string;
-  /** 藏著的特質：悟性不夠的師父看不穿，只看得到 cover 那個樣子。 */
-  hidden?: { cover: string; hint: string };
-  gengu: [number, number];
   weight: number;
+  /** 學藝快慢的加減（1 是一年算一年）。 */
+  learn: number;
+  /** 根骨上限（體弱的人）。 */
+  genguMax?: number;
   /** 拜師那天的樣子；{name} 是弟子的名字。 */
   origin: string[];
 }
 
-export const DISCIPLE_TRAITS: Record<string, DiscipleTrait> = {
+export const DISCIPLE_BIRTHS: Record<string, DiscipleBirth> = {
   rich: {
     id: 'rich',
     name: '大富大貴',
-    desc: '家裡有錢。拜師帶一份厚禮，往後年年有孝敬；只是吃不了苦，學得慢。',
-    gengu: [2, 6],
-    weight: 3,
+    desc: '入門帶一份厚禮，往後年年有孝敬，門派的進帳也跟著多；只是吃不了苦，學得慢一點。',
+    weight: 2,
+    learn: -0.15,
     origin: [
       '{name}是坐著轎子來的，身後跟著兩個挑禮的家丁。',
       '{name}穿的那件袍子，夠尋常人家吃一年。他說家裡開了三間當鋪。',
     ],
   },
-  gifted: {
-    id: 'gifted',
-    name: '根骨奇佳',
-    desc: '天生練武的材料，學得比誰都快。出師那天，整個江湖都會知道你的門下出了人物。',
-    gengu: [8, 10],
-    weight: 2,
-    origin: [
-      '{name}在山門外的石階上跪了一夜，膝蓋底下的青石都濕了，人卻一點也不晃。',
-      '{name}是挑柴的，一擔柴少說一百五十斤，他挑上山來，臉不紅氣不喘。',
-    ],
-  },
-  fickle: {
-    id: 'fickle',
-    name: '朝三暮四',
-    desc: '聰明，什麼都學得快，可是心定不下來。今年拜你為師，明年可能就去拜別人了。',
-    gengu: [5, 8],
-    weight: 3,
-    origin: [
-      '{name}一進門就把你的招式比劃了兩下，竟然有模有樣。他說前年在別派學過半年。',
-      '{name}說話很快，眼睛一直在看你牆上掛的兵器。',
-    ],
-  },
-  rebel: {
-    id: 'rebel',
-    name: '反骨',
-    desc: '根骨好、心氣高，可是不服人。等他覺得學夠了，可能會帶著你的東西走。',
-    hidden: { cover: '沉默寡言', hint: '他看你的眼神裡，好像藏著什麼。' },
-    gengu: [6, 9],
-    weight: 2,
-    origin: [
-      '{name}不太說話，問什麼答什麼。你讓他打一套拳，他打得乾淨利落。',
-      '{name}說自己是孤兒，在街上長大的。他的手上全是繭，指節上有疤。',
-    ],
-  },
-  honest: {
-    id: 'honest',
-    name: '忠厚老實',
-    desc: '根骨平平，學得不快，可是一輩子不會離開師門。出師以後會留下來幫你帶師弟。',
-    gengu: [3, 6],
-    weight: 4,
+  poor: {
+    id: 'poor',
+    name: '寒門',
+    desc: '尋常人家的孩子。',
+    weight: 5,
+    learn: 0,
     origin: [
       '{name}是莊稼人的孩子，進門先把院子掃了一遍，才來給你磕頭。',
-      '{name}的爹是你從前救過的人。他說，爹臨死前交代，要他來給你當牛做馬。',
+      '{name}是挑柴的，一擔柴少說一百五十斤，他挑上山來，臉不紅氣不喘。',
+      '{name}的爹是你從前救過的人。他說，爹臨死前交代，要他來給你磕頭。',
     ],
   },
-  eloquent: {
-    id: 'eloquent',
-    name: '能說會道',
-    desc: '武功一般，嘴上功夫一流。走到哪裡都替門派說好話，往後來拜師的人會變多。',
-    gengu: [3, 6],
+  orphan: {
+    id: 'orphan',
+    name: '孤兒',
+    desc: '無家可歸，師門就是他的家。學得比誰都勤。',
     weight: 3,
+    learn: 0.15,
     origin: [
-      '{name}一見面就把你這些年的事說了一遍，比你自己記得還清楚，還多了好幾段你沒做過的。',
-      '{name}是說書人的徒弟，說膩了書，想來學點真本事。',
+      '{name}是在山門外的石階上睡了三夜，才被守門的弟子發現的。',
+      '{name}說自己是在街上長大的。他的手上全是繭，指節上有疤。',
+    ],
+  },
+  scholar: {
+    id: 'scholar',
+    name: '書香門第',
+    desc: '讀過書，懂道理，下山以後替門派結交了不少人。',
+    weight: 2,
+    learn: 0,
+    origin: [
+      '{name}背著一箱書上山，說是考了三次州試都沒中，想換條路走。',
+      '{name}一見面就把你這些年的事說了一遍，比你自己記得還清楚。',
     ],
   },
   sickly: {
     id: 'sickly',
     name: '體弱多病',
-    desc: '身子骨弱，可是悟性極高。師父要是懂醫術，能把他調理好；不懂的話，可能留不住。',
-    gengu: [1, 4],
+    desc: '身子骨弱，根骨好不到哪裡去。師父要是懂醫術，能把他調理好；不懂的話，可能留不住。',
     weight: 2,
+    learn: 0,
+    genguMax: 5,
     origin: [
       '{name}說話說到一半就咳了起來，可是你讓他背的口訣，他聽一遍就背下來了。',
-      '{name}是被他娘背上山的。他娘說，大夫說這孩子活不過二十，只求你收下他，讓他活得像個人。',
+      '{name}是被他娘背上山的。他娘說，大夫說這孩子活不過二十，只求你收下他。',
     ],
   },
+};
+
+/** 品性：跟根骨無關。有些藏著，看起來是另一個樣子，要師父有眼光才看得穿。 */
+export interface DiscipleCharacter {
+  id: string;
+  name: string;
+  desc: string;
+  weight: number;
+  /** 學藝快慢的倍數。 */
+  learnMult: number;
+  /** 藏著的品性：看起來是 cover，see 是看得穿要的屬性。 */
+  hidden?: { cover: string; hint: string; see: { stat: 'wuxing' | 'meili' | 'xinxing'; at: number }[] };
+}
+
+export const DISCIPLE_CHARACTERS: Record<string, DiscipleCharacter> = {
+  respectful: {
+    id: 'respectful',
+    name: '尊師重道',
+    desc: '一輩子不會離開師門。出師以後會留下來，幫你帶師弟。',
+    weight: 3,
+    learnMult: 1,
+  },
+  ordinary: {
+    id: 'ordinary',
+    name: '安分守己',
+    desc: '不惹事，也不出挑。',
+    weight: 5,
+    learnMult: 1,
+  },
+  fickle: {
+    id: 'fickle',
+    name: '朝三暮四',
+    desc: '心定不下來。今年拜你為師，明年可能就去拜別人了。',
+    weight: 2,
+    learnMult: 1.1,
+  },
+  lazy: {
+    id: 'lazy',
+    name: '不學無術',
+    desc: '根骨再好也不肯練。放著不管，可能一輩子出不了師；管得動的話，是另一回事。',
+    weight: 2,
+    learnMult: 0.35,
+  },
+  violent: {
+    id: 'violent',
+    name: '好勇鬥狠',
+    desc: '打起架來比誰都兇，替門派接戰的時候用得上；只是常在山下惹事，仇家會找上門。',
+    weight: 2,
+    learnMult: 1,
+  },
+  liar: {
+    id: 'liar',
+    name: '顛倒黑白',
+    desc: '嘴甜，替門派拉來不少人；可是他會在你面前搬弄是非，害老實的師兄弟被趕走。',
+    weight: 2,
+    learnMult: 1,
+    hidden: { cover: '能說會道', hint: '他的話好聽得有點過頭。', see: [{ stat: 'meili', at: 9 }, { stat: 'xinxing', at: 10 }] },
+  },
+  treacherous: {
+    id: 'treacherous',
+    name: '心術不正',
+    desc: '學得比誰都快。他想要的不是你的功夫，是你的位子。',
+    weight: 2,
+    learnMult: 1.3,
+    hidden: { cover: '勤奮好學', hint: '他問的，都是你還沒教的東西。', see: [{ stat: 'wuxing', at: 9 }] },
+  },
+};
+
+/** 舊存檔的弟子只有一個特質：換算成出身和品性。 */
+export const LEGACY_TRAITS: Record<string, { birth: string; character: string }> = {
+  rich: { birth: 'rich', character: 'ordinary' },
+  gifted: { birth: 'poor', character: 'respectful' },
+  fickle: { birth: 'poor', character: 'fickle' },
+  rebel: { birth: 'orphan', character: 'treacherous' },
+  honest: { birth: 'poor', character: 'respectful' },
+  eloquent: { birth: 'scholar', character: 'ordinary' },
+  sickly: { birth: 'sickly', character: 'ordinary' },
 };
 
 export interface SchoolRuleDef {
@@ -104,8 +161,9 @@ export interface SchoolRuleDef {
   desc: string;
   /** 每次開山門多來幾個人。 */
   extraCandidates: number;
-  /** 各種特質出現的倍數。 */
-  traitMult: Partial<Record<string, number>>;
+  /** 出身、品性出現的倍數。 */
+  birthMult: Partial<Record<string, number>>;
+  characterMult: Partial<Record<string, number>>;
   /** 根骨的加減。 */
   gengu: number;
 }
@@ -116,15 +174,17 @@ export const SCHOOL_RULES: Record<string, SchoolRuleDef> = {
     name: '不問出身',
     desc: '誰來都收：窮人、孤兒、有前科的。來的人多，什麼樣的都有。',
     extraCandidates: 1,
-    traitMult: { honest: 1.5, sickly: 1.5, rebel: 1.5, rich: 0.5 },
+    birthMult: { orphan: 2, sickly: 1.5, rich: 0.5 },
+    characterMult: { violent: 1.5, treacherous: 1.3 },
     gengu: 0,
   },
   strict: {
     id: 'strict',
     name: '寧缺毋濫',
-    desc: '只收好苗子。來的人少，根骨都不差。',
+    desc: '只收好苗子。來的人少，根骨都不差；可是根骨好的人，心氣也高。',
     extraCandidates: -1,
-    traitMult: { gifted: 3, sickly: 0.2, rich: 0.5 },
+    birthMult: { sickly: 0.2 },
+    characterMult: { lazy: 1.5, treacherous: 1.5 },
     gengu: 2,
   },
   city: {
@@ -132,10 +192,26 @@ export const SCHOOL_RULES: Record<string, SchoolRuleDef> = {
     name: '城在人在',
     desc: '門下弟子，國難當頭要下山。肯來的人都是有血性的，只是這樣的門派，總有人回不來。',
     extraCandidates: 0,
-    traitMult: { honest: 2, fickle: 0.4, rich: 0.6 },
+    birthMult: { rich: 0.5 },
+    characterMult: { respectful: 2, violent: 1.5, fickle: 0.4, lazy: 0.5 },
     gengu: 1,
   },
 };
+
+/** 風雲榜上的新面孔：稱號與成名的方式。 */
+export const STAR_TITLES = [
+  '快刀', '白袍', '鐵掌', '青衫劍', '斷魂槍', '小孟嘗', '北地狂生', '無影腳', '雙鉤', '烏衣', '赤手', '一葦',
+  '寒星', '鬼見愁', '笑面', '銀槍', '短笛', '鐵算盤', '霜刃', '踏雪',
+];
+
+export const STAR_DEEDS = [
+  '一年之內挑了七家武館，沒有一家撐過十招。',
+  '在漢水邊一個人擋住了一夥潰兵，第二天就傳遍了三個州。',
+  '上了青冥山，跟謝凌霜過了三十招才落敗。下山時，沒有人敢笑他。',
+  '在蒙古人的營外待了三天，帶回來一個被擄走的知府。',
+  '單人匹馬上了一座山寨，下山時身後跟著一百多個放下了刀的人。',
+  '說是哪一派都不收他，他就一家一家地打過去。',
+];
 
 /** 武學取名的素材：意象（依經歷）＋兵器字＋字尾。 */
 export const ART_IMAGERY: { if?: Condition; words: string[] }[] = [
@@ -195,5 +271,8 @@ export const DEED_RUMORS: { id: string; if: Condition; text: string }[] = [
   { id: 'd_xueyi', if: { flags: ['xueyi_lord'] }, text: '有人說江湖上有兩個無面客。也有人說，那第二個，原本是個有名有姓的人。' },
   { id: 'd_walls', if: { flags: ['funded_defense_big'] }, text: '襄陽城頭新起的那道女牆，磚上刻了捐錢的人名。排在最前面的，是{renown}。' },
   { id: 'd_temple', if: { flags: ['held_temple_gate'] }, text: '山裡的人說，苦竹寺的山門那天沒有破，是因為有個人跟啞鐘和尚一起站在石階上。那人是誰，寺裡的和尚都不肯說。' },
+  { id: 'd_traitor', if: { flags: ['traitor_out'], notFlags: ['usurper_defeated', 'usurped'] }, text: '江湖上冒出一個人，自稱是「{art}」的正宗傳人，說他師父老了、糊塗了。這話傳到你耳朵裡的時候，已經傳了三個州。' },
+  { id: 'd_usurper', if: { flags: ['usurper_defeated'] }, text: '聽說{renown}親手清理了門戶。說書的講到逆徒倒在山門石階上那一段，茶館裡沒有一個人出聲。' },
+  { id: 'd_stars', if: { flagMin: { stars_beaten: 2 } }, text: '風雲榜上的後生，一個接一個去找{renown}，一個接一個回來。回來的人都說同一句話：榜上排的，太保守了。' },
   { id: 'd_motou', if: { maxAlignment: -45, minFame: 22 }, text: '鎮上的孩子不睡覺，大人就說：「再哭，{renown}來了。」孩子馬上就不哭了。' },
 ];

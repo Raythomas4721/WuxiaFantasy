@@ -14,7 +14,7 @@ import { DECK, pushDuelReward, pushTask, startingDeck, upgradableIndexes } from 
 import { playSimpleRound } from './duelAI';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
-import { deedRumor, tickSchool } from './school';
+import { deedRumor, tickSchool, tickStars } from './school';
 import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
@@ -991,6 +991,7 @@ export function nextTurn(state: GameState): GameState {
     p.health = Math.min(100, p.health + Math.max(NODE.healMin, Math.min(NODE.healMax, NODE.healPerYear * years)));
     loseProperties(s);
     tickSchool(s, years, rng);
+    tickStars(s, years, rng);
 
     let death = 0;
     if (p.age >= 50) death += 0.03 + (p.age - 50) * 0.012;

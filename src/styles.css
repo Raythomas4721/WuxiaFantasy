@@ -3158,3 +3158,10 @@ small {
 .rank-no { width: 1.6em; text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
 .rank-list li.is-me .rank-no { color: var(--accent); }
 .chapter-rank { margin: 6px 0 0; color: var(--ink-2); font-size: 0.95rem; }
+.candidate-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.candidate-trait.is-gifted { border-color: var(--ink); color: var(--ink); font-weight: 700; }
+.candidate-trait.is-birth { border-color: var(--ink-3); color: var(--ink-2); }
+.rank-list li.is-disciple { color: var(--ink); }
+.rank-list li.is-traitor .rank-name { text-decoration: underline wavy var(--accent); text-underline-offset: 3px; }
+.rank-tag { margin-left: auto; font-size: 0.72rem; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-3); white-space: nowrap; }
+.rank-list li.is-me { color: var(--accent); font-weight: 700; }

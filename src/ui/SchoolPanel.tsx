@@ -1,10 +1,11 @@
 // 自創武學、開宗立派的畫面：取名、收徒，側欄的門派與風雲榜。
 
 import { useState } from 'react';
-import { DISCIPLE_TRAITS, SCHOOL_RULES } from '../content/school';
+import { SCHOOL_RULES } from '../content/school';
 import { getCard } from '../engine/duel';
 import {
-  ART_PASSIVE, SCHOOL, cleanName, giveName, rankings, recruitDisciple, schoolFame, schoolFameLabel, suggestName,
+  ART_PASSIVE, birthOf, cleanName, giveName, rankings, recruitDisciple, schoolFame, schoolFameLabel, shownCharacter, suggestName,
+  toGraduate, type RankRow,
 } from '../engine/school';
 import type { DeckTask, Disciple, GameState } from '../engine/types';
 import { CardFace } from './DuelView';
@@ -12,6 +13,8 @@ import { CardFace } from './DuelView';
 type Act = (fn: () => GameState, scroll?: boolean) => void;
 
 const NAME_MAX = 8;
+/** 根骨到了這裡，標「根骨奇佳」。 */
+const GIFTED_AT = 8;
 
 /** 取名：自己打，或用建議的、換一個建議。 */
 export function NameTask({ state, task, act }: { state: GameState; task: Extract<DeckTask, { kind: 'name' }>; act: Act }) {
@@ -61,10 +64,10 @@ export function NameTask({ state, task, act }: { state: GameState; task: Extract
   );
 }
 
-/** 一個想拜師的人：根骨、來歷、特質（藏著的特質，眼光不夠看不穿）。 */
+/** 一個想拜師的人：根骨、出身、品性（藏著的品性只看得到它裝出來的樣子）。 */
 function CandidateCard({ d, onPick }: { d: Disciple; onPick: () => void }) {
-  const trait = DISCIPLE_TRAITS[d.trait];
-  const shown = d.seen || !trait.hidden;
+  const birth = birthOf(d);
+  const character = shownCharacter(d);
   return (
     <button className="candidate" onClick={onPick}>
       <span className="candidate-head">
@@ -77,11 +80,14 @@ function CandidateCard({ d, onPick }: { d: Disciple; onPick: () => void }) {
         </span>
       </span>
       <span className="candidate-origin">{d.origin}</span>
-      <span className={`candidate-trait ${shown ? '' : 'is-hidden'}`}>
-        {shown ? trait.name : trait.hidden!.cover}
+      <span className="candidate-tags">
+        {d.gengu >= GIFTED_AT && <span className="candidate-trait is-gifted">根骨奇佳</span>}
+        {birth.id !== 'poor' && <span className="candidate-trait is-birth">{birth.name}</span>}
+        <span className={`candidate-trait ${character.hidden ? 'is-hidden' : ''}`}>{character.name}</span>
       </span>
       <span className="candidate-desc muted small">
-        {shown ? trait.desc : `${trait.hidden!.hint}（悟性 ${SCHOOL.seeThroughWuxing} 以上才看得穿）`}
+        {birth.id !== 'poor' && `${birth.desc} `}
+        {character.desc}
       </span>
     </button>
   );
@@ -109,11 +115,18 @@ const STATUS_LABEL: Record<Disciple['status'], string> = {
   graduated: '出師',
   heir: '傳人',
   left: '離去',
-  betrayed: '叛出',
+  betrayed: '叛出師門',
   dead: '亡故',
   caught: '廢去武功',
   reformed: '回頭',
 };
+
+/** 學藝的進度：幾成。 */
+function progressText(d: Disciple): string {
+  if (d.status !== 'training') return STATUS_LABEL[d.status];
+  const p = Math.min(9, Math.floor(((d.progress ?? d.years) / toGraduate(d)) * 10));
+  return p <= 0 ? '剛入門' : `學了${'一二三四五六七八九'[p - 1]}成`;
+}
 
 /** 側欄：門派、弟子。 */
 export function SchoolBlock({ state }: { state: GameState }) {
@@ -135,18 +148,18 @@ export function SchoolBlock({ state }: { state: GameState }) {
       ) : (
         <ul className="plain-list disciples">
           {disciples.map((d) => {
-            const trait = DISCIPLE_TRAITS[d.trait];
+            const birth = birthOf(d);
+            const character = shownCharacter(d);
             const gone = ['left', 'betrayed', 'dead', 'caught'].includes(d.status);
             return (
               <li key={d.id} className={gone ? 'is-gone' : undefined}>
                 <details>
                   <summary>
                     <span>{d.name}</span>
-                    <span className="muted small">根骨 {d.gengu}・{d.seen || !trait.hidden ? trait.name : trait.hidden.cover}・{STATUS_LABEL[d.status]}</span>
+                    <span className="muted small">根骨 {d.gengu}・{character.name}・{progressText(d)}</span>
                   </summary>
                   <p className="muted small">
-                    {d.origin} 入門 {d.years} 年。
-                    {(d.seen || !trait.hidden) && ` ${trait.desc}`}
+                    {d.origin} 出身{birth.name}，入門 {d.years} 年。{character.desc}
                   </p>
                 </details>
               </li>
@@ -158,7 +171,15 @@ export function SchoolBlock({ state }: { state: GameState }) {
   );
 }
 
-/** 側欄：風雲榜。 */
+function rankName(r: RankRow): string {
+  if (r.kind === 'me') return r.name;
+  if (r.kind === 'disciple') return `${r.title ? `「${r.title}」` : ''}${r.name}`;
+  if (r.kind === 'traitor') return `${r.name}（叛出師門）`;
+  if (!r.known) return `「${r.title ?? '無名'}」？？？`;
+  return `${r.title ? `「${r.title}」` : ''}${r.name}`;
+}
+
+/** 側欄：風雲榜。你的弟子、叛徒、新冒出來的人都標出來。 */
 export function RankBlock({ state }: { state: GameState }) {
   const { rows, myRank } = rankings(state);
   return (
@@ -166,11 +187,11 @@ export function RankBlock({ state }: { state: GameState }) {
       <h4>風雲榜</h4>
       <ol className="rank-list">
         {rows.map((r, i) => (
-          <li key={`${r.name}-${i}`} className={r.me ? 'is-me' : undefined}>
-            <span className="rank-no">{r.me ? myRank : i + 1}</span>
-            <span className="rank-name">
-              {r.me ? r.name : r.known ? `${r.title ? `「${r.title}」` : ''}${r.name}` : `「${r.title ?? '無名'}」？？？`}
-            </span>
+          <li key={`${r.kind}-${r.name}-${i}`} className={`is-${r.kind}`}>
+            <span className="rank-no">{r.kind === 'me' ? myRank : i + 1}</span>
+            <span className="rank-name">{rankName(r)}</span>
+            {r.kind === 'star' && <span className="rank-tag">新秀</span>}
+            {r.kind === 'disciple' && <span className="rank-tag">門下</span>}
           </li>
         ))}
       </ol>
@@ -182,10 +203,10 @@ export function RankBlock({ state }: { state: GameState }) {
 export function rankLine(state: GameState): string | undefined {
   const { myRank, rows } = rankings(state);
   if (state.player.age < 16) return undefined;
-  if (myRank === 1) return '江湖風雲榜上，你的名字排在第一。';
-  if (myRank <= 10) {
-    const above = rows[myRank - 2];
-    return `江湖風雲榜上，你排第 ${myRank}，就在${above.known ? above.name : `「${above.title ?? '某人'}」`}後面。`;
+  if (myRank === 1) {
+    const next = rows[1];
+    return next ? `江湖風雲榜上，你的名字排在第一。緊跟在後面的，是${rankName(next)}。` : '江湖風雲榜上，你的名字排在第一。';
   }
+  if (myRank <= 10) return `江湖風雲榜上，你排第 ${myRank}，就在${rankName(rows[myRank - 2])}後面。`;
   return '江湖風雲榜上，還沒有你的名字。';
 }
