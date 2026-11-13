@@ -80,7 +80,7 @@ describe('置產', () => {
   it('家產算進產業的價值', () => {
     const s = shopper('jiangnan', 100);
     s.player.properties = [{ kind: 'shop', region: 'jiangnan' }];
-    expect(wealthOf(s)).toBe(600);
+    expect(wealthOf(s)).toBe(100 + CONTENT.market.find((m) => m.id === 'shop')!.price);
   });
 });
 

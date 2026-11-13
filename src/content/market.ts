@@ -58,11 +58,11 @@ export const market: MarketItemDef[] = [
     regions: ['shu', 'jiangnan'], once: true, effects: [xp('baicao', 3)],
   },
   {
-    id: 'land', name: '置產：田地', price: 200, desc: '之後每回合收租 25 文。戰亂可能毀掉產業',
+    id: 'land', name: '置產：田地', price: 150, desc: '之後每回合收租 25 文。戰亂可能毀掉產業',
     regions: ['jiangnan', 'shu'], requires: { minAge: 16 }, effects: [property('land')],
   },
   {
-    id: 'shop', name: '置產：鋪面', price: 500, desc: '之後每回合收入 60 文；行商多賺五成。戰亂可能毀掉產業',
+    id: 'shop', name: '置產：鋪面', price: 350, desc: '之後每回合收入 60 文；行商多賺五成。戰亂可能毀掉產業',
     regions: ['jiangnan', 'xiangyang'], requires: { minAge: 18 }, effects: [property('shop')],
   },
 ];

@@ -530,11 +530,11 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 章末首領（§1.1）----
   rival_boss: {
-    id: 'rival_boss', name: '{rival}', signature: { name: '拚命三郎', tell: '{foe}吐了口唾沫，把袖子捋到肩膀上，眼睛都紅了。', mult: 0.75, hits: 2 }, who: 'rival', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, traps: ['weiou', 'fanshou'],
+    id: 'rival_boss', name: '{rival}', signature: { name: '拚命三郎', tell: '{foe}吐了口唾沫，把袖子捋到肩膀上，眼睛都紅了。', mult: 0.75, hits: 2 }, who: 'rival', level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'veteran', specials: { enrage: 1 }, phase2: { line: '我不會再輸給你了！', temper: 'brute', rage: 3 }, hpMult: 0.85, traps: ['weiou', 'fanshou'],
     tells: tells({ attack: '他這幾年練得很苦，拳頭比從前硬多了。', feint: '他嘴上罵著，眼睛卻在找你的破綻。' }),
   },
   town_champion: {
-    id: 'town_champion', name: '連守七場的擂主', signature: { name: '擂台連環腿', tell: '{foe}腳下踩了個古怪的步子，重心全壓在右腿上。', mult: 0.7, hits: 2 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', specials: { heal: 1 }, phase2: { line: '好，那我也不留手了。', temper: 'veteran', traps: ['fanshou'] }, traps: ['tiebu'],
+    id: 'town_champion', name: '連守七場的擂主', signature: { name: '擂台連環腿', tell: '{foe}腳下踩了個古怪的步子，重心全壓在右腿上。', mult: 0.7, hits: 2 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'guard', specials: { heal: 1 }, phase2: { line: '好，那我也不留手了。', temper: 'veteran', traps: ['fanshou'] }, hpMult: 0.82, traps: ['tiebu'],
     tells: tells({ guard: '他穩穩站在擂台中央，等你過去。' }),
   },
   sect_champion: {
@@ -571,11 +571,11 @@ export const opponents: Record<string, OpponentDef> = {
   },
   // ---- 章末首領：尋常的那幾位，每一輪隨機遇到 ----
   flying_thief: {
-    id: 'flying_thief', name: '飛簷走壁的賊', signature: { name: '燕子三抄水', tell: '{foe}腳尖在牆上一點，整個人翻上了半空。', mult: 0.45, hits: 3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '小子，追得挺緊啊。', temper: 'brute', rage: 2 }, traps: ['huishen'],
+    id: 'flying_thief', name: '飛簷走壁的賊', signature: { name: '燕子三抄水', tell: '{foe}腳尖在牆上一點，整個人翻上了半空。', mult: 0.45, hits: 3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 6, temper: 'veteran', specials: { curse: 1 }, phase2: { line: '小子，追得挺緊啊。', temper: 'brute', rage: 2 }, hpMult: 0.78, traps: ['huishen'],
     tells: tells({ feint: '他在屋脊上左晃右晃，看不清要往哪邊跳。', attack: '他從袖子裡抖出一把短刀。' }),
   },
   tyrant_coach: {
-    id: 'tyrant_coach', name: '惡霸家的教頭', signature: { name: '鐵砂掌', tell: '{foe}把兩隻手掌在褲腿上蹭了蹭，掌心黑得發亮。', mult: 1.3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '老爺養我，就是為了今天！', temper: 'veteran', traps: ['fanshou'] }, traps: ['tiebu'],
+    id: 'tyrant_coach', name: '惡霸家的教頭', signature: { name: '鐵砂掌', tell: '{foe}把兩隻手掌在褲腿上蹭了蹭，掌心黑得發亮。', mult: 1.3 }, level: { relative: 0, min: 1, max: 4 }, wuxing: 5, temper: 'brute', specials: { enrage: 1 }, phase2: { line: '老爺養我，就是為了今天！', temper: 'veteran', traps: ['fanshou'] }, hpMult: 0.75, traps: ['tiebu'],
     tells: tells({ attack: '他的巴掌比蒲扇還大。', guard: '他雙臂一抱，等你自己撞上來。' }),
   },
   river_pirate: {

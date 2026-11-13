@@ -356,7 +356,13 @@ export const focuses: FocusDef[] = [
     name: '謀生',
     desc: '賺取錢財，磨練心性。錢能在市集買兵器、護具，過招時一直有用。',
     tags: ['work', 'village'],
-    growth: [{ effect: money(25) }, { effect: xinxing(1), chance: 0.15 }],
+    growth: [
+      { effect: money(25) },
+      // 做熟了：第四段日子起多賺
+      { effect: money(10), if: { flagMin: { work_turns: 3 } } },
+      { effect: add('work_turns') },
+      { effect: xinxing(1), chance: 0.15 },
+    ],
     summary: [
       '這段日子你踏踏實實地做活，攢下了一點積蓄。',
       '你在碼頭扛了一陣子貨，肩膀上磨出了一層厚皮。',
@@ -370,7 +376,15 @@ export const focuses: FocusDef[] = [
     desc: '走南闖北做買賣，有賺有賠。',
     conditions: { any: [{ backgrounds: ['merchant'] }, { minAge: 18 }] },
     tags: ['trade', 'travel'],
-    growth: [{ effect: money(35) }, { effect: meili(1), chance: 0.15 }],
+    growth: [
+      { effect: money(35) },
+      // 跑熟了路：第四趟起、第七趟起各多賺一截；入了商會，貨跟著大船走
+      { effect: money(20), if: { flagMin: { trade_turns: 3 } } },
+      { effect: money(20), if: { flagMin: { trade_turns: 6 } } },
+      { effect: money(20), if: { flags: ['guild_member'] } },
+      { effect: add('trade_turns') },
+      { effect: meili(1), chance: 0.15 },
+    ],
     summary: [
       '你跟著貨船走了幾趟，見識了不少地方，也學會了怎麼跟人討價還價。',
       '這一趟生意不賺不賠，倒是結識了幾個客商。',

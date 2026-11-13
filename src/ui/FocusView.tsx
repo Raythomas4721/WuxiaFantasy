@@ -21,8 +21,17 @@ const CHANCE = (c: number) => (c === 0.5 ? '一半機會' : c < 0.1 ? '偶爾' :
 
 /** 方針的收穫：從 growth 直接算出來，改了內容這裡會跟著變。給了 state 就只列這個人拿得到的。 */
 export function focusGains(f: FocusDef, s?: GameState): string {
-  return f.growth
-    .filter((g) => !g.if || !s || checkCondition(s, g.if))
+  const growth = f.growth.filter((g) => !g.if || !s || checkCondition(s, g.if));
+  const income = growth.reduce((sum, g) => sum + (g.effect.type === 'money' && g.effect.delta > 0 && !g.chance ? g.effect.delta : 0), 0);
+  let incomeShown = false;
+  return growth
+    .filter((g) => {
+      if (!(g.effect.type === 'money' && g.effect.delta > 0 && !g.chance)) return true;
+      if (incomeShown) return false;
+      incomeShown = true;
+      return true;
+    })
+    .map((g) => (g.effect.type === 'money' && g.effect.delta > 0 && !g.chance ? { ...g, effect: { ...g.effect, delta: income } } : g))
     .map(({ effect: e, chance }) => {
       let t = '';
       if (e.type === 'stat') t = `${STAT_NAMES[e.stat]} +${e.delta}`;

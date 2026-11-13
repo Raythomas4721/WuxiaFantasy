@@ -182,6 +182,18 @@ export const threads: ThreadDef[] = [
     advances: ['ruan_run'],
   },
   {
+    id: 'cargo',
+    title: '一船貨',
+    priority: 38,
+    conditions: { any: [{ flags: ['cargo_salt'] }, { flags: ['cargo_herbs'] }, { flags: ['cargo_silk'] }] },
+    text: [
+      { if: { flags: ['cargo_salt'] }, text: '你那車私鹽還在往北的路上。沿路的渡口，聽說官府查得緊。' },
+      { if: { flags: ['cargo_herbs'] }, text: '你那船藥材還在往襄陽的水路上。' },
+      { text: '你那船綢緞還在往臨安的路上。貨款，等回來再算。' },
+    ],
+    advances: ['cargo_salt_return', 'cargo_herbs_return', 'cargo_silk_return'],
+  },
+  {
     id: 'baina_mantle',
     title: '百衲衣',
     priority: 50,
