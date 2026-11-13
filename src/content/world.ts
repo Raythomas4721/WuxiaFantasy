@@ -110,6 +110,7 @@ export const sects: Record<string, SectDef> = {
 export const npcs: Record<string, NpcDef> = {
   shen_guzhou: {
     id: 'shen_guzhou',
+    power: 80,
     name: '沈孤舟',
     title: '醉劍',
     desc: '不屬任何門派的浪人劍客，終日醉醺醺，劍法卻快得看不清。從不收徒。',
@@ -119,6 +120,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   lin_henian: {
     id: 'lin_henian',
+    power: 52,
     name: '林鶴年',
     title: '藥王',
     desc: '濟世藥谷谷主。嘉熙年間川蜀大疫，他開谷救人，三天三夜沒合眼。',
@@ -129,6 +131,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   han_shouyi: {
     id: 'han_shouyi',
+    power: 74,
     name: '韓守義',
     title: '鐵槍',
     desc: '襄陽義軍統領，鐵塔似的漢子。他說：朝廷的兵守城牆，咱們守的是城裡的人。',
@@ -139,6 +142,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   bater: {
     id: 'bater',
+    power: 72,
     name: '巴特爾',
     title: '白翎箭',
     desc: '蒙古神箭手，箭袋裡總插著一排白色的箭羽。',
@@ -161,6 +165,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   ge_baina: {
     id: 'ge_baina',
+    power: 56,
     name: '葛百衲',
     title: '百衲翁',
     desc: '百衲會首領，穿著一身百衲衣的老乞丐。襄陽城裡一半的流民都聽他的。',
@@ -170,6 +175,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   wumian: {
     id: 'wumian',
+    power: 84,
     name: '無面客',
     title: '血衣樓',
     desc: '血衣樓的殺手，總戴著一張沒有五官的白面具。他只在一個人走投無路的時候出現。',
@@ -178,6 +184,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   xie_lingshuang: {
     id: 'xie_lingshuang',
+    power: 86,
     name: '謝凌霜',
     title: '寒衣劍主',
     desc: '青衡劍府的掌門。嚴厲公正，一身素白，劍法冷得像冬夜的霜。',
@@ -195,6 +202,7 @@ export const npcs: Record<string, NpcDef> = {
   qin_yuan: { id: 'qin_yuan', name: '秦遠', desc: '在酒樓裡結識的游俠。', presence: [], codex: false },
   su_banxia: {
     id: 'su_banxia',
+    power: 60,
     name: '蘇半夏',
     title: '拂星手',
     desc: '背著藥箱四處行醫的女郎中，兩根手指點穴比針還準。她說點穴本是救人的手法，是被人學去害人了。',
@@ -205,6 +213,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   wuyan: {
     id: 'wuyan',
+    power: 76,
     name: '無言',
     title: '啞鐘和尚',
     desc: '苦竹寺敲鐘的老僧，四十年沒有開口說過一個字。寺裡那口鐘沒有鐘槌，他每天清晨用掌心去推。',
@@ -215,6 +224,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   ruan_qinggao: {
     id: 'ruan_qinggao',
+    power: 64,
     name: '阮青篙',
     title: '一篙渡',
     desc: '漢水上撐渡船的女人，船比誰都快。她說：水上討生活的人，不跟浪硬碰，只跟浪借力。',
@@ -225,6 +235,7 @@ export const npcs: Record<string, NpcDef> = {
   },
   he_yunqi: {
     id: 'he_yunqi',
+    power: 82,
     name: '賀雲旗',
     title: '斷纓槍',
     desc: '當年大宋槍術第一的統制，如今是蒙古軍的前鋒。他的槍上繫著一條舊紅纓，沒有人敢問那是誰的血染的。',

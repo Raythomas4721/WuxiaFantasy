@@ -103,7 +103,59 @@ export type GameEffect =
   | { type: 'meet'; npc: string }
   /** 中斷連續方針的計數，例如停下來休息之後。 */
   | { type: 'resetStreak' }
-  | { type: 'die'; cause: string };
+  | { type: 'die'; cause: string }
+  /** 自創武學：算出絕招，等玩家取名。 */
+  | { type: 'createArt' }
+  /** 開宗立派：立下門規，等玩家取名，接著開山門收第一批弟子。 */
+  | { type: 'foundSchool'; rule: SchoolRule }
+  /** 開山門：來幾個想拜師的人，由你挑。 */
+  | { type: 'recruit' }
+  /** 這件事說的那個弟子（school.spotlight）怎麼了。 */
+  | { type: 'disciple'; status: DiscipleStatus }
+  /** 挑出這件事要說的那個弟子：傳人人選、最出色的、隨便一個還在學的。 */
+  | { type: 'spotlight'; pick: 'heir' | 'star' | 'any' };
+
+/** 門規：不問出身、寧缺毋濫、城在人在。 */
+export type SchoolRule = 'open' | 'strict' | 'city';
+export type DiscipleStatus = 'training' | 'graduated' | 'left' | 'betrayed' | 'dead' | 'heir' | 'caught' | 'reformed';
+
+export interface Disciple {
+  id: string;
+  name: string;
+  /** 根骨 1–10。 */
+  gengu: number;
+  trait: string;
+  /** 來歷：拜師那天你看到的樣子。 */
+  origin: string;
+  /** 藏著的特質（反骨）有沒有被你看穿。 */
+  seen?: boolean;
+  joined: number;
+  /** 在門下學了幾年。 */
+  years: number;
+  status: DiscipleStatus;
+  /** 反骨已經發作過了。 */
+  acted?: boolean;
+}
+
+export interface SchoolState {
+  name: string;
+  rule: SchoolRule;
+  founded: number;
+  disciples: Disciple[];
+  /** 這件事說的是哪個弟子。 */
+  spotlight?: string;
+  /** 已經用過的弟子名字（不重複）。 */
+  nextId: number;
+}
+
+export interface OwnArt {
+  name: string;
+  /** 從哪一門武學化出來的。 */
+  base: string;
+  /** 絕招的牌。 */
+  ult: string;
+  year: number;
+}
 
 export interface Recap {
   weight: number;
@@ -253,6 +305,8 @@ export interface NpcDef {
   codex: boolean;
   /** 正派人物：玩家正邪 < 0 時，和他的關係增長減半。 */
   righteous?: boolean;
+  /** 風雲榜上的分量；沒有就不上榜。 */
+  power?: number;
 }
 
 export interface AmbitionDef {
@@ -725,6 +779,8 @@ export interface Player {
   mainSkill?: string;
   /** 已經觸類旁通過的武學（每門一次）。 */
   caughtUp?: string[];
+  /** 自創的武學。 */
+  ownArt?: OwnArt;
   /** 江湖名號：成名的地方固定下來；新的一章才可能改口。 */
   epithet?: { name: string; place: string; stage: number };
   alive: boolean;
@@ -854,6 +910,8 @@ export interface GameState {
   pointStage?: number;
   /** title：這一次的標題（組合式小戰依地點取名）；沒有就用事件的標題。 */
   current?: { eventId: string; text: string; vars?: Record<string, string>; title?: string };
+  /** 自己開的門派。 */
+  school?: SchoolState;
   /** 最近遇過的小戰對手、用過的素材句子：下一次盡量不重複。 */
   recent?: { foes: string[]; vars: string[] };
   duel?: DuelState;
@@ -895,7 +953,11 @@ export type DeckTask =
   /** 升級一張牌。 */
   | { kind: 'upgrade'; title: string; text: string }
   /** 武學心得二選一。 */
-  | { kind: 'talent'; title: string; text: string; options: string[] };
+  | { kind: 'talent'; title: string; text: string; options: string[] }
+  /** 替自創武學、自己的門派取名。 */
+  | { kind: 'name'; target: 'art' | 'school'; title: string; text: string; suggested: string }
+  /** 開山門收徒：從幾個人裡挑。 */
+  | { kind: 'recruit'; title: string; text: string; candidates: Disciple[]; picks: number };
 
 /** 方針擲出的關卡（設計文件 v0.5 §1.2）：小戰、精英、劇情、武館、休養、閉關。 */
 export type NodeKind = 'fight' | 'elite' | 'story' | 'market' | 'rest' | 'insight';

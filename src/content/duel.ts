@@ -296,6 +296,36 @@ export const cards: Record<string, CardDef> = {
   wound: card({ id: 'wound', name: '傷', kind: 'curse', cost: 0, onDraw: { energy: 1, hp: 2 }, flavor: '舊傷一陣抽痛，手上慢了半拍。' }),
   demon: card({ id: 'demon', name: '心魔', kind: 'curse', cost: 0, onDraw: { hp: 3 }, flavor: '你的心裡忽然一亂，一口真氣走岔了。' }),
 
+  // ---- 自創絕招：依主修的路數，自創武學時得到一張（content/school.ts 的 ART_ULTS） ----
+  art_jian: card({
+    id: 'art_jian', name: '自成一劍', rarity: 'rare', kind: 'attack', tag: '劍', cost: 2, dmg: 7, hits: 2, pierce: true,
+    flavor: '這一劍不在任何劍譜上。是你這一生走過的路，一步一步磨出來的。',
+  }),
+  art_qiang: card({
+    id: 'art_qiang', name: '自成一槍', rarity: 'rare', kind: 'attack', tag: '槍', cost: 2, dmg: 6, block: 6, dmgFromBlock: 1,
+    flavor: '槍還是那桿槍。只是這一槍刺出去的時候，你知道自己為什麼而刺。',
+  }),
+  art_quan: card({
+    id: 'art_quan', name: '自成一拳', rarity: 'rare', kind: 'attack', tag: '拳', cost: 2, dmg: 4, hits: 4, breakGuard: true,
+    flavor: '你這一拳沒有名字，也不用有名字。{foe}只知道擋不住。',
+  }),
+  art_bu: card({
+    id: 'art_bu', name: '自成一步', rarity: 'rare', kind: 'skill', tag: '步', cost: 1, block: 8, draw: 3, energyNext: 2,
+    flavor: '你往前走了一步。{foe}眨了一下眼，你已經在三步之外。',
+  }),
+  art_zhen: card({
+    id: 'art_zhen', name: '自成一針', rarity: 'rare', kind: 'attack', tag: '針', cost: 2, dmg: 4, bleed: 8, bleedMult: 2,
+    flavor: '針出去的時候，連你自己都沒聽見聲音。',
+  }),
+  art_zhi: card({
+    id: 'art_zhi', name: '自成一指', rarity: 'rare', kind: 'attack', tag: '指', cost: 2, dmg: 9, seal: 8, ward: 1,
+    flavor: '你只伸出一根手指。{foe}這一輩子學過的招式，忽然全都使不出來了。',
+  }),
+  art_qi: card({
+    id: 'art_qi', name: '自成一家', rarity: 'rare', kind: 'skill', tag: '氣', cost: 2, heal: 8, block: 10, dmg: 8, pierce: true,
+    flavor: '你這一生學過的東西，在這一刻全都化成了一口氣。',
+  }),
+
   // ---- 特殊牌 ----
   duanying: card({
     id: 'duanying', name: '斷纓', rarity: 'rare', kind: 'attack', tag: '槍', cost: 2, dmg: 14, pierce: true, breakGuard: true,
@@ -499,6 +529,10 @@ export const opponents: Record<string, OpponentDef> = {
   garrison: {
     id: 'garrison', name: '州裡調來的官兵', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', traps: ['yuanbing'], specials: { drain: 1 },
     tells: tells({ guard: '官兵們把盾牌一面挨一面排開，一步一步往上推。', attack: '都頭舉起了令旗，弓手拉滿了弦。', charge: '山腳的戰鼓越敲越急。' }),
+  },
+  traitor_disciple: {
+    id: 'traitor_disciple', name: '叛出門牆的弟子', level: { relative: -1, min: 2, max: 5 }, wuxing: 8, temper: 'veteran', hpMult: 0.85, traps: ['fanshou'],
+    tells: tells({ feint: '他使的是你教的招，你一眼就看得出下一招是什麼。可他也知道你看得出來。', attack: '他咬著牙撲了上來，像當年第一次跟你過招那樣。' }),
   },
   water_fort: {
     id: 'water_fort', name: '水寨的守軍', level: { relative: 0, min: 2, max: 5 }, wuxing: 6, temper: 'guard', hpMult: 0.9, traps: ['yuanbing'], specials: { curse: 1 },

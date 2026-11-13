@@ -74,6 +74,12 @@ export const TAUNTS: Record<string, Partial<Record<TauntKind, string[]>>> = {
     gloat: ['老子在死人堆裡爬出來的，你算什麼！'],
     defeat: ['別打了……我們只是想回家……'],
   },
+  traitor_disciple: {
+    half: ['師父，這一招你沒教過我吧？'],
+    broken: ['你還是比我快……'],
+    gloat: ['你老了，師父。'],
+    defeat: ['師父……我錯了。'],
+  },
   water_fort: {
     half: ['有船衝寨！放箭！'],
     combo: ['攔住那條頭船！'],

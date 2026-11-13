@@ -47,7 +47,7 @@ export function pickText(spec: TextSpec, state: GameState): string {
 /** 所有事件都能使用的內建變數名稱（內容檢查用）。 */
 export const TEMPLATE_KEYS = [
   'name', 'surname', 'companion', 'companionTrait', 'rival', 'age', 'ageCn', 'year', 'yearName', 'region', 'place', 'sect',
-  'father', 'mother', 'spouse',
+  'father', 'mother', 'spouse', 'art', 'school', 'disciple', 'heir', 'renown',
 ];
 
 export function templateVars(state: GameState): Record<string, string> {
@@ -71,6 +71,13 @@ export function templateVars(state: GameState): Record<string, string> {
     mother: state.flags.mother_dead ? '父親' : '母親',
     // 另一半：和玩伴成親的是玩伴，其他人不寫名字。
     spouse: state.flags.married_companion ? state.companion.name : '家裡那口子',
+    // 自創的武學、自己的門派、這件事說的那個弟子、傳人
+    art: state.player.ownArt?.name || '那門功夫',
+    school: state.school?.name || '你的門派',
+    disciple: state.school?.disciples.find((d) => d.id === state.school!.spotlight)?.name ?? '那個弟子',
+    heir: String(state.flags.heir_name ?? '那個弟子'),
+    // 江湖上怎麼叫你：有名號用名號
+    renown: p.epithet?.name ? `「${p.epithet.name}」` : `一個姓${p.surname}的人`,
   };
 }
 

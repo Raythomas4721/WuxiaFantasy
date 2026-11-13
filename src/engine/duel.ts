@@ -8,6 +8,7 @@ import { CONTENT } from '../content';
 import { checkCondition, levelFromXp, npcAlive, skillLevel } from './conditions';
 import { Rng } from './rng';
 import { allyRelation, growthPassive, mergePassive, talentHp } from './talents';
+import { artPassive } from './school';
 import { encounterOpenings } from '../content/encounters';
 import { GENERIC, GENERIC_REMATCH, REMATCH, TAUNTS, type TauntKind } from '../content/taunts';
 import { allies } from '../content/allies';
@@ -542,6 +543,7 @@ export function passivesFor(s: GameState, def: OpponentDef): Passive {
     mergePassive(p, gear.effect);
   }
   growthPassive(s, p);
+  artPassive(s, p);
   return p;
 }
 

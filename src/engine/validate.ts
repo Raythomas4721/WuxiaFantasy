@@ -8,7 +8,11 @@ import { allies } from '../content/allies';
 import { encounterFoes } from '../content/encounters';
 
 /** 引擎自己設定的旗標。 */
-const ENGINE_FLAGS = ['hidden_illness', 'weak_body', 'omen', 'fortune_decline', 'fortune_rise', 'father_dead', 'mother_dead', 'dead', 'died_young'];
+const ENGINE_SCHEDULED = ['school_traitor', 'found_school', 'school_gate', 'school_challenge', 'school_war', 'school_heir'];
+const ENGINE_FLAGS = [
+  // 自創武學、開宗立派（engine/school.ts）
+  'own_art', 'founded_sect', 'school_fame', 'school_star', 'school_has_heir', 'school_has_spotlight', 'heir_name', 'rule_open', 'rule_strict', 'rule_city',
+  'hidden_illness', 'weak_body', 'omen', 'fortune_decline', 'fortune_rise', 'father_dead', 'mother_dead', 'dead', 'died_young'];
 
 /** 知名武俠作品的專有名稱，遊戲內容不得出現。 */
 export const BANNED_NAMES = [
@@ -340,6 +344,8 @@ export function validateContent(content: Content): ValidationReport {
 
   // ---- 提醒 ----
   const scheduled = new Set(effects.flatMap(({ e }) => (e.type === 'schedule' || e.type === 'chain' ? [e.event] : [])));
+  // 引擎自己排的：反骨的弟子學了幾年會叛逃（engine/school.ts）
+  for (const id of ENGINE_SCHEDULED) scheduled.add(id);
   for (const e of content.events) {
     if (e.scheduledOnly && !scheduled.has(e.id)) warnings.push(`事件 ${e.id} 只能被排程，但沒有任何地方排程它`);
   }

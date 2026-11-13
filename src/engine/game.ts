@@ -14,6 +14,7 @@ import { DECK, pushDuelReward, pushTask, startingDeck, upgradableIndexes } from 
 import { playSimpleRound } from './duelAI';
 import { computeEnding } from './ending';
 import { Rng } from './rng';
+import { deedRumor, tickSchool } from './school';
 import { eventAllowed, forcedEvent, getEvent, selectEvent } from './select';
 import { LIFE_STAGES, stageIndex } from './stages';
 import { chineseNumber, eraName, fill, renderText } from './text';
@@ -239,6 +240,8 @@ function describeGains(s: GameState): string[] {
 }
 
 const EPITHET_RUMOR_CHANCE = 0.3;
+/** 做過的大事，江湖上傳得很快：有這種傳聞可說時，這個機率先說它。 */
+const DEED_RUMOR_CHANCE = 0.45;
 
 /** 關於你的傳聞：傳著傳著就走了樣。 */
 function epithetRumor(s: GameState, rng: Rng): string {
@@ -261,7 +264,12 @@ function pickRumor(s: GameState, rng: Rng): string | undefined {
     if (news) return news;
   }
   if (!rng.chance(RUMOR_CHANCE)) return undefined;
-  // 有了名號，傳聞裡也會有你的事
+  // 有了名號、做過大事，傳聞裡也會有你的事
+  const deed = rng.chance(DEED_RUMOR_CHANCE) ? deedRumor(s, rng) : undefined;
+  if (deed) {
+    s.shownRumors.push(deed.id);
+    return fill(deed.text, s);
+  }
   if (s.player.epithet && rng.chance(EPITHET_RUMOR_CHANCE)) return epithetRumor(s, rng);
   const pool = CONTENT.rumors
     .filter((r) => !s.shownRumors.includes(r.id) && checkCondition(s, r.conditions))
@@ -982,6 +990,7 @@ export function nextTurn(state: GameState): GameState {
     // 傷會隨著歲月慢慢好起來（健康就是血量，v0.5 §3.1）
     p.health = Math.min(100, p.health + Math.max(NODE.healMin, Math.min(NODE.healMax, NODE.healPerYear * years)));
     loseProperties(s);
+    tickSchool(s, years, rng);
 
     let death = 0;
     if (p.age >= 50) death += 0.03 + (p.age - 50) * 0.012;

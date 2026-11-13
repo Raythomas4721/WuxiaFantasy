@@ -10,6 +10,7 @@ import { DeckList } from './DeckPanel';
 import { STAT_PERK2_AT, STAT_PERKS, STAT_PERK_AT, getTalent, talentHp } from '../engine/talents';
 import type { GameState } from '../engine/types';
 import { ThreadList } from './FocusView';
+import { RankBlock, SchoolBlock } from './SchoolPanel';
 
 function relationLabel(v: number): string {
   if (v >= 60) return '生死之交';
@@ -163,6 +164,12 @@ export function StatusPanel({ state, act }: { state: GameState; act?: (fn: () =>
             })}
           </ul>
         )}
+        {p.ownArt?.name && (
+          <p className="own-art">
+            自創：<b>{p.ownArt.name}</b>
+            <span className="muted small">（化自{CONTENT.skills[p.ownArt.base]?.name}）</span>
+          </p>
+        )}
         <p className="muted small realm">
           過招時：內力 {realm.energy}・氣血 {DUEL.playerHp(p.stats.gengu, main.level) + talentHp(state)}
           {realm.draw > 0 && `・每回合多抽 ${realm.draw} 張`}
@@ -181,6 +188,10 @@ export function StatusPanel({ state, act }: { state: GameState; act?: (fn: () =>
         )}
         {p.deck && <DeckList deck={p.deck} />}
       </section>
+
+      <SchoolBlock state={state} />
+
+      {p.age >= 16 && <RankBlock state={state} />}
 
       <section className="status-block">
         <h4>人物</h4>

@@ -11,6 +11,7 @@ import { STAT_MAX, STAT_PERK_AT } from './talents';
 import { baseCardId, cardSkill, getCard, mainSkill, yieldDuel } from './duel';
 import { DOJO_REMOVE, buy, buyDojo, dojoOffers, marketOffers, removePrice } from './market';
 import { Rng } from './rng';
+import { giveName, recruitDisciple } from './school';
 import type { GameState, StatName } from './types';
 
 /** 模擬玩家分配屬性點：先把根骨、膽識、心性補到有效果，再補根骨。 */
@@ -103,6 +104,12 @@ export function autoDeckTask(s: GameState): GameState {
     return pickCard(s, deck.length >= 24 && cardScore(s, best) < 2 ? null : best);
   }
   if (task.kind === 'talent') return pickTalent(s, task.options[0]);
+  if (task.kind === 'name') return giveName(s, task.suggested);
+  if (task.kind === 'recruit') {
+    // 看得到的特質裡挑根骨最好的；看不穿的人也照根骨挑
+    const best = [...task.candidates].sort((a, b) => b.gengu - a.gengu)[0];
+    return recruitDisciple(s, best?.id ?? null);
+  }
   if (task.kind === 'remove') {
     const at = ['punch', 'parry'].map((id) => deck.indexOf(id)).find((i) => i >= 0);
     const affordable = task.cost?.health ? s.player.health > 50 : true;

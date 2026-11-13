@@ -194,7 +194,7 @@ export function removeBlocked(s: GameState): string | undefined {
   return undefined;
 }
 
-function startTask(state: GameState, kind: DeckTask['kind']): { s: GameState; task: DeckTask } {
+export function startTask(state: GameState, kind: DeckTask['kind']): { s: GameState; task: DeckTask } {
   const task = state.deckTasks?.[0];
   if (!task || task.kind !== kind) throw new Error('現在沒有這件事要處理');
   const s = structuredClone(state);
@@ -202,7 +202,7 @@ function startTask(state: GameState, kind: DeckTask['kind']): { s: GameState; ta
   return { s, task: s.deckTasks![0] };
 }
 
-function doneTask(s: GameState): void {
+export function doneTask(s: GameState): void {
   s.deckTasks = s.deckTasks!.slice(1);
   if (s.deckTasks.length === 0) s.deckTasks = undefined;
 }

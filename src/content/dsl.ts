@@ -47,3 +47,8 @@ export const meet = (npc: string): GameEffect => ({ type: 'meet', npc });
 export const property = (kind: 'land' | 'shop', delta = 1): GameEffect => ({ type: 'property', kind, delta });
 export const resetStreak = (): GameEffect => ({ type: 'resetStreak' });
 export const die = (cause: string): GameEffect => ({ type: 'die', cause });
+export const createArt = (): GameEffect => ({ type: 'createArt' });
+export const foundSchool = (rule: 'open' | 'strict' | 'city'): GameEffect => ({ type: 'foundSchool', rule });
+export const recruit = (): GameEffect => ({ type: 'recruit' });
+export const disciple = (status: 'betrayed' | 'left' | 'dead' | 'heir' | 'caught' | 'reformed'): GameEffect => ({ type: 'disciple', status });
+export const spotlight = (pick: 'heir' | 'star' | 'any'): GameEffect => ({ type: 'spotlight', pick });

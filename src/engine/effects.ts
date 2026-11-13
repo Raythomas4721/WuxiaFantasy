@@ -2,6 +2,7 @@ import { CONTENT } from '../content';
 import { currentYear, levelFromXp, xpForLevel } from './conditions';
 import { LEVEL_NAMES } from './describe';
 import { addToDeck, noteSkillGain } from './deck';
+import { createArt, foundSchool, openGate, pickSpotlight, setDiscipleStatus } from './school';
 import type { Rng } from './rng';
 import type { GameEffect, GameState } from './types';
 
@@ -183,6 +184,21 @@ export function applyEffect(s: GameState, e: GameEffect, rng: Rng): void {
       break;
     case 'die':
       killPlayer(s, e.cause);
+      break;
+    case 'createArt':
+      createArt(s);
+      break;
+    case 'foundSchool':
+      foundSchool(s, e.rule, rng);
+      break;
+    case 'recruit':
+      openGate(s, rng);
+      break;
+    case 'disciple':
+      setDiscipleStatus(s, e.status);
+      break;
+    case 'spotlight':
+      pickSpotlight(s, e.pick, rng);
       break;
   }
 }

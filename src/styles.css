@@ -3118,3 +3118,43 @@ small {
   margin-left: 0.3rem;
   font-weight: 400;
 }
+
+/* ---------- 自創武學、開宗立派 ---------- */
+.name-task { display: grid; gap: 12px; }
+.name-preview { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.name-preview .card { flex: 0 0 auto; }
+.name-preview p { flex: 1 1 160px; margin: 0; }
+.name-field { display: grid; gap: 4px; }
+.name-field input {
+  font: inherit; font-size: 1.15rem; letter-spacing: 0.1em;
+  padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px;
+  background: var(--paper); color: var(--ink); max-width: 100%;
+}
+.name-field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.candidates { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.candidate {
+  display: grid; gap: 6px; text-align: left; font: inherit; color: var(--ink);
+  padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper-2); cursor: pointer;
+}
+.candidate:hover, .candidate:focus-visible { border-color: var(--accent); }
+.candidate-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.candidate-name { font-weight: 700; font-size: 1.05rem; }
+.candidate-gengu { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--ink-2); }
+.gengu-bar { display: inline-block; width: 48px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.gengu-bar span { display: block; height: 100%; background: var(--accent); }
+.candidate-origin { font-size: 0.92rem; color: var(--ink-2); line-height: 1.6; }
+.candidate-trait {
+  justify-self: start; font-size: 0.8rem; padding: 1px 8px; border-radius: 999px;
+  border: 1px solid var(--accent); color: var(--accent);
+}
+.candidate-trait.is-hidden { border-style: dashed; border-color: var(--ink-3); color: var(--ink-3); }
+.own-art { margin: 6px 0 0; }
+.school-block .disciples li { padding: 2px 0; }
+.school-block .disciples summary { display: flex; justify-content: space-between; gap: 8px; cursor: pointer; }
+.school-block .disciples li.is-gone { opacity: 0.55; }
+.rank-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.rank-list li { display: flex; gap: 8px; font-size: 0.9rem; }
+.rank-list li.is-me { color: var(--accent); font-weight: 700; }
+.rank-no { width: 1.6em; text-align: right; color: var(--ink-3); font-variant-numeric: tabular-nums; }
+.rank-list li.is-me .rank-no { color: var(--accent); }
+.chapter-rank { margin: 6px 0 0; color: var(--ink-2); font-size: 0.95rem; }

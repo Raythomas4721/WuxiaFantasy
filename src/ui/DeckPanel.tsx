@@ -7,6 +7,7 @@ import { dojoOpen } from '../engine/market';
 import { cardSkill, cardText, getCard } from '../engine/duel';
 import type { GameState } from '../engine/types';
 import { CardFace } from './DuelView';
+import { NameTask, RecruitTask } from './SchoolPanel';
 
 interface Props {
   state: GameState;
@@ -68,6 +69,12 @@ export function DeckTaskPanel({ state, act }: Props) {
             text: '武學突破了境界：兩個心得選一個，選了就一直有效。選過的心得，在側欄的武學欄看得到。',
           },
           { id: 'deck-upgrade', when: task.kind === 'upgrade', text: '升級一張牌：數值變強，或者花的內力變少。' },
+          { id: 'school-name', when: task.kind === 'name', text: '名字自己打，最多八個字。不想想的話，用建議的，或按「換一個建議」。' },
+          {
+            id: 'school-recruit',
+            when: task.kind === 'recruit',
+            text: '根骨越好學得越快，出師時門派的聲勢漲得越多。特質也要看：大富大貴年年有孝敬，能說會道替你招人，朝三暮四可能哪天就走了。有些人心裡藏著東西，悟性夠高才看得穿。',
+          },
           { id: 'deck-remove', when: task.kind === 'remove', text: '刪掉一張牌：牌庫越精，好牌就越常抽到。' },
         ]}
       />
@@ -102,6 +109,10 @@ export function DeckTaskPanel({ state, act }: Props) {
       )}
 
       {task.kind === 'remove' && <RemoveList state={state} deck={deck} act={act} />}
+
+      {task.kind === 'name' && <NameTask key={task.target} state={state} task={task} act={act} />}
+
+      {task.kind === 'recruit' && <RecruitTask state={state} task={task} act={act} />}
 
       {task.kind === 'upgrade' && (
         <>

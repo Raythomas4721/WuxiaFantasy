@@ -182,6 +182,14 @@ export const threads: ThreadDef[] = [
     advances: ['ruan_run'],
   },
   {
+    id: 'found_school',
+    title: '山門',
+    priority: 70,
+    conditions: { flags: ['own_art'], notFlags: ['founded_sect', 'declined_school'] },
+    text: '想跟你學「{art}」的人，在門外排了好幾回隊。有人勸你，乾脆開一座山門。',
+    advances: ['found_school'],
+  },
+  {
     id: 'cargo',
     title: '一船貨',
     priority: 38,

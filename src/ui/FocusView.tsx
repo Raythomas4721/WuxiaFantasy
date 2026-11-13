@@ -12,6 +12,7 @@ import { checkCondition } from '../engine/conditions';
 import { STAT_NAMES, STAT_ORDER } from '../engine/describe';
 import { STAT_MAX, STAT_PERK2_AT, STAT_PERKS, STAT_PERK_AT } from '../engine/talents';
 import type { FocusDef, GameState, NodeKind } from '../engine/types';
+import { rankLine } from './SchoolPanel';
 
 const MAX_THREADS = 4;
 
@@ -245,6 +246,7 @@ function ChapterHead({ state }: { state: GameState }) {
         </ul>
       )}
       {index >= 2 && <p className="chapter-where">{where.join('，')}。</p>}
+      {index >= 3 && rankLine(state) && <p className="chapter-rank">{rankLine(state)}</p>}
     </header>
   );
 }
