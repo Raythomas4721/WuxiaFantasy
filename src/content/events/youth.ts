@@ -2,7 +2,7 @@
 
 import type { GameEvent } from '../../engine/types';
 import {
-  add, align, ambition, card, chiv, danshi, die, dropItem, fame, flag, fuyuan, goTo, health, item, join, later, leaveSect, master, meet, meili, money, rel, wuxing, xinxing, xp,
+  add, align, ambition, card, chiv, danshi, die, dropItem, fame, flag, fuyuan, goTo, health, item, join, later, leaveSect, master, meet, meili, money, rel, train, wuxing, xinxing, xp,
 } from '../dsl';
 
 export const youthEvents: GameEvent[] = [
@@ -32,19 +32,23 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'martial',
         text: '「我要練成天下無敵的武功。」',
-        requires: { minMartial: 1 },
-        hidden: true,
-        outcome: {
-          text: '長輩看了看你手上的繭，嘆了口氣：「那就別怕吃苦。」',
-          effects: [ambition('martial'), danshi(1)],
-          recap: { weight: 2, text: '{ageCn}歲那年，你說要練成天下無敵的武功。' },
-        },
+        outcome: [
+          {
+            if: { minMartial: 1 },
+            text: '長輩看了看你手上的繭，嘆了口氣：「那就別怕吃苦。」',
+            effects: [ambition('martial'), danshi(1), train('martial', 2)],
+            recap: { weight: 2, text: '{ageCn}歲那年，你說要練成天下無敵的武功。' },
+          },
+          {
+            text: '長輩看了看你細細的胳膊，笑了：「那明天起，雞叫就起來紮馬步。」第二天雞叫的時候，你真的起來了。',
+            effects: [ambition('martial'), danshi(1), train('martial', 2)],
+            recap: { weight: 2, text: '{ageCn}歲那年，你說要練成天下無敵的武功。' },
+          },
+        ],
       },
       {
         id: 'chivalry',
         text: '「我要做個鋤強扶弱的俠客。」',
-        requires: { any: [{ minChivalry: 5 }, { flags: ['saved_lu'] }, { flags: ['river_hero'] }] },
-        hidden: true,
         outcome: {
           text: '長輩笑了：「俠客可不好當。」可你看得出來，那笑裡有幾分驕傲。',
           effects: [ambition('chivalry'), chiv(3)],
@@ -54,30 +58,24 @@ export const youthEvents: GameEvent[] = [
       {
         id: 'healer',
         text: '「我要像那些大夫一樣救人。」',
-        requires: { any: [{ backgrounds: ['physician'] }, { minSkill: { baicao: 1 } }, { flags: ['plague_helper'] }] },
-        hidden: true,
         outcome: {
-          text: '長輩點點頭：「醫者的手，一輩子都放不下。想好了？」你用力點頭。',
-          effects: [ambition('healer'), xinxing(1)],
+          text: '長輩點點頭：「醫者的手，一輩子都放不下。想好了？」你用力點頭。第二天，長輩托人把你送到鎮上的藥鋪當學徒。',
+          effects: [ambition('healer'), xinxing(1), xp('baicao', 2)],
           recap: { weight: 2, text: '{ageCn}歲那年，你說要做一個救人的大夫。' },
         },
       },
       {
         id: 'wealth',
         text: '「我要賺很多很多錢，讓家裡再也不愁吃穿。」',
-        requires: { any: [{ backgrounds: ['merchant'] }, { flags: ['fortune_decline'] }, { flags: ['zhua_coin'] }] },
-        hidden: true,
         outcome: {
-          text: '長輩哈哈大笑：「好！比那些空口說白話的強。」',
-          effects: [ambition('wealth'), meili(1)],
+          text: '長輩哈哈大笑：「好！比那些空口說白話的強。」說完塞給你一串銅錢：「拿去，看你能不能讓它生出小錢來。」',
+          effects: [ambition('wealth'), meili(1), money(30)],
           recap: { weight: 2, text: '{ageCn}歲那年，你說要賺很多錢，讓家裡再也不愁吃穿。' },
         },
       },
       {
         id: 'nation',
         text: '「我要從軍，把北邊打來的兵趕回去。」',
-        requires: { flags: ['war_seen'] },
-        hidden: true,
         outcome: {
           text: '屋裡忽然安靜了。過了很久，長輩才低聲說：「這世道，總得有人去。」',
           effects: [ambition('nation'), danshi(1)],

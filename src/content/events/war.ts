@@ -148,10 +148,16 @@ export const warEvents: GameEvent[] = [
   // ==================== 船家女 阮青篙：渡江篙 ====================
   {
     id: 'ruan_meet',
-    kind: 'normal',
+    // 投了義軍的人、在漢水邊做買賣跑江湖的人，一定會坐上她的船
+    kind: 'forced',
     title: '擺渡',
-    weight: 14,
-    conditions: { minAge: 15, maxAge: 55, npcPresent: 'ruan_qinggao' },
+    priority: 2,
+    conditions: {
+      minAge: 15,
+      maxAge: 55,
+      npcAlive: ['ruan_qinggao'],
+      any: [{ flags: ['joined_yijun'], minYear: 1255, maxYear: 1272 }, { npcPresent: 'ruan_qinggao', focus: ['trade', 'travel'] }],
+    },
     tags: ['travel', 'trade', 'work', 'martial'],
     enterEffects: [meet('ruan_qinggao')],
     text: '漢水上最快的渡船是一個女人撐的。別人過江要一炷香，她只要半炷。船到江心，一個客人嫌船錢貴，想賴帳，還伸手去推她。她頭也沒回，竹篙往後一點，那人就坐進了水裡。她把篙伸過去讓他抓住：「船錢照舊，撈人另算。」',
@@ -280,11 +286,18 @@ export const warEvents: GameEvent[] = [
   // ==================== 降將 賀雲旗：斷纓槍 ====================
   {
     id: 'he_meet',
-    kind: 'normal',
+    // 守城的人、立志守國的人，在城頭上一定會看見他
+    kind: 'forced',
     title: '城下',
-    weight: 16,
-    conditions: { minAge: 18, minYear: 1261, maxYear: 1273, regions: ['xiangyang', 'shu'], npcAlive: ['he_yunqi'] },
-    weightMods: [{ if: { sects: ['yijun'] }, mult: 2 }, { if: { ambitions: ['nation'] }, mult: 1.5 }],
+    priority: 2,
+    conditions: {
+      minAge: 18,
+      minYear: 1261,
+      maxYear: 1273,
+      regions: ['xiangyang', 'shu'],
+      npcAlive: ['he_yunqi'],
+      any: [{ flags: ['joined_yijun'] }, { flags: ['defended_city'] }, { ambitions: ['nation'] }],
+    },
     tags: ['war', 'martial', 'sect'],
     enterEffects: [meet('he_yunqi')],
     text: '城外來了一員蒙古軍的將領，單人獨騎，槍上繫著一條舊紅纓。他在城下連挑了守軍三員將，每一個都只用了一槍。城頭有老兵認了出來，聲音都變了：那是賀雲旗，十年前大宋槍術第一的統制。他勒住馬，抬頭朝城上喊：「還有誰？」',

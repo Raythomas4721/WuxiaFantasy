@@ -3165,3 +3165,16 @@ small {
 .rank-list li.is-traitor .rank-name { text-decoration: underline wavy var(--accent); text-underline-offset: 3px; }
 .rank-tag { margin-left: auto; font-size: 0.72rem; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-3); white-space: nowrap; }
 .rank-list li.is-me { color: var(--accent); font-weight: 700; }
+.ending-legacy { margin: 24px 0; }
+.ending-legacy h3 { font-size: 1rem; letter-spacing: 0.2em; color: var(--ink-2); margin: 0 0 8px; }
+.ending-legacy dl { margin: 0; display: grid; gap: 6px; }
+.ending-legacy .feat { display: grid; grid-template-columns: 5.5em 1fr; gap: 8px; }
+.ending-legacy dt { color: var(--ink-3); }
+.ending-legacy dd { margin: 0; }
+.legacy-disciples { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; }
+.legacy-disciples li { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: 0.92rem; }
+.legacy-disciples .person-note { color: var(--ink-2); }
+.legacy-disciples li.fate-betrayed .person-name, .legacy-disciples li.fate-caught .person-name { color: var(--accent); }
+.legacy-disciples li.fate-heir .person-name { font-weight: 700; }
+.legacy-reveal { color: var(--accent); }
+.ending-legacy dl, .legacy-disciples { text-align: left; max-width: 34em; margin-left: auto; margin-right: auto; }

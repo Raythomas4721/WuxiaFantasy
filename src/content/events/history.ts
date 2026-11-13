@@ -8,14 +8,17 @@ const HAN_DEAD = flag('dead_han_shouyi');
 export const historyEvents: GameEvent[] = [
   {
     id: 'xiangyang_militia',
-    kind: 'normal',
+    // 抗蒙這條線的起點：立志守國、守過城的人，一定會遇到他（其他人在襄陽也可能在城頭遇見）
+    kind: 'forced',
     title: '鐵槍韓守義',
-    weight: 14,
+    priority: 2,
     conditions: {
       minAge: 16,
       maxAge: 55,
-      hasSect: false,
-      any: [{ npcPresent: 'han_shouyi' }, { ambitions: ['nation'], npcAlive: ['han_shouyi'], minYear: 1250 }],
+      minYear: 1250,
+      maxYear: 1272,
+      npcAlive: ['han_shouyi'],
+      any: [{ ambitions: ['nation'] }, { flags: ['defended_city'] }],
     },
     tags: ['war', 'social'],
     enterEffects: [meet('han_shouyi')],
@@ -32,6 +35,8 @@ export const historyEvents: GameEvent[] = [
       {
         id: 'enlist',
         text: '投軍',
+        requires: { hasSect: false },
+        hint: '你已經有師門了',
         outcome: {
           text: '韓守義拍了拍你的肩膀，差點把你拍趴下：「好！明天開始，跟我學槍。」',
           effects: [

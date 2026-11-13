@@ -946,6 +946,8 @@ export interface GameState {
   school?: SchoolState;
   /** 風雲榜上冒出來的新面孔；starSpot 是正在找你挑戰的那個。 */
   stars?: RisingStar[];
+  /** 這一生在風雲榜上最好的名次。 */
+  bestRank?: number;
   /** 用過的新人稱號（不重複）。 */
   retiredTitles?: string[];
   starSpot?: string;

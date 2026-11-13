@@ -1,6 +1,7 @@
 import { CONTENT } from '../content';
 import type { GameState, LifeChapter } from '../engine/types';
 import type { LifeUnlocks } from '../save/codex';
+import { LegacySection } from './SchoolPanel';
 
 interface Props {
   state: GameState;
@@ -40,6 +41,8 @@ export function EndingView({ state, unlocks, onNewLife, onCodex, onExit }: Props
           <p>{e.ambition.text}</p>
         </section>
       )}
+
+      <LegacySection state={state} />
 
       {e.eraLine && <p className="ending-era">{e.eraLine}</p>}
 

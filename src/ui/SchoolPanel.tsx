@@ -1,10 +1,11 @@
 // 自創武學、開宗立派的畫面：取名、收徒，側欄的門派與風雲榜。
 
 import { useState } from 'react';
+import { CONTENT } from '../content';
 import { SCHOOL_RULES } from '../content/school';
 import { getCard } from '../engine/duel';
 import {
-  ART_PASSIVE, birthOf, cleanName, giveName, rankings, recruitDisciple, schoolFame, schoolFameLabel, shownCharacter, suggestName,
+  ART_PASSIVE, birthOf, characterOf, cleanName, giveName, rankings, recruitDisciple, schoolFame, schoolFameLabel, shownCharacter, suggestName,
   toGraduate, type RankRow,
 } from '../engine/school';
 import type { DeckTask, Disciple, GameState } from '../engine/types';
@@ -209,4 +210,80 @@ export function rankLine(state: GameState): string | undefined {
   }
   if (myRank <= 10) return `江湖風雲榜上，你排第 ${myRank}，就在${rankName(rows[myRank - 2])}後面。`;
   return '江湖風雲榜上，還沒有你的名字。';
+}
+
+const FATE: Record<Disciple['status'], string> = {
+  training: '還在門下學藝',
+  graduated: '學成出師',
+  heir: '接了掌門',
+  left: '離開了師門',
+  betrayed: '叛出師門',
+  dead: '早早走了',
+  caught: '被廢去武功',
+  reformed: '回頭',
+};
+
+/** 結局：這一生留下的東西。自創的武學、門派、弟子的下落、風雲榜上的名次。 */
+export function LegacySection({ state }: { state: GameState }) {
+  const art = state.player.ownArt;
+  const school = state.school;
+  const { rows, myRank } = rankings(state);
+  const best = Math.min(state.bestRank ?? myRank, myRank);
+  const ranked = best <= 10;
+  if (!art?.name && !school && !ranked) return null;
+  const inList = rows.filter((r) => r.kind === 'disciple').length;
+  const beaten = Number(state.flags.stars_beaten ?? 0);
+  return (
+    <section className="ending-legacy">
+      <h3>留下的東西</h3>
+      <dl>
+        {art?.name && (
+          <div className="feat">
+            <dt>自創武學</dt>
+            <dd>
+              「{art.name}」，化自{CONTENT.skills[art.base]?.name ?? art.base}。絕招【{getCard(art.ult).name}】。
+            </dd>
+          </div>
+        )}
+        {school && (
+          <div className="feat">
+            <dt>門派</dt>
+            <dd>
+              「{school.name || '無名'}」・門規「{SCHOOL_RULES[school.rule].name}」・聲勢{schoolFameLabel(schoolFame(state))}
+              {state.flags.usurped ? '。後來換了掌門，也換了名字' : ''}
+            </dd>
+          </div>
+        )}
+        {ranked && (
+          <div className="feat">
+            <dt>風雲榜</dt>
+            <dd>
+              {best === 1 ? '曾經排在第一' : `最高排到第 ${best}`}
+              {myRank !== best && `，最後第 ${myRank > 10 ? '十名以外' : myRank}`}
+              {inList > 0 && `。門下有 ${inList} 人上榜`}
+              {beaten > 0 && `。打退過 ${beaten} 個下帖的新秀`}
+            </dd>
+          </div>
+        )}
+      </dl>
+      {school && school.disciples.length > 0 && (
+        <ul className="legacy-disciples">
+          {school.disciples.map((d) => {
+            const c = characterOf(d);
+            const wasHidden = Boolean(c.hidden) && !d.seen;
+            return (
+              <li key={d.id} className={`fate-${d.status}`}>
+                <span className="person-name">{d.name}</span>
+                <span className="person-note">
+                  根骨 {d.gengu}・{c.name}
+                  {wasHidden && <span className="legacy-reveal">（你一直以為他{c.hidden!.cover}）</span>}
+                  ・{FATE[d.status]}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </section>
+  );
 }

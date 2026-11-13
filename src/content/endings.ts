@@ -379,8 +379,8 @@ export const ambitions: Record<string, AmbitionDef> = {
   healer: {
     id: 'healer',
     name: '懸壺濟世',
-    fulfilled: { minSkill: { baicao: 3 }, flagMin: { healed: 3 } },
-    goal: '醫術精湛，親手救活三個以上的人。',
+    fulfilled: { minSkill: { baicao: 3 }, flagMin: { healed: 2 } },
+    goal: '醫術精湛，親手救活兩個以上的人。',
     focuses: ['medicine', 'study'],
     fulfilledText: '少年時你說要做一個救人的大夫。你做到了。',
     unfulfilledText: '少年時你說要做一個救人的大夫。可這一生，你救過的人，還不如你送走的多。',
